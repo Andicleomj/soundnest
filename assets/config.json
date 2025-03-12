@@ -1,0 +1,26 @@
+{
+  "splashScreen": {
+    "logo": "assets/Logo 1.png",
+    "width": 150,
+    "height": 150,
+    "backgroundColor": "#FFFFFF",
+    "text": {
+      "content": "SoundNest",
+      "fontSize": 24,
+      "color": "#000000",
+      "fontWeight": "bold"
+    },
+    "duration": 3000
+  },
+  "loginScreen": {
+    "logo": "assets/Logo 1.png",
+    "width": 180,
+    "height": 180,
+    "buttonText": "Login",
+    "buttonColorStart": "#AFCBFF",
+    "buttonColorEnd": "#D6E5FF",
+    "textColor": "#000000",
+    "signUpText": "Don't have an account? Sign up",
+    "signUpColor": "#007BFF"
+  }
+}
