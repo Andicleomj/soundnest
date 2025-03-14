@@ -22,5 +22,17 @@
     "textColor": "#000000",
     "signUpText": "Don't have an account? Sign up",
     "signUpColor": "#007BFF"
+  },
+
+    "login": {
+      "title": "Login",
+      "username_placeholder": "Enter your username",
+      "password_placeholder": "Enter your password",
+      "forgot_password": "Forgot Password?",
+      "login_button": "Login"
+    }
   }
-}
+  
+
+
+

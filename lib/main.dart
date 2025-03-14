@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'splash_screen.dart';
+import 'package:soundnest/utils/app_routes.dart';
 
 void main() {
   runApp(MyApp());
@@ -8,6 +8,11 @@ void main() {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: SplashScreen());
+    return MaterialApp(
+      title: 'SoundNest',
+      debugShowCheckedModeBanner: false,
+      initialRoute: AppRoutes.splash, 
+      routes: AppRoutes.getRoutes(),
+    );
   }
 }

@@ -1,19 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:soundnest/utils/app_routes.dart';
 import 'dart:async';
 
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: SplashScreen());
-  }
-}
-
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
   @override
+  // ignore: library_private_types_in_public_api
   _SplashScreenState createState() => _SplashScreenState();
 }
 
@@ -21,37 +14,37 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
+    Timer(const Duration(seconds: 3), () {
+      Navigator.pushReplacementNamed(context, AppRoutes.login);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            FlutterLogo(size: 100),
-            SizedBox(height: 20),
-            Text("Loading...", style: TextStyle(fontSize: 18)),
+            // Logo Aplikasi
+            Image.asset(
+              'assets/Logo 1.png',
+              width: 150,
+              height: 150,
+            ),
+            const SizedBox(height: 20),
+            // Nama Aplikasi
+            const Text(
+              "SoundNest",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Halaman Utama")),
-      body: Center(child: Text("Selamat Datang di Aplikasi Flutter!")),
     );
   }
 }
