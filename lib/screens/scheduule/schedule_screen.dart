@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:soundnest/screens/penjadwalan_murottal.dart';
-import 'package:soundnest/screens/penjadwalan_musik.dart'; 
+import 'package:soundnest/screens/scheduule/penjadwalan_murottal.dart';
+import 'package:soundnest/screens/scheduule/penjadwalan_musik.dart'; 
 
 class ScheduleScreen extends StatelessWidget {
   const ScheduleScreen({super.key});

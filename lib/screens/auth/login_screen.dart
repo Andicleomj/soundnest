@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:soundnest/screens/login.dart';
-import 'package:soundnest/screens/signup_screen.dart'; 
+import 'package:soundnest/screens/auth/login.dart';
+import 'package:soundnest/screens/auth/signup_screen.dart'; 
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -19,8 +19,8 @@ class LoginScreen extends StatelessWidget {
               padding: const EdgeInsets.all(8),
               child: Image.asset(
                 'assets/Logo 1.png', 
-                width: 120,
-                height: 120,
+                width: 200,
+                height: 200,
               ),
             ),
             const SizedBox(height: 30),

@@ -52,9 +52,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
             // Logo di tengah
             Center(
               child: Image.asset(
-                'assets/Logo 1.png', // Sesuaikan dengan nama file logo
-                width: 120,
-                height: 120,
+                'assets/Logo 1.png', 
+                width: 200,
+                height: 200,
               ),
             ),
             const SizedBox(height: 20),

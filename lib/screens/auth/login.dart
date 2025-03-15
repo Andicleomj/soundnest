@@ -44,8 +44,8 @@ class _LoginState extends State<Login> {
                 children: [
                   Image.asset(
                     'assets/Logo 1.png',
-                    width: 120,
-                    height: 120,
+                    width: 200,
+                    height: 200,
                   ),
                   const SizedBox(height: 20),
                 ],
@@ -84,7 +84,8 @@ class _LoginState extends State<Login> {
               alignment: Alignment.centerRight,
               child: GestureDetector(
                 onTap: () {
-                  // Aksi jika lupa password ditekan
+                  // Navigasi ke halaman Forgot Password
+                  Navigator.pushNamed(context, AppRoutes.forgetPassword);
                 },
                 child: const Text(
                   "Forgot Password?",
