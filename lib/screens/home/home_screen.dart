@@ -25,7 +25,7 @@ class HomeScreen extends StatelessWidget {
           // Grid Menu
           Expanded(
             child: GridView.count(
-              padding: const EdgeInsets.symmetric(horizontal: 30),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               crossAxisCount: 3,
               crossAxisSpacing: 20,
               mainAxisSpacing: 20,
@@ -85,3 +85,4 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
+

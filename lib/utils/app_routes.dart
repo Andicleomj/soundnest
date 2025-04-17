@@ -6,7 +6,10 @@ import 'package:soundnest/screens/auth/verify_code_screen.dart';
 import 'package:soundnest/screens/home/home_screen.dart';
 import 'package:soundnest/screens/auth/login_screen.dart';
 import 'package:soundnest/screens/auth/signup_screen.dart';
-import 'package:soundnest/screens/scheduule/schedule_screen.dart';
+import 'package:soundnest/screens/scheduule/daftar%20jadwal/jadwal.dart';
+import 'package:soundnest/screens/scheduule/daftar%20jadwal/list_schedule_screen.dart';
+import 'package:soundnest/screens/scheduule/schedule.dart';
+import 'package:soundnest/screens/scheduule/buat%20jadwal/schedule_screen.dart';
 import 'package:soundnest/screens/home/dashboard_screen.dart';
 import 'package:soundnest/screens/splash_screen.dart';
 
@@ -19,8 +22,14 @@ class AppRoutes {
   static const String resetPassword = "/reset-password";
   static const String newPassword = "/new-password";
   static const String signup = '/signup';
-  static const String schedule = '/schedule';
+  static const String schedulescreen = '/schedule-screen';
   static const String dashboard = '/dashboard';
+  static const String listSchedule = "/list-schedule";
+  static const String schedule = "/schedule";
+  static const String daftarJadwal = "/jadwal";
+
+
+
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -32,8 +41,13 @@ class AppRoutes {
       resetPassword: (context) => const ResetPasswordScreen(),
       newPassword: (context) => const NewPasswordScreen(),
       signup: (context) => const SignUpScreen(),
-      schedule: (context) => const ScheduleScreen(),
+      schedulescreen: (context) => const ScheduleScreen(),
       dashboard: (context) => const DashboardScreen(),
+      listSchedule: (context) => const ListScheduleScreen(),
+      schedule: (context) => const Schedule(),
+      daftarJadwal: (context) => const DaftarJadwal(),
+
+
     };
   }
 }

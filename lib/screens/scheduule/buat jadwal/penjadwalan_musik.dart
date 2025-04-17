@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:soundnest/screens/scheduule/penjadwalan_murottal.dart';
-import 'package:soundnest/screens/scheduule/penjadwalan_musik.dart'; 
 
-class ScheduleScreen extends StatelessWidget {
-  const ScheduleScreen({super.key});
+class PenjadwalanMusik extends StatelessWidget {
+  const PenjadwalanMusik({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -28,7 +27,7 @@ class ScheduleScreen extends StatelessWidget {
         ),
         title: const Text(
           "Penjadwalan",
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         centerTitle: true,
       ),
@@ -36,40 +35,14 @@ class ScheduleScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const PenjadwalanMusik()),
-                );
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text("Musik"),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(10),
               ),
-            ),
-            const SizedBox(height: 10),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MurottalScreen()),
-                );
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text("Murottal Al-Qur’an"),
-              ),
+              child: const Text("List musik"),
             ),
           ],
         ),

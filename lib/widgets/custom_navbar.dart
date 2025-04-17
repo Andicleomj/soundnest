@@ -16,7 +16,7 @@ class CustomNavBar extends StatelessWidget {
         ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           // Tombol Home
           GestureDetector(
@@ -25,9 +25,10 @@ class CustomNavBar extends StatelessWidget {
             },
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.home, color: Colors.white),
-                const Text("Home", style: TextStyle(color: Colors.white, fontSize: 12)),
+              children: const [
+                Icon(Icons.home, color: Colors.white),
+                SizedBox(height: 4),
+                Text("Home", style: TextStyle(color: Colors.white, fontSize: 12)),
               ],
             ),
           ),
@@ -39,9 +40,10 @@ class CustomNavBar extends StatelessWidget {
             },
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.schedule, color: Colors.white),
-                const Text("Penjadwalan", style: TextStyle(color: Colors.white, fontSize: 12)),
+              children: const [
+                Icon(Icons.schedule, color: Colors.white),
+                SizedBox(height: 4),
+                Text("Penjadwalan", style: TextStyle(color: Colors.white, fontSize: 12)),
               ],
             ),
           ),
@@ -49,9 +51,20 @@ class CustomNavBar extends StatelessWidget {
           // Tombol Logout
           GestureDetector(
             onTap: () {
-              Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (route) => false);
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                AppRoutes.login,
+                (route) => false,
+              );
             },
-            child: const Icon(Icons.logout, color: Colors.white, size: 30),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Icon(Icons.logout, color: Colors.white),
+                SizedBox(height: 4),
+                Text("Logout", style: TextStyle(color: Colors.white, fontSize: 12)),
+              ],
+            ),
           ),
         ],
       ),

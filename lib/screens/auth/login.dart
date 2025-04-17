@@ -32,95 +32,98 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true, // Mencegah overflow saat keyboard muncul
       backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Column(
-                children: [
-                  Image.asset(
-                    'assets/Logo 1.png',
-                    width: 200,
-                    height: 200,
-                  ),
-                  const SizedBox(height: 20),
-                ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 50),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Column(
+                  children: [
+                    Image.asset(
+                      'assets/Logo 1.png',
+                      width: 200,
+                      height: 200,
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
               ),
-            ),
 
-            const Text(
-              "LOGIN",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+              const Text(
+                "LOGIN",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            const Text("Username"),
-            TextField(
-              controller: _usernameController,
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
+              const Text("Username"),
+              TextField(
+                controller: _usernameController,
+                decoration: const InputDecoration(
+                  border: UnderlineInputBorder(),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            const Text("Password"),
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
+              const Text("Password"),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  border: UnderlineInputBorder(),
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
+              const SizedBox(height: 10),
 
-            Align(
-              alignment: Alignment.centerRight,
-              child: GestureDetector(
-                onTap: () {
-                  // Navigasi ke halaman Forgot Password
-                  Navigator.pushNamed(context, AppRoutes.forgetPassword);
-                },
-                child: const Text(
-                  "Forgot Password?",
-                  style: TextStyle(
-                    color: Colors.blueAccent,
-                    fontWeight: FontWeight.bold,
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () {
+                    // Navigasi ke halaman Forgot Password
+                    Navigator.pushNamed(context, AppRoutes.forgetPassword);
+                  },
+                  child: const Text(
+                    "Forgot Password?",
+                    style: TextStyle(
+                      color: Colors.blueAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 30),
+              const SizedBox(height: 30),
 
-            Center(
-              child: ElevatedButton(
-                onPressed: _login,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
-                    side: const BorderSide(color: Colors.blueAccent),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _login,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      side: const BorderSide(color: Colors.blueAccent),
+                    ),
+                    elevation: 3,
                   ),
-                  elevation: 3,
-                ),
-                child: const Text(
-                  "Login",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
+                  child: const Text(
+                    "Login",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -32,8 +32,10 @@ class _VolumeScreenState extends State<VolumeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Volume"),
+        title: const Text("Volume", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -44,9 +46,9 @@ class _VolumeScreenState extends State<VolumeScreen> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.white, Colors.blue],
-              begin: Alignment.topLeft,
-              end: Alignment.topRight,
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
         ),
@@ -68,7 +70,7 @@ class _VolumeScreenState extends State<VolumeScreen> {
             margin: const EdgeInsets.symmetric(horizontal: 40),
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
             decoration: BoxDecoration(
-              color: Colors.blue[100],
+              color: Colors.blue.shade100,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -101,7 +103,7 @@ class _VolumeScreenState extends State<VolumeScreen> {
           ElevatedButton(
             onPressed: _saveVolume,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue[200],
+              backgroundColor: Colors.blue.shade100,
               padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),

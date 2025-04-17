@@ -12,9 +12,9 @@ class _BellScreenState extends State<BellScreen> {
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   void _playBellSound() async {
-  await _audioPlayer.setSourceAsset('sounds/bell.mp3');
-  await _audioPlayer.resume();
-}
+    await _audioPlayer.setSourceAsset('sounds/bell.mp3');
+    await _audioPlayer.resume();
+  }
 
   @override
   void dispose() {
@@ -25,8 +25,15 @@ class _BellScreenState extends State<BellScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Bel"),
+        title: const Text(
+          "Bel",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -34,20 +41,27 @@ class _BellScreenState extends State<BellScreen> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.white, Colors.blue],
-              begin: Alignment.topLeft,
-              end: Alignment.topRight,
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              "Klik untuk membunyikan bel",
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                "Klik untuk membunyikan bel",
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 20),
             GestureDetector(

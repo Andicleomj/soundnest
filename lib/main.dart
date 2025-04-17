@@ -13,8 +13,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'SoundNest',
       debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.splash,
-      routes: AppRoutes.getRoutes(),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      initialRoute: AppRoutes.splash, 
+      routes: AppRoutes.getRoutes(),  
     );
   }
 }

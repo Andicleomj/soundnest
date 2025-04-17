@@ -6,6 +6,7 @@ class MurottalScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -26,7 +27,7 @@ class MurottalScreen extends StatelessWidget {
         ),
         title: const Text(
           "Penjadwalan",
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         centerTitle: true,
       ),
