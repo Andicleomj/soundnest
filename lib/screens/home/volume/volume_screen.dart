@@ -8,22 +8,21 @@ class VolumeScreen extends StatefulWidget {
 }
 
 class _VolumeScreenState extends State<VolumeScreen> {
-  double _volume = 50; // Nilai awal volume
+  double _volume = 50;
 
   void _increaseVolume() {
     setState(() {
-      if (_volume < 100) _volume += 10; // Maksimal 100
+      if (_volume < 100) _volume += 10;
     });
   }
 
   void _decreaseVolume() {
     setState(() {
-      if (_volume > 0) _volume -= 10; // Minimal 0
+      if (_volume > 0) _volume -= 10;
     });
   }
 
   void _saveVolume() {
-    // TODO: Tambahkan logika penyimpanan volume
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Volume disimpan: $_volume")),
     );
@@ -34,7 +33,9 @@ class _VolumeScreenState extends State<VolumeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Volume", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        title: const Text(
+          "Volume",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -54,16 +55,17 @@ class _VolumeScreenState extends State<VolumeScreen> {
         ),
       ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 40),
+          const SizedBox(height: 20),
+
+          // Logo
           Image.asset(
-            'assets/Logo 1.png', 
+            'assets/Logo 1.png',
             width: 200,
             height: 200,
           ),
 
-          const SizedBox(height: 150),
+          const SizedBox(height: 20),
 
           // Kontrol volume
           Container(
@@ -71,24 +73,19 @@ class _VolumeScreenState extends State<VolumeScreen> {
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
             decoration: BoxDecoration(
               color: Colors.blue.shade100,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Tombol kurang
                 IconButton(
                   icon: const Icon(Icons.remove, color: Colors.black),
                   onPressed: _decreaseVolume,
                 ),
-
-                // Label volume
                 const Text(
                   "Volume",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-
-                // Tombol tambah
                 IconButton(
                   icon: const Icon(Icons.add, color: Colors.black),
                   onPressed: _increaseVolume,
@@ -97,21 +94,24 @@ class _VolumeScreenState extends State<VolumeScreen> {
             ),
           ),
 
-          const SizedBox(height: 40),
+          const Spacer(),
 
-          // Tombol simpan
-          ElevatedButton(
-            onPressed: _saveVolume,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue.shade100,
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
+          // Tombol simpan di bawah
+          Padding(
+            padding: const EdgeInsets.only(bottom: 40.0),
+            child: ElevatedButton(
+              onPressed: _saveVolume,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade100,
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-            ),
-            child: const Text(
-              "Simpan",
-              style: TextStyle(fontSize: 16, color: Colors.black),
+              child: const Text(
+                "Simpan",
+                style: TextStyle(fontSize: 16, color: Colors.black),
+              ),
             ),
           ),
         ],

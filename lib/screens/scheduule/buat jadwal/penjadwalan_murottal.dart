@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soundnest/screens/scheduule/buat%20jadwal/penjadwalan_pengulangan.dart';
 
 class MurottalScreen extends StatelessWidget {
   const MurottalScreen({super.key});
@@ -35,14 +36,22 @@ class MurottalScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Container(
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PenjadwalanScreen_()),
+                );
+              },
+            child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: Color(0xFFD9D9D9),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Text("List Murottal Al-Qur’an"),
+              ),
             ),
           ],
         ),

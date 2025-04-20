@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:soundnest/screens/scheduule/buat%20jadwal/schedule_screen.dart';
-import 'list_schedule_screen.dart'; 
+import 'list_schedule_screen.dart';
 
 class DaftarJadwal extends StatefulWidget {
   const DaftarJadwal({super.key});
@@ -11,8 +11,8 @@ class DaftarJadwal extends StatefulWidget {
 }
 
 class _DaftarJadwal extends State<DaftarJadwal> {
-  int selectedHour = 9;
-  int selectedMinute = 40;
+  int selectedHour = 0;
+  int selectedMinute = 0;
 
   final List<int> hours = List.generate(24, (index) => index);
   final List<int> minutes = List.generate(60, (index) => index);
@@ -43,144 +43,158 @@ class _DaftarJadwal extends State<DaftarJadwal> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Waktu Picker
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 40),
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey[800],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            height: 150,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Jam Picker
-                SizedBox(
-                  width: 80,
-                  child: CupertinoPicker(
-                    scrollController: FixedExtentScrollController(initialItem: selectedHour),
-                    itemExtent: 32,
-                    onSelectedItemChanged: (index) {
-                      setState(() {
-                        selectedHour = hours[index];
-                      });
-                    },
-                    children: hours
-                        .map((hour) => Center(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Waktu Picker
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.grey[800],
+                borderRadius: BorderRadius.circular(20),
+              ),
+              height: 125,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Jam Picker
+                  SizedBox(
+                    width: 80,
+                    child: CupertinoPicker(
+                      scrollController: FixedExtentScrollController(
+                        initialItem: selectedHour,
+                      ),
+                      itemExtent: 32,
+                      onSelectedItemChanged: (index) {
+                        setState(() {
+                          selectedHour = index;
+                        });
+                      },
+                      children: hours
+                          .map(
+                            (hour) => Center(
                               child: Text(
                                 hour.toString().padLeft(2, '0'),
-                                style: const TextStyle(color: Colors.white, fontSize: 20),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                ),
                               ),
-                            ))
-                        .toList(),
+                            ),
+                          )
+                          .toList(),
+                    ),
                   ),
-                ),
-                const Text(
-                  ':',
-                  style: TextStyle(color: Colors.white, fontSize: 24),
-                ),
-                // Menit Picker
-                SizedBox(
-                  width: 80,
-                  child: CupertinoPicker(
-                    scrollController: FixedExtentScrollController(initialItem: selectedMinute),
-                    itemExtent: 32,
-                    onSelectedItemChanged: (index) {
-                      setState(() {
-                        selectedMinute = minutes[index];
-                      });
-                    },
-                    children: minutes
-                        .map((minute) => Center(
+                  const Text(
+                    ':',
+                    style: TextStyle(color: Colors.white, fontSize: 24),
+                  ),
+                  // Menit Picker
+                  SizedBox(
+                    width: 80,
+                    child: CupertinoPicker(
+                      scrollController: FixedExtentScrollController(
+                        initialItem: selectedMinute,
+                      ),
+                      itemExtent: 32,
+                      onSelectedItemChanged: (index) {
+                        setState(() {
+                          selectedMinute = index;
+                        });
+                      },
+                      children: minutes
+                          .map(
+                            (minute) => Center(
                               child: Text(
                                 minute.toString().padLeft(2, '0'),
-                                style: const TextStyle(color: Colors.white, fontSize: 20),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                ),
                               ),
-                            ))
-                        .toList(),
+                            ),
+                          )
+                          .toList(),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 40),
-          // Tombol
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Column(
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Navigasi ke ScheduleScreen
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ScheduleScreen()),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade100,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+
+            const SizedBox(height: 60),
+
+            // Tombol Buat Penjadwalan
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ScheduleScreen(),
                     ),
-                    child: const Text(
-                      "Buat Penjadwalan",
-                      style: TextStyle(fontSize: 16, color: Colors.black),
-                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFD9D9D9),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
+                  elevation: 0,
                 ),
-                const SizedBox(height: 15),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Navigasi ke ListScheduleScreen
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ListScheduleScreen()),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade100,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    child: const Text(
-                      "Daftar Jadwal",
-                      style: TextStyle(fontSize: 16, color: Colors.black),
-                    ),
-                  ),
+                child: const Text(
+                  "Buat Penjadwalan",
+                  style: TextStyle(fontSize: 16, color: Colors.black),
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+
+            const SizedBox(height: 20),
+
+            // Tombol Daftar Jadwal
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ListScheduleScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFD9D9D9),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  "Daftar Jadwal",
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-      // Bottom Navigation
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.blueAccent,
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.white70,
         currentIndex: 1,
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.access_time),
-            label: 'Penjadwalan',
-          ),
+              icon: Icon(Icons.access_time), label: 'Penjadwalan'),
         ],
         onTap: (index) {
-          // Navigasi jika diperlukan
+          // Tambahkan navigasi jika dibutuhkan
         },
       ),
     );

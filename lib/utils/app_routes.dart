@@ -6,6 +6,8 @@ import 'package:soundnest/screens/auth/verify_code_screen.dart';
 import 'package:soundnest/screens/home/home_screen.dart';
 import 'package:soundnest/screens/auth/login_screen.dart';
 import 'package:soundnest/screens/auth/signup_screen.dart';
+import 'package:soundnest/screens/scheduule/buat%20jadwal/penjadwalan.dart';
+import 'package:soundnest/screens/scheduule/buat%20jadwal/penjadwalan_pengulangan.dart';
 import 'package:soundnest/screens/scheduule/daftar%20jadwal/jadwal.dart';
 import 'package:soundnest/screens/scheduule/daftar%20jadwal/list_schedule_screen.dart';
 import 'package:soundnest/screens/scheduule/schedule.dart';
@@ -27,7 +29,8 @@ class AppRoutes {
   static const String listSchedule = "/list-schedule";
   static const String schedule = "/schedule";
   static const String daftarJadwal = "/jadwal";
-
+  static const String penjadwalan = '/penjadwalan';
+  static const String penjadwalanPengulangan = '/penjadwalan-pengulangan';
 
 
 
@@ -46,6 +49,8 @@ class AppRoutes {
       listSchedule: (context) => const ListScheduleScreen(),
       schedule: (context) => const Schedule(),
       daftarJadwal: (context) => const DaftarJadwal(),
+      penjadwalan: (context) => const PenjadwalanScreen(),
+      penjadwalanPengulangan: (context) => const PenjadwalanScreen_(), 
 
 
     };

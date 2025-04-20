@@ -50,7 +50,7 @@ class ScheduleScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: Color(0xFFD9D9D9),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Text("Musik"),
@@ -68,7 +68,7 @@ class ScheduleScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: Color(0xFFD9D9D9),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Text("Murottal Al-Qur’an"),
