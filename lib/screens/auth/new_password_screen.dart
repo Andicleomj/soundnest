@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soundnest/screens/auth/password_reset_success.dart';
-import 'package:soundnest/screens/auth/reset_password_screen.dart';
-import 'package:soundnest/utils/app_routes.dart';
+
 
 
 class NewPasswordScreen extends StatefulWidget {
