@@ -11,78 +11,90 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
+      body: Stack(
         children: [
-          const SizedBox(height: 40), 
-          // Logo
-          Center(
-            child: Image.asset('assets/Logo 1.png', width: 200, height: 200),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Grid Menu
-          Expanded(
-            child: GridView.count(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              crossAxisCount: 3,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-              children: [
-                MenuItem(
-                  icon: 'assets/icons/bell.png',
-                  label: "Bel",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const BellScreen(),
-                      ),
-                    );
-                  },
-                ),
-                MenuItem(
-                  icon: 'assets/icons/musik.png', 
-                  label: "Musik",
-                  ),
-                MenuItem(
-                  icon: 'assets/icons/murottal.png',
-                  label: "Murottal\nAl-qur'an",
-                ),
-                MenuItem(
-                  icon: 'assets/icons/pemberitahuan.png',
-                  label: "Pemberitahuan",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const NotificationScreen(),
-                      ),
-                    );
-                  },
-                ),
-                MenuItem(
-                  icon: 'assets/icons/volume.png', 
-                  label: "Volume",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const VolumeScreen(),
-                      ),
-                    );
-                  },
-                  ),
-              ],
+          // Background Image
+          Positioned.fill(
+            child: Image.asset(
+              'assets/bg home.jpg',
+              fit: BoxFit.cover,
             ),
           ),
 
-          // Custom Bottom Navigation Bar
-          CustomNavBar(),
+          // Foreground Content
+          Column(
+            children: [
+              const SizedBox(height: 70),
+
+              // Logo
+              Center(
+                child: Image.asset('assets/Logo 1.png', width: 200, height: 200),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Grid Menu
+              Expanded(
+                child: GridView.count(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 20,
+                  children: [
+                    MenuItem(
+                      icon: 'assets/icons/bell.png',
+                      label: "Bel",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const BellScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    MenuItem(
+                      icon: 'assets/icons/musik.png',
+                      label: "Musik",
+                    ),
+                    MenuItem(
+                      icon: 'assets/icons/murottal.png',
+                      label: "Murottal\nAl-qur'an",
+                    ),
+                    MenuItem(
+                      icon: 'assets/icons/pemberitahuan.png',
+                      label: "Pemberitahuan",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    MenuItem(
+                      icon: 'assets/icons/volume.png',
+                      label: "Volume",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const VolumeScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              // Custom Bottom Navigation Bar
+              CustomNavBar(),
+            ],
+          ),
         ],
       ),
     );
   }
 }
-
