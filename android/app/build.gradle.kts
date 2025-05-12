@@ -24,6 +24,7 @@ android {
         applicationId = "com.example.soundnest"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // commit
         minSdk = 23
         targetSdk = 35
         versionCode = 1
