@@ -1,13 +1,14 @@
 {
   "project_info": {
-    "project_number": "870786098927",
-    "project_id": "database-d0e0a",
-    "storage_bucket": "database-d0e0a.firebasestorage.app"
+    "project_number": "307643391567",
+    "firebase_url": "https://databaseta-108d5-default-rtdb.firebaseio.com",
+    "project_id": "databaseta-108d5",
+    "storage_bucket": "databaseta-108d5.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:870786098927:android:f43cf2a4f97b1ad75f1d1a",
+        "mobilesdk_app_id": "1:307643391567:android:02b4ee9aecf759d220943a",
         "android_client_info": {
           "package_name": "com.example.soundnest"
         }
@@ -15,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyB2MxA3Snx2kT7p6j_CysY111Do-RMDIQU"
+          "current_key": "AIzaSyDywdoot5ID1lXKG1wQPTioxENmgJsJ3pM"
         }
       ],
       "services": {
