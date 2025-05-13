@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:soundnest/utils/app_routes.dart';
 
 class Login extends StatefulWidget {
@@ -9,20 +10,35 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _login() {
-    String username = _usernameController.text.trim();
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
 
-    if (username == "admin" && password == "admin123") {
-      // Navigasi ke HomeScreen setelah login berhasil
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // Jika berhasil login
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Login berhasil!")));
       Navigator.pushReplacementNamed(context, AppRoutes.home);
-    } else {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Username atau Password salah!"),
+        SnackBar(
+          content: Text("Login gagal"),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -42,49 +58,34 @@ class _LoginState extends State<Login> {
             Center(
               child: Column(
                 children: [
-                  Image.asset(
-                    'assets/Logo 1.png',
-                    width: 200,
-                    height: 200,
-                  ),
+                  Image.asset('assets/Logo 1.png', width: 200, height: 200),
                   const SizedBox(height: 20),
                 ],
               ),
             ),
-
             const Text(
               "LOGIN",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-
-            const Text("Username"),
+            const Text("Email"),
             TextField(
-              controller: _usernameController,
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-              ),
+              controller: _emailController,
+              decoration: const InputDecoration(border: UnderlineInputBorder()),
+              keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 20),
-
             const Text("Password"),
             TextField(
               controller: _passwordController,
               obscureText: true,
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-              ),
+              decoration: const InputDecoration(border: UnderlineInputBorder()),
             ),
             const SizedBox(height: 10),
-
             Align(
               alignment: Alignment.centerRight,
               child: GestureDetector(
                 onTap: () {
-                  // Navigasi ke halaman Forgot Password
                   Navigator.pushNamed(context, AppRoutes.forgetPassword);
                 },
                 child: const Text(
@@ -96,14 +97,15 @@ class _LoginState extends State<Login> {
                 ),
               ),
             ),
-
             const SizedBox(height: 30),
-
             Center(
               child: ElevatedButton(
                 onPressed: _login,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 50,
+                    vertical: 15,
+                  ),
                   backgroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
@@ -113,10 +115,7 @@ class _LoginState extends State<Login> {
                 ),
                 child: const Text(
                   "Login",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.black),
                 ),
               ),
             ),
