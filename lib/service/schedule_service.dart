@@ -44,7 +44,14 @@ class ScheduleService {
     print("📅 Jumlah jadwal ditemukan: ${schedules.length}");
 
     for (var schedule in schedules) {
+      // Tambahkan pengecekan isActive
+      if (!(schedule['isActive'] ?? true)) {
+        print("❌ Jadwal dinonaktifkan: ${schedule['name'] ?? 'Tanpa Nama'}");
+        continue;
+      }
+
       if (!_isScheduleValid(schedule, now)) continue;
+
       await _runScheduledAudio(schedule, now);
       print("✅ Audio dijalankan.");
     }
