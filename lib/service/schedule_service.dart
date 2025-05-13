@@ -67,8 +67,9 @@ class ScheduleService {
     final day = schedule['day']?.toLowerCase();
     final timeStart = schedule['time_start'];
 
-    if (day == null || timeStart == null || schedule['file_id'] == null)
+    if (day == null || timeStart == null || schedule['file_id'] == null) {
       return false;
+    }
     if (day != _getDayOfWeek(now)) return false;
 
     final parts = timeStart.split(':');
