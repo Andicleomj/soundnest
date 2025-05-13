@@ -11,12 +11,12 @@ class MusicScreen extends StatelessWidget {
         backgroundColor: Colors.blue,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(8.0),
         child: GridView.builder(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
             childAspectRatio: 1.4,
           ),
           itemCount: categories.length,
@@ -30,7 +30,7 @@ class MusicScreen extends StatelessWidget {
 
   Widget _buildCategoryCard(BuildContext context, String category) {
     return SizedBox(
-      height: 80,
+      height: 30,
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 3,
