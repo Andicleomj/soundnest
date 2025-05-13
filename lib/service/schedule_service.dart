@@ -4,7 +4,7 @@ import 'g_drive_audio_service.dart';
 
 class ScheduleService {
   final DatabaseReference _ref = FirebaseDatabase.instance.ref(
-    'devices/devices_01/schedule_001/-Nxyz12345',
+    'devices/devices_01/schedule_001',
   );
   final GoogleDriveAudioService _audioService = GoogleDriveAudioService();
   Timer? _timer;
@@ -24,13 +24,10 @@ class ScheduleService {
   Future<List<Map<String, dynamic>>> getSchedules() async {
     try {
       final snapshot = await _ref.get();
-      if (snapshot.exists && snapshot.value is Map) {
-        final rawSchedules = (snapshot.value as Map).values;
-
-        // Hanya ambil data yang bertipe Map<String, dynamic>
-        return rawSchedules
-            .where((e) => e is Map<String, dynamic>)
-            .map((e) => Map<String, dynamic>.from(e))
+      if (snapshot.exists) {
+        final data = snapshot.value as Map<dynamic, dynamic>;
+        return data.entries
+            .map((entry) => Map<String, dynamic>.from(entry.value))
             .toList();
       }
     } catch (e) {
@@ -42,17 +39,12 @@ class ScheduleService {
   Future<void> checkAndRunSchedule() async {
     print("⏰ Mengecek jadwal...");
     final now = DateTime.now();
-
     final schedules = await getSchedules();
     print("📅 Jumlah jadwal ditemukan: ${schedules.length}");
 
     for (var schedule in schedules) {
-      // Tambahkan pengecekan isActive
-      if (!(schedule['isActive'] ?? true)) {
-        print("❌ Jadwal dinonaktifkan: ${schedule['name'] ?? 'Tanpa Nama'}");
-        continue;
-      }
-
+      // Cek apakah jadwal aktif
+      if (!schedule['isActive']) continue;
       if (!_isScheduleValid(schedule, now)) continue;
 
       await _runScheduledAudio(schedule, now);
@@ -81,16 +73,13 @@ class ScheduleService {
     if (day == null || timeStart == null || schedule['file_id'] == null) {
       return false;
     }
-
     if (day != _getDayOfWeek(now)) return false;
 
     final parts = timeStart.split(':');
     if (parts.length != 2) return false;
 
-    final scheduleHour = int.tryParse(parts[0]);
-    final scheduleMinute = int.tryParse(parts[1]);
-
-    return now.hour == scheduleHour && now.minute == scheduleMinute;
+    // Validasi jam dan menit
+    return now.hour == int.parse(parts[0]) && now.minute == int.parse(parts[1]);
   }
 
   String _getDayOfWeek(DateTime now) {
