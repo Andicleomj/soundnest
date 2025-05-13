@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
-import 'g_drive_audio_service.dart';
+import 'package:soundnest/service/g_drive_audio_service.dart';
 
 class ScheduleService {
   final DatabaseReference _ref = FirebaseDatabase.instance.ref(
@@ -24,10 +24,9 @@ class ScheduleService {
   Future<List<Map<String, dynamic>>> getSchedules() async {
     try {
       final snapshot = await _ref.get();
-      if (snapshot.exists) {
-        final data = snapshot.value as Map<dynamic, dynamic>;
-        return data.entries
-            .map((entry) => Map<String, dynamic>.from(entry.value))
+      if (snapshot.exists && snapshot.value is Map) {
+        return (snapshot.value as Map).values
+            .map((e) => Map<String, dynamic>.from(e))
             .toList();
       }
     } catch (e) {
@@ -43,7 +42,6 @@ class ScheduleService {
     print("📅 Jumlah jadwal ditemukan: ${schedules.length}");
 
     for (var schedule in schedules) {
-      // Cek apakah jadwal aktif
       if (!schedule['isActive']) continue;
       if (!_isScheduleValid(schedule, now)) continue;
 
@@ -59,8 +57,6 @@ class ScheduleService {
     final fileId = schedule['file_id'];
     if (fileId == null) return;
 
-    print("🎶 Memutar audio dari Google Drive dengan ID: $fileId");
-
     _isAudioPlaying = true;
     await _audioService.playFromGoogleDrive(fileId);
     _isAudioPlaying = false;
@@ -72,15 +68,12 @@ class ScheduleService {
     final day = schedule['day']?.toLowerCase();
     final timeStart = schedule['time_start'];
 
-    if (day == null || timeStart == null || schedule['file_id'] == null) {
-      return false;
-    }
+    if (day == null || timeStart == null) return false;
     if (day != _getDayOfWeek(now)) return false;
 
     final parts = timeStart.split(':');
     if (parts.length != 2) return false;
 
-    // Validasi jam dan menit
     return now.hour == int.parse(parts[0]) && now.minute == int.parse(parts[1]);
   }
 
@@ -95,11 +88,6 @@ class ScheduleService {
       'minggu',
     ];
     return days[now.weekday - 1];
-  }
-
-  Future<void> addSchedule(Map<String, dynamic> scheduleData) async {
-    await _ref.push().set(scheduleData);
-    print("📅 Jadwal baru ditambahkan: $scheduleData");
   }
 
   void dispose() {
