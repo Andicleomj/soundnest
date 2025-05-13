@@ -1,25 +1,17 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
 import 'package:soundnest/main.dart';
+import 'package:soundnest/service/schedule_service.dart';
 
 void main() {
-  testWidgets('Test MyApp tanpa ScheduleService dan NotificationService', (
-    WidgetTester tester,
-  ) async {
-    // Bangun aplikasi tanpa ScheduleService dan NotificationService
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Test MyApp dengan ScheduleService', (WidgetTester tester) async {
+    // Inisialisasi ScheduleService untuk pengujian
+    final scheduleService = ScheduleService();
+
+    // Bangun aplikasi dengan ScheduleService
+    await tester.pumpWidget(MyApp(scheduleService: scheduleService));
 
     // Verifikasi apakah widget muncul
-    expect(find.text('Firebase Test'), findsOneWidget);
-
-    // Verifikasi tombol navigasi ke SignUp ada
-    expect(find.text('Go to Sign Up'), findsOneWidget);
-
-    // Simulasi klik tombol untuk navigasi
-    await tester.tap(find.text('Go to Sign Up'));
-    await tester.pumpAndSettle();
-
-    // Verifikasi apakah halaman SignUp muncul
-    expect(find.text('Sign Up'), findsOneWidget);
+    expect(find.text('SoundNest'), findsOneWidget);
   });
 }
