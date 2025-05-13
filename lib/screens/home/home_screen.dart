@@ -4,6 +4,8 @@ import 'package:soundnest/screens/home/pemberitahuan/notification_screen.dart';
 import 'package:soundnest/screens/home/volume/volume_screen.dart';
 import 'package:soundnest/widgets/custom_navbar.dart';
 import 'package:soundnest/widgets/menu_item.dart';
+import 'package:soundnest/screens/home/musik/musik_screen.dart';
+import 'package:soundnest/screens/home/murottal/murottal_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -14,7 +16,7 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          const SizedBox(height: 40), 
+          const SizedBox(height: 40),
           // Logo
           Center(
             child: Image.asset('assets/Logo 1.png', width: 200, height: 200),
@@ -43,12 +45,28 @@ class HomeScreen extends StatelessWidget {
                   },
                 ),
                 MenuItem(
-                  icon: 'assets/icons/musik.png', 
+                  icon: 'assets/icons/musik.png',
                   label: "Musik",
-                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MusicScreen(),
+                      ),
+                    );
+                  },
+                ),
                 MenuItem(
                   icon: 'assets/icons/murottal.png',
                   label: "Murottal\nAl-qur'an",
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MurottalScreen(),
+                      ),
+                    );
+                  },
                 ),
                 MenuItem(
                   icon: 'assets/icons/pemberitahuan.png',
@@ -63,7 +81,7 @@ class HomeScreen extends StatelessWidget {
                   },
                 ),
                 MenuItem(
-                  icon: 'assets/icons/volume.png', 
+                  icon: 'assets/icons/volume.png',
                   label: "Volume",
                   onTap: () {
                     Navigator.push(
@@ -73,7 +91,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  ),
+                ),
               ],
             ),
           ),
