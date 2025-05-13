@@ -4,7 +4,7 @@ import 'g_drive_audio_service.dart';
 
 class ScheduleService {
   final DatabaseReference _ref = FirebaseDatabase.instance.ref(
-    'devices/devices_01/schedule_001',
+    'devices/devices_01/schedule_001/-Nxyz12345',
   );
   final GoogleDriveAudioService _audioService = GoogleDriveAudioService();
   Timer? _timer;
