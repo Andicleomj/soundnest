@@ -30,7 +30,7 @@ class MusicScreen extends StatelessWidget {
 
   Widget _buildCategoryCard(BuildContext context, String category) {
     return SizedBox(
-      height: 30,
+      height: 25,
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 3,
