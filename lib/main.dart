@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:soundnest/firebase_options.dart';
-import 'package:soundnest/service/schedule_service.dart'; // Import ScheduleService
-import 'package:soundnest/screens/auth/signup_screen.dart'; // Import SignUpScreen
+import 'package:soundnest/screens/scheduule/schedule_screen.dart'; // Halaman Daftar Jadwal
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,29 +10,19 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   print("✅ Firebase berhasil diinisialisasi.");
 
-  // Inisialisasi ScheduleService
-  final scheduleService = ScheduleService();
-  scheduleService.start(); // Memulai pengecekan jadwal otomatis
-  print("✅ ScheduleService berhasil dijalankan.");
-
-  runApp(MyApp(scheduleService: scheduleService));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final ScheduleService scheduleService;
-
-  const MyApp({super.key, required this.scheduleService});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SoundNest',
       debugShowCheckedModeBanner: false,
-      initialRoute: '/home',
-      routes: {
-        '/home': (context) => HomePage(),
-        '/signup': (context) => const SignUpScreen(),
-      },
+      home: HomePage(),
+      routes: {'/schedule': (context) => const ScheduleScreen()},
     );
   }
 }
@@ -44,21 +33,35 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Firebase Test")),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text("Firebase Initialized Successfully."),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/signup');
-              },
-              child: const Text("Go to Sign Up"),
-            ),
-          ],
-        ),
+      appBar: AppBar(title: Text("SoundNest")),
+      body: GridView.count(
+        crossAxisCount: 2,
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildIcon(context, Icons.music_note, "Musik"),
+          _buildIcon(context, Icons.book, "Murottal Al-Qur'an"),
+          _buildIcon(context, Icons.notifications, "Pemberitahuan"),
+          _buildIcon(context, Icons.schedule, "Jadwal", route: '/schedule'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIcon(
+    BuildContext context,
+    IconData icon,
+    String label, {
+    String? route,
+  }) {
+    return GestureDetector(
+      onTap: route != null ? () => Navigator.pushNamed(context, route) : () {},
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 50),
+          const SizedBox(height: 10),
+          Text(label),
+        ],
       ),
     );
   }
