@@ -25,8 +25,11 @@ class ScheduleService {
     try {
       final snapshot = await _ref.get();
       if (snapshot.exists && snapshot.value is Map) {
-        return (snapshot.value as Map).values
-            .expand((e) => (e as Map).values)
+        final rawSchedules = (snapshot.value as Map).values;
+
+        // Hanya ambil data yang bertipe Map<String, dynamic>
+        return rawSchedules
+            .where((e) => e is Map<String, dynamic>)
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
       }
