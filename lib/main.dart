@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:soundnest/firebase_options.dart';
 import 'package:soundnest/service/schedule_service.dart';
 import 'package:soundnest/utils/app_routes.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +31,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'SoundNest',
       debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.home,
+      initialRoute:
+          FirebaseAuth.instance.currentUser == null
+              ? AppRoutes.login
+              : AppRoutes.home,
       routes: AppRoutes.getRoutes(),
     );
   }
