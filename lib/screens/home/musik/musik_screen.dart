@@ -11,17 +11,24 @@ class MusicScreen extends StatelessWidget {
         backgroundColor: Colors.blue,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          children: [
-            _buildCategoryCard(context, 'Musik Religi'),
-            _buildCategoryCard(context, 'Musik Tradisional'),
-            _buildCategoryCard(context, 'Musik Modern'),
-            _buildCategoryCard(context, 'Instrumental'),
-          ],
+        padding: const EdgeInsets.all(12.0),
+        child: GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 3 / 2,
+          ),
+          itemCount: 4,
+          itemBuilder: (context, index) {
+            final categories = [
+              'Musik Religi',
+              'Musik Tradisional',
+              'Musik Modern',
+              'Instrumental',
+            ];
+            return _buildCategoryCard(context, categories[index]);
+          },
         ),
       ),
     );
@@ -38,12 +45,13 @@ class MusicScreen extends StatelessWidget {
         );
       },
       child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 3,
         child: Center(
           child: Text(
             category,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
           ),
         ),
       ),
@@ -67,4 +75,3 @@ class CategoryDetailScreen extends StatelessWidget {
     );
   }
 }
-// tes 
