@@ -4,15 +4,14 @@ import 'package:soundnest/main.dart';
 import 'package:soundnest/service/schedule_service.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Buat instance ScheduleService palsu (dummy)
+  testWidgets('Test MyApp dengan ScheduleService', (WidgetTester tester) async {
+    // Inisiasi ScheduleService yang Dibutuhkan
     final scheduleService = ScheduleService();
 
-    // Bangun aplikasi dengan ScheduleService dummy
+    // Bangun aplikasi dengan ScheduleService
     await tester.pumpWidget(MyApp(scheduleService: scheduleService));
 
-    // Verifikasi aplikasi dapat berjalan
-    expect(find.byType(MaterialApp), findsOneWidget);
+    // Verifikasi apakah widget muncul
+    expect(find.text('Firebase Test'), findsOneWidget);
   });
 }
-// test

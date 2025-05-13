@@ -1,81 +1,84 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/material.dart';
 import 'g_drive_audio_service.dart';
-import 'notifikasi_service.dart';
-
-final NotificationService _notificationService = NotificationService();
 
 class ScheduleService {
   final DatabaseReference _ref = FirebaseDatabase.instance.ref(
-    'devices/device_001/schedules',
+    'devices/device_01/schedule_001',
   );
-
   final GoogleDriveAudioService _audioService = GoogleDriveAudioService();
   Timer? _timer;
+  bool _isAudioPlaying = false;
 
-  // Ambil semua jadwal
+  bool get isAudioPlaying => _isAudioPlaying;
+
+  void start() {
+    _timer?.cancel();
+    _timer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => checkAndRunSchedule(),
+    );
+    print("✅ ScheduleService started.");
+  }
+
   Future<List<Map<String, dynamic>>> getSchedules() async {
-    final snapshot = await _ref.get();
-    if (snapshot.exists) {
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
-      return data.values.map((e) => Map<String, dynamic>.from(e)).toList();
-    } else {
-      return [];
+    try {
+      final snapshot = await _ref.get();
+      if (snapshot.exists && snapshot.value is Map) {
+        return (snapshot.value as Map).values
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      }
+    } catch (e) {
+      print("❌ Error fetching schedules: $e");
     }
+    return [];
   }
 
-  // Tambahkan jadwal baru
-  Future<void> addSchedule(Map<String, dynamic> scheduleData) async {
-    await _ref.push().set(scheduleData);
-  }
-
-  // Mulai pengecekan berkala setiap menit
-  void startScheduleChecker() {
-    _timer?.cancel(); // Hentikan timer sebelumnya jika ada
-    _timer = Timer.periodic(const Duration(minutes: 1), (_) async {
-      await checkAndRunSchedule();
-    });
-  }
-
-  // Logika pengecekan dan eksekusi jadwal
   Future<void> checkAndRunSchedule() async {
-    final now = TimeOfDay.now();
+    print("⏰ Mengecek jadwal...");
+    final now = DateTime.now();
+
     final schedules = await getSchedules();
+    print("📅 Jumlah jadwal ditemukan: ${schedules.length}");
 
     for (var schedule in schedules) {
-      final day = schedule['day'];
-      final timeStart = schedule['time_start'];
-      final fileId =
-          schedule['file_id']; // Menggunakan file_id dari Google Drive
-
-      if (day == null || timeStart == null || fileId == null) continue;
-
-      final nowDay = getDayOfWeek(now);
-      if (day != nowDay) continue;
-
-      final parts = timeStart.split(':');
-      if (parts.length != 2) continue;
-
-      final jadwal = TimeOfDay(
-        hour: int.tryParse(parts[0]) ?? 0,
-        minute: int.tryParse(parts[1]) ?? 0,
-      );
-
-      if (now.hour == jadwal.hour && now.minute == jadwal.minute) {
-        print('⏰ Jadwal cocok, menjalankan aksi untuk $timeStart');
-        await _audioService.playFromGoogleDrive(fileId);
-        await _notificationService.showNotification(
-          "Jadwal Aktif",
-          "Memutar audio sesuai jadwal pada $timeStart",
-        );
-      }
+      if (!_isScheduleValid(schedule, now)) continue;
+      await _runScheduledAudio(schedule, now);
+      print("✅ Audio dijalankan.");
     }
   }
 
-  // Fungsi untuk mendapatkan nama hari dalam bahasa Indonesia
-  String getDayOfWeek(TimeOfDay now) {
-    final days = [
+  Future<void> _runScheduledAudio(
+    Map<String, dynamic> schedule,
+    DateTime now,
+  ) async {
+    final fileId = schedule['file_id'];
+    if (fileId == null) return;
+
+    _isAudioPlaying = true;
+    await _audioService.playFromGoogleDrive(fileId);
+    _isAudioPlaying = false;
+
+    print("🎶 Audio dimainkan sesuai jadwal: ${schedule['time_start']}.");
+  }
+
+  bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
+    final day = schedule['day']?.toLowerCase();
+    final timeStart = schedule['time_start'];
+
+    if (day == null || timeStart == null || schedule['file_id'] == null)
+      return false;
+    if (day != _getDayOfWeek(now)) return false;
+
+    final parts = timeStart.split(':');
+    if (parts.length != 2) return false;
+
+    return now.hour == int.parse(parts[0]) && now.minute == int.parse(parts[1]);
+  }
+
+  String _getDayOfWeek(DateTime now) {
+    const days = [
       'senin',
       'selasa',
       'rabu',
@@ -84,12 +87,17 @@ class ScheduleService {
       'sabtu',
       'minggu',
     ];
-    final weekday = DateTime.now().weekday;
-    return days[weekday - 1];
+    return days[now.weekday - 1];
+  }
+
+  Future<void> addSchedule(Map<String, dynamic> scheduleData) async {
+    await _ref.push().set(scheduleData);
+    print("📅 Jadwal baru ditambahkan: $scheduleData");
   }
 
   void dispose() {
     _timer?.cancel();
     _audioService.dispose();
+    print("🛑 ScheduleService dihentikan.");
   }
 }
