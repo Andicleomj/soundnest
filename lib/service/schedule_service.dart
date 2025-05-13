@@ -4,7 +4,7 @@ import 'g_drive_audio_service.dart';
 
 class ScheduleService {
   final DatabaseReference _ref = FirebaseDatabase.instance.ref(
-    'devices/device_01/schedule_001',
+    'devices/devices_01/schedule_001',
   );
   final GoogleDriveAudioService _audioService = GoogleDriveAudioService();
   Timer? _timer;
@@ -26,6 +26,7 @@ class ScheduleService {
       final snapshot = await _ref.get();
       if (snapshot.exists && snapshot.value is Map) {
         return (snapshot.value as Map).values
+            .expand((e) => (e as Map).values)
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
       }
@@ -70,12 +71,16 @@ class ScheduleService {
     if (day == null || timeStart == null || schedule['file_id'] == null) {
       return false;
     }
+
     if (day != _getDayOfWeek(now)) return false;
 
     final parts = timeStart.split(':');
     if (parts.length != 2) return false;
 
-    return now.hour == int.parse(parts[0]) && now.minute == int.parse(parts[1]);
+    final scheduleHour = int.tryParse(parts[0]);
+    final scheduleMinute = int.tryParse(parts[1]);
+
+    return now.hour == scheduleHour && now.minute == scheduleMinute;
   }
 
   String _getDayOfWeek(DateTime now) {
