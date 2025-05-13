@@ -59,6 +59,8 @@ class ScheduleService {
     final fileId = schedule['file_id'];
     if (fileId == null) return;
 
+    print("🎶 Memutar audio dari Google Drive dengan ID: $fileId");
+
     _isAudioPlaying = true;
     await _audioService.playFromGoogleDrive(fileId);
     _isAudioPlaying = false;
