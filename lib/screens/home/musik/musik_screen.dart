@@ -11,22 +11,16 @@ class MusicScreen extends StatelessWidget {
         backgroundColor: Colors.blue,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(16.0),
         child: GridView.builder(
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 3 / 2,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1.4,
           ),
-          itemCount: 4,
+          itemCount: categories.length,
           itemBuilder: (context, index) {
-            final categories = [
-              'Musik Religi',
-              'Musik Tradisional',
-              'Musik Modern',
-              'Instrumental',
-            ];
             return _buildCategoryCard(context, categories[index]);
           },
         ),
@@ -35,22 +29,16 @@ class MusicScreen extends StatelessWidget {
   }
 
   Widget _buildCategoryCard(BuildContext context, String category) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CategoryDetailScreen(category: category),
-          ),
-        );
-      },
+    return SizedBox(
+      height: 80,
       child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 3,
+        color: Colors.blue.shade50,
         child: Center(
           child: Text(
             category,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
         ),
@@ -59,19 +47,19 @@ class MusicScreen extends StatelessWidget {
   }
 }
 
-class CategoryDetailScreen extends StatelessWidget {
-  final String category;
-
-  const CategoryDetailScreen({Key? key, required this.category})
-    : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(category), backgroundColor: Colors.blue),
-      body: Center(
-        child: Text('Daftar musik untuk $category akan ditampilkan di sini.'),
-      ),
-    );
-  }
-}
+const List<String> categories = [
+  'Masa Adaptasi Sekolah',
+  'Aku Suka Olahraga',
+  'My Family',
+  'Bumi Planet',
+  'Hari Kemerdekaan',
+  'Ramadhan',
+  'Manasik Haji',
+  'Budaya Sunda',
+  'Batik',
+  'Mother Day',
+  'Hewan',
+  'Guruku Tersayang',
+  'Profesi',
+  'Kendaraan',
+];
