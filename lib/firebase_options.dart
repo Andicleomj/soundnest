@@ -7,7 +7,7 @@ class DefaultFirebaseOptions {
   static const FirebaseOptions currentPlatform = android;
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyB9jwIptytxYZAkh8LjdNsaRak4vPP1wC',
+    apiKey: 'AIzaSyDywdoot5ID1lXKG1wQPTioxENmgJsJ3pM',
     appId: '1:307643391567:android:02b4ee9aecf759d220943a',
     messagingSenderId: '307643391567',
     projectId: 'databaseta-108d5',
