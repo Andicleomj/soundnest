@@ -10,7 +10,7 @@ class DaftarJadwal extends StatefulWidget {
 
 class _DaftarJadwalState extends State<DaftarJadwal> {
   final DatabaseReference _ref = FirebaseDatabase.instance.ref(
-    'devices/devices_01/schedule_001/-Nxyz12345',
+    'devices/devices_01/schedule_001',
   );
 
   @override
