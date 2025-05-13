@@ -1,26 +1,43 @@
 import 'package:flutter/material.dart';
-import 'package:soundnest/service/schedule_service.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class DaftarJadwal extends StatefulWidget {
   const DaftarJadwal({super.key});
 
   @override
-  State<DaftarJadwal> createState() => _DaftarJadwalState();
+  _DaftarJadwalState createState() => _DaftarJadwalState();
 }
 
 class _DaftarJadwalState extends State<DaftarJadwal> {
-  final ScheduleService _scheduleService = ScheduleService();
+  final DatabaseReference _ref = FirebaseDatabase.instance.ref(
+    'devices/device_01/schedule_001',
+  );
+  List<Map<String, dynamic>> _schedules = [];
 
   @override
   void initState() {
     super.initState();
-    _scheduleService.start();
+    _loadSchedules();
   }
 
-  @override
-  void dispose() {
-    _scheduleService.dispose();
-    super.dispose();
+  Future<void> _loadSchedules() async {
+    final snapshot = await _ref.get();
+    if (snapshot.exists) {
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+      setState(() {
+        _schedules =
+            data.entries
+                .map(
+                  (e) => {"key": e.key, ...Map<String, dynamic>.from(e.value)},
+                )
+                .toList();
+      });
+    }
+  }
+
+  Future<void> _toggleSchedule(String key, bool isActive) async {
+    await _ref.child(key).update({"isActive": isActive});
+    _loadSchedules(); // Refresh list
   }
 
   @override
@@ -30,50 +47,25 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
         title: const Text("Daftar Jadwal"),
         backgroundColor: Colors.blueAccent,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Expanded(
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: _scheduleService.getSchedules(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  final schedules = snapshot.data ?? [];
-                  if (schedules.isEmpty) {
-                    return const Center(child: Text("Tidak ada jadwal."));
-                  }
-
-                  return ListView.builder(
-                    itemCount: schedules.length,
-                    itemBuilder: (context, index) {
-                      final schedule = schedules[index];
-                      return ListTile(
-                        title: Text(schedule["day"] ?? "Unknown"),
-                        subtitle: Text("Jam: ${schedule["time_start"] ?? "-"}"),
-                      );
-                    },
+      body:
+          _schedules.isEmpty
+              ? const Center(child: Text("Belum ada jadwal."))
+              : ListView.builder(
+                itemCount: _schedules.length,
+                itemBuilder: (context, index) {
+                  final schedule = _schedules[index];
+                  return ListTile(
+                    title: Text(schedule['name'] ?? 'Jadwal Tanpa Nama'),
+                    subtitle: Text("Waktu: ${schedule['time_start']}"),
+                    trailing: Switch(
+                      value: schedule['isActive'] ?? true,
+                      onChanged: (value) {
+                        _toggleSchedule(schedule['key'], value);
+                      },
+                    ),
                   );
                 },
               ),
-            ),
-            if (_scheduleService.isAudioPlaying)
-              const Padding(
-                padding: EdgeInsets.only(top: 16.0),
-                child: Text(
-                  "Audio sedang diputar...",
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
     );
   }
 }
