@@ -67,12 +67,12 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/Logo 1.png
+    - assets/bg home.jpg
     - assets/icons/bell.png
     - assets/icons/musik.png
     - assets/icons/murottal.png
     - assets/icons/pemberitahuan.png
     - assets/icons/volume.png
-    - assets/success.png
     - assets/config.json
     - assets/sounds/bell.mp3
 
