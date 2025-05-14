@@ -1,12 +1,13 @@
+// lib/musik/add_musik.dart
+
 import 'package:flutter/material.dart';
-import 'package:soundnest/service/music_service.dart'; // Import service yang sudah kita buat
+import 'package:soundnest/service/music_service.dart';
 
 class AddMusicScreen extends StatelessWidget {
   final TextEditingController categoryController = TextEditingController();
   final TextEditingController titleController = TextEditingController();
   final TextEditingController fileIdController = TextEditingController();
-  final MusicService musicService =
-      MusicService(); // Buat instance MusicService
+  final MusicService _musicService = MusicService();
 
   AddMusicScreen({super.key});
 
@@ -37,32 +38,15 @@ class AddMusicScreen extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
-                if (categoryController.text.isEmpty ||
-                    titleController.text.isEmpty ||
-                    fileIdController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Semua field harus diisi!')),
-                  );
-                  return;
-                }
-
-                try {
-                  await musicService.addMusic(
-                    category: categoryController.text.trim(),
-                    title: titleController.text.trim(),
-                    fileId: fileIdController.text.trim(),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Musik berhasil ditambahkan!'),
-                    ),
-                  );
-                  Navigator.pop(context);
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Gagal menambahkan musik.')),
-                  );
-                }
+                await _musicService.addMusic(
+                  category: categoryController.text,
+                  title: titleController.text,
+                  fileId: fileIdController.text,
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Musik berhasil ditambahkan!')),
+                );
+                Navigator.pop(context);
               },
               child: const Text('Simpan Musik'),
             ),
