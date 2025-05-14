@@ -11,13 +11,28 @@ Future<void> addMusic({
   required String title,
   required String fileId,
 }) async {
-  final categoryId = uuid.v4(); // UUID otomatis untuk kategori
-  final fileIdUuid = uuid.v4(); // UUID otomatis untuk file
+  final snapshot = await musicRef.once();
+  final categories = snapshot.snapshot.value as Map<dynamic, dynamic>? ?? {};
 
-  await musicRef.child(categoryId).set({
-    'name': category,
-    'files': {
-      fileIdUuid: {'title': title, 'file_id': fileId},
-    },
+  String? categoryId;
+
+  // Cek apakah kategori sudah ada
+  categories.forEach((key, value) {
+    if (value['name'] == category) {
+      categoryId = key;
+    }
+  });
+
+  if (categoryId == null) {
+    // Buat kategori baru jika tidak ada
+    categoryId = uuid.v4();
+    await musicRef.child(categoryId).set({'name': category, 'files': {}});
+  }
+
+  // Tambahkan file musik ke kategori
+  final fileIdUuid = uuid.v4();
+  await musicRef.child(categoryId).child('files').child(fileIdUuid).set({
+    'title': title,
+    'file_id': fileId,
   });
 }
