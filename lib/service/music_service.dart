@@ -11,25 +11,29 @@ Future<void> addMusic({
   required String title,
   required String fileId,
 }) async {
-  final snapshot = await musicRef.once();
-  final categories = snapshot.snapshot.value as Map<dynamic, dynamic>? ?? {};
-
-  String? categoryId;
-
   // Cek apakah kategori sudah ada
-  categories.forEach((key, value) {
-    if (value['name'] == category) {
-      categoryId = key;
-    }
-  });
+  final snapshot = await musicRef.once();
+  Map<dynamic, dynamic>? categories =
+      snapshot.snapshot.value as Map<dynamic, dynamic>?;
 
-  if (categoryId == null) {
-    // Buat kategori baru jika tidak ada
+  String categoryId = '';
+
+  if (categories != null) {
+    // Cek apakah kategori sudah ada di Firebase
+    categories.forEach((key, value) {
+      if (value['name'] == category) {
+        categoryId = key;
+      }
+    });
+  }
+
+  // Jika kategori belum ada, buat kategori baru dengan UUID
+  if (categoryId.isEmpty) {
     categoryId = uuid.v4();
     await musicRef.child(categoryId).set({'name': category, 'files': {}});
   }
 
-  // Tambahkan file musik ke kategori
+  // Tambahkan file musik ke kategori yang sudah ada atau baru
   final fileIdUuid = uuid.v4();
   await musicRef.child(categoryId).child('files').child(fileIdUuid).set({
     'title': title,
