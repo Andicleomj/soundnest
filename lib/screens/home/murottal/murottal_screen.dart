@@ -6,9 +6,21 @@ class MurottalScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // Background putih
       appBar: AppBar(
         title: const Text('Kategori Murottal'),
-        backgroundColor: Colors.blue,
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -55,16 +67,32 @@ class MurottalScreen extends StatelessWidget {
 class MurottalCategoryScreen extends StatelessWidget {
   final String category;
 
-  const MurottalCategoryScreen({Key? key, required this.category})
-    : super(key: key);
+  const MurottalCategoryScreen({Key? key, required this.category}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(category), backgroundColor: Colors.blue),
+      backgroundColor: Colors.white, // Background putih
+      appBar: AppBar(
+        title: Text(category),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+      ),
       body: Center(
         child: Text(
           'Daftar murottal untuk $category akan ditampilkan di sini.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 16),
         ),
       ),
     );
