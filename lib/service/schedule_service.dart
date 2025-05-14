@@ -17,10 +17,11 @@ class ScheduleService {
 
   void start() {
     _timer?.cancel();
-    _timer = Timer.periodic(
-      const Duration(minutes: 1),
-      (_) => checkAndRunSchedule(),
-    );
+    _ref.onValue.listen((event) {
+      if (event.snapshot.exists) {
+        checkAndRunSchedule();
+      }
+    });
     print("✅ ScheduleService started.");
   }
 
@@ -39,37 +40,43 @@ class ScheduleService {
   }
 
   Future<void> checkAndRunSchedule() async {
+    if (_isAudioPlaying) return;
+
     print("⏰ Mengecek jadwal...");
     final now = DateTime.now();
     final schedules = await getSchedules();
-    print("📅 Jumlah jadwal ditemukan: ${schedules.length}");
 
     for (var schedule in schedules) {
       if (!(schedule['isActive'] ?? false)) continue;
       if (!_isScheduleValid(schedule, now)) continue;
 
       await _runScheduledAudio(schedule);
-      print("✅ Audio dijalankan.");
     }
   }
 
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
+    if (_isAudioPlaying) return;
+
     final fileId = schedule['file_id'];
     if (fileId == null) return;
 
     final proxyUrl = "http://localhost:3000/stream/$fileId";
     print("🔗 URL: $proxyUrl");
 
-    _isAudioPlaying = true;
-    await _playerService.playMusicFromProxy(fileId);
-    _isAudioPlaying = false;
-
-    print("🎶 Audio dimainkan sesuai jadwal: ${schedule['time_start']}.");
+    try {
+      _isAudioPlaying = true;
+      await _playerService.playMusicFromProxy(fileId);
+      print("🎶 Audio dimainkan sesuai jadwal: ${schedule['time_start']}.");
+    } catch (e) {
+      print("❌ Error saat memutar audio: $e");
+    } finally {
+      _isAudioPlaying = false;
+    }
   }
 
   bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
-    final day = schedule['day']?.toLowerCase();
-    final timeStart = schedule['time_start'];
+    final day = schedule['day']?.toString().toLowerCase();
+    final timeStart = schedule['time_start']?.toString();
 
     if (day == null || timeStart == null) return false;
     if (day != _getDayOfWeek(now)) return false;
@@ -77,7 +84,11 @@ class ScheduleService {
     final parts = timeStart.split(':');
     if (parts.length != 2) return false;
 
-    return now.hour == int.parse(parts[0]) && now.minute == int.parse(parts[1]);
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) return false;
+
+    return now.hour == hour && now.minute == minute;
   }
 
   String _getDayOfWeek(DateTime now) {

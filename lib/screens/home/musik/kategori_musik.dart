@@ -1,63 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:soundnest/screens/home/musik/daftar_musik.dart';
-import 'package:soundnest/service/music_service.dart';
+import 'package:firebase_database/firebase_database.dart';
 
-class KategoriMusikScreen extends StatefulWidget {
-  const KategoriMusikScreen({super.key});
+class MusikKategoriScreen extends StatelessWidget {
+  final String category;
 
-  @override
-  State<KategoriMusikScreen> createState() => _KategoriMusikScreenState();
-}
-
-class _KategoriMusikScreenState extends State<KategoriMusikScreen> {
-  final MusicService _musicService = MusicService();
-  List<Map<String, dynamic>> categories = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCategories();
-  }
-
-  void _loadCategories() async {
-    final loadedCategories = await _musicService.getAllCategories();
-    setState(() => categories = loadedCategories);
-  }
-
-  void _navigateToAddCategory() {
-    Navigator.pushNamed(context, '/add_musik').then((_) => _loadCategories());
-  }
-
-  void _navigateToCategory(String categoryId) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DaftarMusikScreen(categoryId: categoryId),
-      ),
-    );
-  }
+  const MusikKategoriScreen({super.key, required this.category});
 
   @override
   Widget build(BuildContext context) {
+    final DatabaseReference filesRef = FirebaseDatabase.instance.ref(
+      'devices/devices_01/music/categories/$category/files',
+    );
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kategori Musik'),
-        actions: [
-          IconButton(
-            onPressed: _navigateToAddCategory,
-            icon: const Icon(Icons.add),
-          ),
-        ],
-      ),
-      body: ListView.builder(
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-          final category = categories[index];
-          return ListTile(
-            title: Text(category['name']),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () => _navigateToCategory(category['id']),
-          );
+      appBar: AppBar(title: Text("Musik: $category")),
+      body: StreamBuilder(
+        stream: filesRef.onValue,
+        builder: (context, snapshot) {
+          if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
+            final files = Map<String, dynamic>.from(
+              snapshot.data!.snapshot.value as Map,
+            );
+            return ListView(
+              children:
+                  files.values.map((file) {
+                    return ListTile(
+                      title: Text(file['title'] ?? 'Unknown Title'),
+                      subtitle: Text(file['file_id'] ?? 'No File ID'),
+                    );
+                  }).toList(),
+            );
+          }
+          return const Center(child: Text("Tidak ada musik."));
         },
       ),
     );
