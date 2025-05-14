@@ -18,9 +18,23 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("Daftar Jadwal"),
-        backgroundColor: Colors.blue,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
       ),
       body: StreamBuilder(
         stream: _ref.onValue,
@@ -43,6 +57,7 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
             }
 
             return ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 10),
               itemCount: schedules.length,
               itemBuilder: (context, index) {
                 final entry = schedules[index];
@@ -53,19 +68,56 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
                 switchStates[key] =
                     switchStates[key] ?? (schedule['isActive'] ?? false);
 
-                return ListTile(
-                  title: Text("Jadwal ${index + 1}"),
-                  subtitle: Text(
-                    "${schedule['day']} - ${schedule['time_start']}",
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  trailing: Switch(
-                    value: switchStates[key] ?? false,
-                    onChanged: (value) {
-                      setState(() {
-                        switchStates[key] = value;
-                      });
-                      _ref.child(key).update({'isActive': value});
-                    },
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Jadwal ${index + 1}",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              schedule['time_start'] ?? '',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "${schedule['type']} : ${schedule['content'] ?? ''}",
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.center,
+                        child: Switch(
+                          value: switchStates[key] ?? false,
+                          onChanged: (value) {
+                            setState(() {
+                              switchStates[key] = value;
+                            });
+                            _ref.child(key).update({'isActive': value});
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 );
               },

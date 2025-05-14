@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:soundnest/screens/scheduule/penjadwalan_murottal.dart';
+import 'package:soundnest/screens/home/murottal/murottal_screen.dart';
 import 'package:soundnest/screens/scheduule/penjadwalan_musik.dart';
-import 'daftar_jadwal.dart';
+
 
 class ScheduleScreen extends StatelessWidget {
   const ScheduleScreen({super.key});
@@ -9,6 +9,7 @@ class ScheduleScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -27,7 +28,11 @@ class ScheduleScreen extends StatelessWidget {
             ),
           ),
         ),
-        title: const Text("Penjadwalan", style: TextStyle(color: Colors.black)),
+        title: const Text(
+          "Penjadwalan",
+          style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black),
+          
+        ),
         centerTitle: true,
       ),
       body: Padding(
@@ -38,16 +43,14 @@ class ScheduleScreen extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const PenjadwalanMusik(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const PenjadwalanMusik()),
                 );
               },
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Text("Musik"),
@@ -58,37 +61,17 @@ class ScheduleScreen extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const MurottalScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const MurottalScreen()),
                 );
               },
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Text("Murottal Al-Qur’an"),
-              ),
-            ),
-            const SizedBox(height: 10),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const DaftarJadwal()),
-                );
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text("Daftar Jadwal"),
               ),
             ),
           ],
@@ -110,20 +93,14 @@ class ScheduleScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.home, color: Colors.white),
-                Text(
-                  "Home",
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
+                Text("Home", style: TextStyle(color: Colors.white, fontSize: 12)),
               ],
             ),
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.schedule, color: Colors.white),
-                Text(
-                  "Penjadwalan",
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
+                Text("Penjadwalan", style: TextStyle(color: Colors.white, fontSize: 12)),
               ],
             ),
           ],
@@ -132,4 +109,3 @@ class ScheduleScreen extends StatelessWidget {
     );
   }
 }
-// apa 
