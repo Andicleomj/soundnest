@@ -13,91 +13,105 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
+      body: Stack(
         children: [
-          const SizedBox(height: 40),
-          // Logo
-          Center(
-            child: Image.asset('assets/Logo 1.png', width: 200, height: 200),
+          // Background Image
+          Positioned.fill(
+            child: Image.asset('assets/bg home.jpg', fit: BoxFit.cover),
           ),
 
-          const SizedBox(height: 20),
+          // Foreground Content
+          Column(
+            children: [
+              const SizedBox(height: 70),
 
-          // Grid Menu
-          Expanded(
-            child: GridView.count(
-              padding: const EdgeInsets.symmetric(horizontal: 30),
-              crossAxisCount: 3,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
-              children: [
-                MenuItem(
-                  icon: 'assets/icons/bell.png',
-                  label: "Bel",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const BellScreen(),
-                      ),
-                    );
-                  },
+              // Logo
+              Center(
+                child: Image.asset(
+                  'assets/Logo 1.png',
+                  width: 200,
+                  height: 200,
                 ),
-                MenuItem(
-                  icon: 'assets/icons/musik.png',
-                  label: "Musik",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MusicScreen(),
-                      ),
-                    );
-                  },
+              ),
+
+              const SizedBox(height: 20),
+
+              // Grid Menu
+              Expanded(
+                child: GridView.count(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  crossAxisCount: 3,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 20,
+                  children: [
+                    MenuItem(
+                      icon: 'assets/icons/bell.png',
+                      label: "Bel",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const BellScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    MenuItem(
+                      icon: 'assets/icons/musik.png',
+                      label: "Musik",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MusicScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    MenuItem(
+                      icon: 'assets/icons/murottal.png',
+                      label: "Murottal\nAl-qur'an",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MurottalScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    MenuItem(
+                      icon: 'assets/icons/pemberitahuan.png',
+                      label: "Pemberitahuan",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    MenuItem(
+                      icon: 'assets/icons/volume.png',
+                      label: "Volume",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const VolumeScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
-                MenuItem(
-                  icon: 'assets/icons/murottal.png',
-                  label: "Murottal\nAl-qur'an",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MurottalScreen(),
-                      ),
-                    );
-                  },
-                ),
-                MenuItem(
-                  icon: 'assets/icons/pemberitahuan.png',
-                  label: "Pemberitahuan",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const NotificationScreen(),
-                      ),
-                    );
-                  },
-                ),
-                MenuItem(
-                  icon: 'assets/icons/volume.png',
-                  label: "Volume",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const VolumeScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
+              ),
+
+              // Custom Bottom Navigation Bar
+              CustomNavBar(),
+            ],
           ),
-
-          // Custom Bottom Navigation Bar
-          CustomNavBar(),
         ],
       ),
     );
