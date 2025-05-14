@@ -1,13 +1,19 @@
+// lib/screens/home/musik/daftar_musik.dart
+
 import 'package:flutter/material.dart';
 import 'package:soundnest/service/music_service.dart';
 
 class DaftarMusikScreen extends StatefulWidget {
   final String categoryId;
+  final String categoryName;
 
-  const DaftarMusikScreen({super.key, required this.categoryId});
+  const DaftarMusikScreen({
+    required this.categoryId,
+    required this.categoryName,
+  });
 
   @override
-  State<DaftarMusikScreen> createState() => _DaftarMusikScreenState();
+  _DaftarMusikScreenState createState() => _DaftarMusikScreenState();
 }
 
 class _DaftarMusikScreenState extends State<DaftarMusikScreen> {
@@ -17,30 +23,29 @@ class _DaftarMusikScreenState extends State<DaftarMusikScreen> {
   @override
   void initState() {
     super.initState();
-    _loadMusic();
+    loadMusic();
   }
 
-  void _loadMusic() async {
+  Future<void> loadMusic() async {
     final loadedMusic = await _musicService.getMusicByCategory(
       widget.categoryId,
     );
-    setState(() => musicList = loadedMusic);
+    setState(() {
+      musicList = loadedMusic;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Daftar Musik')),
+      appBar: AppBar(title: Text("Musik - ${widget.categoryName}")),
       body: ListView.builder(
         itemCount: musicList.length,
         itemBuilder: (context, index) {
           final music = musicList[index];
           return ListTile(
             title: Text(music['title']),
-            trailing: const Icon(Icons.play_arrow),
-            onTap: () {
-              // Logika play music menggunakan proxy
-            },
+            subtitle: Text(music['file_id']),
           );
         },
       ),
