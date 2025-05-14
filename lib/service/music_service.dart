@@ -1,42 +1,67 @@
+// lib/service/music_service.dart
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:uuid/uuid.dart';
 
-final DatabaseReference musicRef = FirebaseDatabase.instance.ref(
-  'devices/devices_01/music/categories',
-);
-final uuid = Uuid();
+class MusicService {
+  final DatabaseReference musicRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/music/categories',
+  );
 
-Future<void> addMusic({
-  required String category,
-  required String title,
-  required String fileId,
-}) async {
-  // Cek apakah kategori sudah ada
-  final snapshot = await musicRef.once();
-  Map<dynamic, dynamic>? categories =
-      snapshot.snapshot.value as Map<dynamic, dynamic>?;
+  final Uuid _uuid = Uuid();
 
-  String categoryId = '';
+  Future<void> addCategory(String categoryName) async {
+    final snapshot = await musicRef.get();
+    final categories = (snapshot.value as Map<dynamic, dynamic>? ?? {});
 
-  if (categories != null) {
-    // Cek apakah kategori sudah ada di Firebase
-    categories.forEach((key, value) {
-      if (value['name'] == category) {
-        categoryId = key;
-      }
+    // Cek apakah kategori sudah ada
+    if (categories.values.any((cat) => cat['name'] == categoryName)) {
+      print("⚠️ Kategori sudah ada");
+      return;
+    }
+
+    // Tambahkan kategori baru dengan UUID sebagai ID
+    final newCategoryId = _uuid.v4();
+    await musicRef.child(newCategoryId).set({
+      'name': categoryName,
+      'files': {},
     });
+
+    print("✅ Kategori berhasil ditambahkan ke Firebase");
   }
 
-  // Jika kategori belum ada, buat kategori baru dengan UUID
-  if (categoryId.isEmpty) {
-    categoryId = uuid.v4();
-    await musicRef.child(categoryId).set({'name': category, 'files': {}});
-  }
+  Future<void> addMusic({
+    required String category,
+    required String title,
+    required String fileId,
+  }) async {
+    final snapshot = await musicRef.get();
+    final categories = (snapshot.value as Map<dynamic, dynamic>? ?? {});
 
-  // Tambahkan file musik ke kategori yang sudah ada atau baru
-  final fileIdUuid = uuid.v4();
-  await musicRef.child(categoryId).child('files').child(fileIdUuid).set({
-    'title': title,
-    'file_id': fileId,
-  });
+    // Cari ID kategori atau buat kategori baru
+    String? categoryId =
+        categories.entries
+            .firstWhere(
+              (entry) => entry.value['name'] == category,
+              orElse: () {
+                final newCategoryId = _uuid.v4();
+                musicRef.child(newCategoryId).set({
+                  'name': category,
+                  'files': {},
+                });
+                print("✅ Kategori baru dibuat: $category");
+                return MapEntry(newCategoryId, {'name': category, 'files': {}});
+              },
+            )
+            .key;
+
+    // Tambahkan musik ke kategori dalam node files
+    final newFileId = _uuid.v4();
+    await musicRef.child('$categoryId/files/$newFileId').set({
+      'title': title,
+      'file_id': fileId,
+    });
+
+    print("✅ Musik berhasil ditambahkan ke kategori: $category");
+  }
 }
