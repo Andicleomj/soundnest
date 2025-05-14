@@ -12,6 +12,7 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _obscurePassword = true; // Untuk toggle show/hide password
 
   @override
   void dispose() {
@@ -37,7 +38,7 @@ class _LoginState extends State<Login> {
       Navigator.pushReplacementNamed(context, AppRoutes.home);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text("Login gagal"),
           backgroundColor: Colors.redAccent,
         ),
@@ -78,8 +79,21 @@ class _LoginState extends State<Login> {
             const Text("Password"),
             TextField(
               controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(border: UnderlineInputBorder()),
+              obscureText: _obscurePassword,
+              decoration: InputDecoration(
+                border: const UnderlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                ),
+              ),
             ),
             const SizedBox(height: 10),
             Align(
