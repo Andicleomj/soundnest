@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:soundnest/firebase_options.dart';
 import 'package:soundnest/service/schedule_service.dart';
-// Import MusicPlayerService
 import 'package:soundnest/screens/home/musik/musik_screen.dart'; // Import MusicScreen
 import 'package:soundnest/utils/app_routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
