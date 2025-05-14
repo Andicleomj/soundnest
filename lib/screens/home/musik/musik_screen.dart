@@ -35,8 +35,9 @@ class _MusicScreenState extends State<MusicScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Ganti background jadi putih
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: true,
         title: const Text('Kategori Musik'),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -61,13 +62,33 @@ class _MusicScreenState extends State<MusicScreen> {
         itemBuilder: (context, index) {
           return Card(
             margin: const EdgeInsets.all(8.0),
-            child: ListTile(
-              title: Text(_categories[index]['name']),
-              subtitle: Column(
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Baris: Nama Kategori & Tombol Tambah
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _categories[index]['name'],
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () => _showAddMusicDialog(index),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Daftar Musik
                   ..._categories[index]['files'].map<Widget>((file) {
                     return ListTile(
+                      contentPadding: EdgeInsets.zero,
                       title: Text(file['title']),
                       trailing: IconButton(
                         icon: const Icon(Icons.play_arrow),
@@ -76,10 +97,6 @@ class _MusicScreenState extends State<MusicScreen> {
                     );
                   }).toList(),
                 ],
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: () => _showAddMusicDialog(index),
               ),
             ),
           );
