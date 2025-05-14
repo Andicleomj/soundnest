@@ -9,8 +9,17 @@ class MusicPlayerService {
     print("🎶 Playing music from: $proxyUrl");
   }
 
+  Future<void> play(String url) async {
+    await _audioPlayer.play(UrlSource(url));
+    print("🎶 Playing music from: $url");
+  }
+
   Future<void> stopMusic() async {
     await _audioPlayer.stop();
     print("🛑 Music stopped.");
+  }
+
+  void dispose() {
+    _audioPlayer.dispose();
   }
 }
