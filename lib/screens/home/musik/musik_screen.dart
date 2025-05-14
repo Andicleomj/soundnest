@@ -8,7 +8,6 @@ class MusicScreen extends StatefulWidget {
   _MusicScreenState createState() => _MusicScreenState();
 }
 
-//up
 class _MusicScreenState extends State<MusicScreen> {
   final MusicPlayerService _musicPlayerService = MusicPlayerService();
 
@@ -36,9 +35,20 @@ class _MusicScreenState extends State<MusicScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // Ganti background jadi putih
       appBar: AppBar(
         title: const Text('Kategori Musik'),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -82,23 +92,22 @@ class _MusicScreenState extends State<MusicScreen> {
     String newCategory = '';
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Tambah Kategori'),
-            content: TextField(
-              onChanged: (value) => newCategory = value,
-              decoration: const InputDecoration(hintText: 'Nama Kategori'),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  if (newCategory.isNotEmpty) _addCategory(newCategory);
-                },
-                child: const Text('Tambah'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Tambah Kategori'),
+        content: TextField(
+          onChanged: (value) => newCategory = value,
+          decoration: const InputDecoration(hintText: 'Nama Kategori'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              if (newCategory.isNotEmpty) _addCategory(newCategory);
+            },
+            child: const Text('Tambah'),
           ),
+        ],
+      ),
     );
   }
 
@@ -108,36 +117,35 @@ class _MusicScreenState extends State<MusicScreen> {
 
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Tambah Musik'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  onChanged: (value) => title = value,
-                  decoration: const InputDecoration(hintText: 'Judul Musik'),
-                ),
-                TextField(
-                  onChanged: (value) => fileId = value,
-                  decoration: const InputDecoration(
-                    hintText: 'File ID Google Drive',
-                  ),
-                ),
-              ],
+      builder: (context) => AlertDialog(
+        title: const Text('Tambah Musik'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              onChanged: (value) => title = value,
+              decoration: const InputDecoration(hintText: 'Judul Musik'),
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  if (title.isNotEmpty && fileId.isNotEmpty) {
-                    _addMusic(index, title, fileId);
-                  }
-                },
-                child: const Text('Tambah'),
+            TextField(
+              onChanged: (value) => fileId = value,
+              decoration: const InputDecoration(
+                hintText: 'File ID Google Drive',
               ),
-            ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              if (title.isNotEmpty && fileId.isNotEmpty) {
+                _addMusic(index, title, fileId);
+              }
+            },
+            child: const Text('Tambah'),
           ),
+        ],
+      ),
     );
   }
 }

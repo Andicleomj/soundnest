@@ -44,9 +44,9 @@ class _VolumeScreenState extends State<VolumeScreen> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.white, Colors.blue],
-              begin: Alignment.topLeft,
-              end: Alignment.topRight,
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
           ),
         ),
