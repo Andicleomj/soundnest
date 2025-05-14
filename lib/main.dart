@@ -3,6 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:soundnest/firebase_options.dart';
 import 'package:soundnest/service/schedule_service.dart';
 import 'package:soundnest/screens/home/musik/musik_screen.dart'; // Import MusicScreen
+import 'package:soundnest/screens/home/musik/musik_kategori.dart'; // Import MusikKategoriScreen
+import 'package:soundnest/screens/home/musik/daftar_musik.dart'; // Import DaftarMusikScreen
 import 'package:soundnest/utils/app_routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -38,9 +40,11 @@ class MyApp extends StatelessWidget {
               : AppRoutes.home,
       routes: {
         ...AppRoutes.getRoutes(),
-        '/music':
-            (context) =>
-                const MusicScreen(), // Tambahkan MusicScreen sebagai route
+        '/music': (context) => const MusicScreen(),
+        '/music/category':
+            (context) => MusicCategoryScreen(), // Sesuaikan dengan nama baru
+        '/music/list':
+            (context) => DaftarMusikScreen(categoryId: '', categoryName: ''),
       },
     );
   }
