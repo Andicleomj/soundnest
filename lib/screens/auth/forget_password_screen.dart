@@ -1,5 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:soundnest/utils/app_routes.dart';
 
 class ForgetPasswordScreen extends StatefulWidget {
   const ForgetPasswordScreen({super.key});
@@ -11,27 +11,50 @@ class ForgetPasswordScreen extends StatefulWidget {
 class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   final TextEditingController _emailController = TextEditingController();
 
-  void _sendCode() {
+  // Fungsi untuk mengirimkan email reset password
+  Future<void> _sendResetPasswordEmail() async {
     String email = _emailController.text.trim();
+
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter your email")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Please enter your email")));
       return;
     }
 
-    // Simulasi proses pengiriman kode
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Verification code sent to $email")),
-    );
-
-    // Navigasi ke halaman verifikasi kode
-    Navigator.pushNamed(context, AppRoutes.verifyCode);
+    try {
+      // Mengirimkan email reset password
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Password reset email sent to $email")),
+      );
+      // Navigasi atau aksi lain setelah email terkirim
+      Navigator.pop(context); // Navigasi kembali ke halaman sebelumnya
+    } catch (e) {
+      String errorMessage = 'An error occurred. Please try again later.';
+      if (e is FirebaseAuthException) {
+        switch (e.code) {
+          case 'invalid-email':
+            errorMessage = 'The email address is not valid.';
+            break;
+          case 'user-not-found':
+            errorMessage = 'No user found for that email.';
+            break;
+          default:
+            errorMessage = 'Error: ${e.message}';
+            break;
+        }
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage)));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white, // Mengubah background menjadi putih
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -46,12 +69,12 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Forgot password",
+              "Forgot Password",
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 5),
             const Text(
-              "Please enter your email to receive a verification code",
+              "Please enter your email to receive a password reset link.",
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 20),
@@ -71,7 +94,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _sendCode,
+                onPressed: _sendResetPasswordEmail,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue[100],
                   padding: const EdgeInsets.symmetric(vertical: 15),
@@ -80,8 +103,11 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                   ),
                 ),
                 child: const Text(
-                  "Send Code",
-                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                  "Reset Password",
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),

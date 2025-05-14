@@ -3,21 +3,18 @@ import 'package:audioplayers/audioplayers.dart';
 class GoogleDriveAudioService {
   final AudioPlayer _audioPlayer = AudioPlayer();
 
-  Future<void> playFromGoogleDrive(String fileId) async {
-    final url = 'https://drive.google.com/uc?id=$fileId&export=open';
-    print("🔗 Memutar audio dari Google Drive dengan ID: $fileId");
-    print("🔗 URL: $url");
-
+  Future<void> playFromUrl(String url) async {
+    print("🎶 Memutar audio dari URL langsung: $url");
     try {
       await _audioPlayer.play(UrlSource(url));
-      print("✅ Audio dimainkan dari URL: $url");
+      print("✅ Audio dari URL langsung dimainkan.");
     } catch (e) {
-      print("❌ Error saat memutar audio: $e");
+      print("❌ Gagal memutar audio: $e");
     }
   }
 
   void dispose() {
     _audioPlayer.dispose();
-    print("🛑 GoogleDriveAudioService dihentikan.");
+    print("🔴 GoogleDriveAudioService dihentikan.");
   }
 }
