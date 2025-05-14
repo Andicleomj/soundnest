@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:soundnest/service/g_drive_audio_service.dart';
+import 'package:soundnest/service/music_service.dart';
+import 'package:soundnest/service/music_player_service.dart';
 
 class ScheduleService {
   final DatabaseReference _ref = FirebaseDatabase.instance.ref(
     'devices/devices_01/schedule_001',
   );
-  final GoogleDriveAudioService _audioService = GoogleDriveAudioService();
+  final MusicService _musicService = MusicService();
+  final MusicPlayerService _playerService = MusicPlayerService();
+
   Timer? _timer;
   bool _isAudioPlaying = false;
 
@@ -45,15 +48,12 @@ class ScheduleService {
       if (!(schedule['isActive'] ?? false)) continue;
       if (!_isScheduleValid(schedule, now)) continue;
 
-      await _runScheduledAudio(schedule, now);
+      await _runScheduledAudio(schedule);
       print("✅ Audio dijalankan.");
     }
   }
 
-  Future<void> _runScheduledAudio(
-    Map<String, dynamic> schedule,
-    DateTime now,
-  ) async {
+  Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
     final fileId = schedule['file_id'];
     if (fileId == null) return;
 
@@ -61,7 +61,7 @@ class ScheduleService {
     print("🔗 URL: $proxyUrl");
 
     _isAudioPlaying = true;
-    await _audioService.playFromUrl(proxyUrl);
+    await _playerService.playMusicFromProxy(fileId);
     _isAudioPlaying = false;
 
     print("🎶 Audio dimainkan sesuai jadwal: ${schedule['time_start']}.");
@@ -95,7 +95,7 @@ class ScheduleService {
 
   void dispose() {
     _timer?.cancel();
-    _audioService.dispose();
+    _playerService.stopMusic();
     print("🛑 ScheduleService dihentikan.");
   }
 }
