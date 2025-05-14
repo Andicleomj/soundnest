@@ -5,6 +5,8 @@ class AddMusicScreen extends StatelessWidget {
   final TextEditingController categoryController = TextEditingController();
   final TextEditingController titleController = TextEditingController();
   final TextEditingController fileIdController = TextEditingController();
+  final MusicService musicService =
+      MusicService(); // Buat instance MusicService
 
   AddMusicScreen({super.key});
 
@@ -35,15 +37,32 @@ class AddMusicScreen extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
-                await addMusic(
-                  category: categoryController.text,
-                  title: titleController.text,
-                  fileId: fileIdController.text,
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Musik berhasil ditambahkan!')),
-                );
-                Navigator.pop(context);
+                if (categoryController.text.isEmpty ||
+                    titleController.text.isEmpty ||
+                    fileIdController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Semua field harus diisi!')),
+                  );
+                  return;
+                }
+
+                try {
+                  await musicService.addMusic(
+                    category: categoryController.text.trim(),
+                    title: titleController.text.trim(),
+                    fileId: fileIdController.text.trim(),
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Musik berhasil ditambahkan!'),
+                    ),
+                  );
+                  Navigator.pop(context);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Gagal menambahkan musik.')),
+                  );
+                }
               },
               child: const Text('Simpan Musik'),
             ),
