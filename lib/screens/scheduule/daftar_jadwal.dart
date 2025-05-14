@@ -20,7 +20,10 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Daftar Jadwal"),
+        title: const Text(
+          "Daftar Jadwal",
+        style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black),
+        ),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),

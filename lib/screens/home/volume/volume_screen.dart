@@ -34,7 +34,10 @@ class _VolumeScreenState extends State<VolumeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Volume"),
+        title: const Text(
+          "Volume",
+        style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,

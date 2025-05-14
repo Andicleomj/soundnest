@@ -27,7 +27,13 @@ class _BellScreenState extends State<BellScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Bel"),
+        title: const Text(
+          "Bel",
+        style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),

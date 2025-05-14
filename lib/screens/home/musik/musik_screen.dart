@@ -38,7 +38,10 @@ class _MusicScreenState extends State<MusicScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         centerTitle: true,
-        title: const Text('Kategori Musik'),
+        title: const Text(
+          'Kategori Musik',
+        style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         flexibleSpace: Container(

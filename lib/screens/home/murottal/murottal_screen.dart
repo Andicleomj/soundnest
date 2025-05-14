@@ -8,7 +8,10 @@ class MurottalScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white, // Background putih
       appBar: AppBar(
-        title: const Text('Kategori Murottal'),
+        title: const Text(
+          'Kategori Murottal',
+          style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black),
+          ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,

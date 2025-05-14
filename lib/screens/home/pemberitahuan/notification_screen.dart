@@ -23,7 +23,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Pemberitahuan"),
+        title: const Text(
+          "Pemberitahuan",
+        style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black),
+        ),
+        
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
