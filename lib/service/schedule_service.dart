@@ -42,7 +42,7 @@ class ScheduleService {
     print("📅 Jumlah jadwal ditemukan: ${schedules.length}");
 
     for (var schedule in schedules) {
-      if (!schedule['isActive']) continue;
+      if (!(schedule['isActive'] ?? false)) continue;
       if (!_isScheduleValid(schedule, now)) continue;
 
       await _runScheduledAudio(schedule, now);
@@ -57,8 +57,11 @@ class ScheduleService {
     final fileId = schedule['file_id'];
     if (fileId == null) return;
 
+    final proxyUrl = "http://localhost:3000/stream/$fileId";
+    print("🔗 URL: $proxyUrl");
+
     _isAudioPlaying = true;
-    await _audioService.playFromGoogleDrive(fileId);
+    await _audioService.playFromUrl(proxyUrl);
     _isAudioPlaying = false;
 
     print("🎶 Audio dimainkan sesuai jadwal: ${schedule['time_start']}.");
