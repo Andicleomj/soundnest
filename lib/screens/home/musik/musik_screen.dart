@@ -17,7 +17,7 @@ class MusicScreen extends StatelessWidget {
             crossAxisCount: 2,
             mainAxisSpacing: 8,
             crossAxisSpacing: 8,
-            childAspectRatio: 1.4,
+            childAspectRatio: 1.8,
           ),
           itemCount: categories.length,
           itemBuilder: (context, index) {
@@ -30,10 +30,10 @@ class MusicScreen extends StatelessWidget {
 
   Widget _buildCategoryCard(BuildContext context, String category) {
     return SizedBox(
-      height: 25,
+      height: 80,
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 3,
+        elevation: 2,
         color: Colors.blue.shade50,
         child: Center(
           child: Text(
