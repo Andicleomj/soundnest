@@ -65,7 +65,7 @@ class _HewanScreenState extends State<HewanScreen> {
 
   void togglePlayPause(int index) async {
     final fileId = musicList[index]['file_id'];
-    final url = 'http://192.168.110.224:3000/stream/$fileId';
+    final url = 'http://localhost:3000/stream/$fileId';
 
     // Jika sedang memainkan surah yang sama → PAUSE
     if (isPlaying && currentIndex == index) {
