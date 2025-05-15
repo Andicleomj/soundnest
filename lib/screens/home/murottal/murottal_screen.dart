@@ -1,17 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:soundnest/screens/home/murottal/surah_screen.dart';
 
 class MurottalScreen extends StatelessWidget {
   const MurottalScreen({Key? key}) : super(key: key);
 
+  String getPathFromCategory(String category) {
+    switch (category) {
+      case 'Surah Pendek':
+        return 'Surah Pendek';  // sesuaikan path Firebase kamu
+      case 'Juz Amma':
+        return 'Juz Amma';
+      case 'Surah Pilihan':
+        return 'Surah Pilihan';
+      case 'Al-Qur\'an Lengkap':
+        return 'Al-Quran Lengkap';
+      default:
+        return 'Surah Pendek';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Background putih
+      backgroundColor: Colors.white, 
       appBar: AppBar(
         title: const Text(
           'Kategori Murottal',
-          style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black),
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -45,10 +61,15 @@ class MurottalScreen extends StatelessWidget {
   Widget _buildCategoryCard(BuildContext context, String category) {
     return GestureDetector(
       onTap: () {
+        final path = getPathFromCategory(category);
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => MurottalCategoryScreen(category: category),
+            builder: (context) => SurahScreen(
+            categoryPath: path,
+            categoryName: category,
+          ),
+
           ),
         );
       },
@@ -61,41 +82,6 @@ class MurottalScreen extends StatelessWidget {
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class MurottalCategoryScreen extends StatelessWidget {
-  final String category;
-
-  const MurottalCategoryScreen({Key? key, required this.category}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white, // Background putih
-      appBar: AppBar(
-        title: Text(category),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.white],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
-      ),
-      body: Center(
-        child: Text(
-          'Daftar murottal untuk $category akan ditampilkan di sini.',
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 16),
         ),
       ),
     );

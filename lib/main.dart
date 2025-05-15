@@ -3,11 +3,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:soundnest/firebase_options.dart';
 import 'package:soundnest/screens/auth/auth_check.dart';
 import 'package:soundnest/service/schedule_service.dart';
+import 'package:soundnest/screens/home/murottal/jadwal_surah_service.dart';
 import 'package:soundnest/screens/home/musik/musik_screen.dart';
 import 'package:soundnest/screens/home/musik/musik_kategori.dart';
 import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/utils/app_routes.dart';
 
+late final JadwalSurahService jadwalSurahService;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,10 +18,16 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   print("✅ Firebase berhasil diinisialisasi.");
 
+  // Jadwal musik
   final scheduleService = ScheduleService();
   scheduleService.start();
   scheduleService.checkAndRunSchedule();
   print("✅ ScheduleService berhasil dijalankan.");
+
+  // Jadwal surah otomatis
+  jadwalSurahService = JadwalSurahService();
+  jadwalSurahService.startChecking();
+  print("✅ JadwalSurahService berhasil dijalankan.");
 
   runApp(MyApp(scheduleService: scheduleService));
 }
@@ -27,21 +35,20 @@ void main() async {
 class MyApp extends StatelessWidget {
   final ScheduleService scheduleService;
 
-  const MyApp({super.key, required this.scheduleService});
+  const MyApp({Key? key, required this.scheduleService}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SoundNest',
       debugShowCheckedModeBanner: false,
-      initialRoute: '/', 
+      initialRoute: '/',
       routes: {
-        '/': (context) => const AuthCheck(), 
+        '/': (context) => const AuthCheck(),
         ...AppRoutes.getRoutes(),
         '/music': (context) => const MusicScreen(),
         '/music/category': (context) => MusicCategoryScreen(),
-        '/music/list': (context) =>
-            DaftarMusikScreen(categoryId: '', categoryName: ''),
+        '/music/list': (context) => DaftarMusikScreen(categoryId: '', categoryName: ''),
       },
     );
   }
