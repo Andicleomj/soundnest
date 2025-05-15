@@ -111,7 +111,7 @@ class MusicScreen extends StatelessWidget {
           categoryName: category,
         );
         break;
-      case 'Olahraga':
+      case 'Aku Suka Olahraga':
         categoryPath = 'devices/devices_01/music/categories/kategori_003/files';
         screen = OlahragaScreen(
           categoryPath: categoryPath,
