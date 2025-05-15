@@ -84,25 +84,42 @@ class _FamilyScreenState extends State<FamilyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.categoryName), centerTitle: true),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : ListView.builder(
-                itemCount: familyList.length,
-                itemBuilder: (context, index) {
-                  final music = familyList[index];
-                  final isCurrent = currentIndex == index && isPlaying;
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          'My Family',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: familyList.length,
+              itemBuilder: (context, index) {
+                final music = familyList[index];
+                final isCurrent = currentIndex == index && isPlaying;
 
-                  return ListTile(
-                    title: Text(music['title']),
-                    trailing: IconButton(
-                      icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
-                      onPressed: () => togglePlay(index),
-                    ),
-                  );
-                },
-              ),
+                return ListTile(
+                  title: Text(music['title']),
+                  trailing: IconButton(
+                    icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
+                    onPressed: () => togglePlay(index),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
