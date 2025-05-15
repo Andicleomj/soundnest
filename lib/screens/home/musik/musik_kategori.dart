@@ -1,145 +1,94 @@
-// lib/screens/home/musik/music_category_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:soundnest/service/music_file_management.dart';
-import 'package:soundnest/screens/home/musik/daftar_musik.dart';
-import 'package:soundnest/utils/app_routes.dart';
 
-class MusicCategoryScreen extends StatefulWidget {
-  const MusicCategoryScreen({super.key});
+class MusikKategoriScreen extends StatefulWidget {
+  final String kategori;
+
+  const MusikKategoriScreen({Key? key, required this.kategori})
+    : super(key: key);
 
   @override
-  State<MusicCategoryScreen> createState() => _MusicCategoryScreenState();
+  _MusikKategoriScreenState createState() => _MusikKategoriScreenState();
 }
 
-class _MusicCategoryScreenState extends State<MusicCategoryScreen> {
-  final DatabaseReference _musicRef = FirebaseDatabase.instance.ref(
-    'devices/devices_01/music/categories',
-  );
-  Map<String, dynamic> _categories = {};
-  bool _isLoading = true;
+class _MusikKategoriScreenState extends State<MusikKategoriScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _fileIdController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    _loadCategories();
-  }
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref('music');
 
-  Future<void> _loadCategories() async {
-    final snapshot = await _musicRef.get();
-    if (snapshot.exists) {
-      setState(() {
-        _categories = Map<String, dynamic>.from(snapshot.value as Map);
-        _isLoading = false;
-      });
-    }
-  }
+  void _addMusic() {
+    if (_formKey.currentState!.validate()) {
+      final title = _titleController.text.trim();
+      final fileId = _fileIdController.text.trim();
 
-  void _navigateToCategory(String categoryId, String categoryName) {
-    Navigator.pushNamed(
-      context,
-      AppRoutes.daftarMusik, // Sesuaikan dengan route yang kamu buat
-      arguments: {'categoryId': categoryId, 'categoryName': categoryName},
-    );
-  }
-
-  void _showAddMusicDialog() async {
-    String? selectedCategory;
-    String title = '';
-    String fileId = '';
-
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Tambah Musik"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                value: selectedCategory,
-                items:
-                    _categories.keys.map((key) {
-                      return DropdownMenuItem(
-                        value: key,
-                        child: Text(_categories[key]['name'] ?? 'Unknown'),
-                      );
-                    }).toList(),
-                onChanged: (value) {
-                  selectedCategory = value;
-                },
-                decoration: const InputDecoration(labelText: "Kategori"),
-              ),
-              TextField(
-                onChanged: (value) => title = value,
-                decoration: const InputDecoration(labelText: "Judul Musik"),
-              ),
-              TextField(
-                onChanged: (value) => fileId = value,
-                decoration: const InputDecoration(labelText: "File ID"),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Batal"),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                if (selectedCategory != null &&
-                    title.isNotEmpty &&
-                    fileId.isNotEmpty) {
-                  _addNewFile(selectedCategory!, title, fileId);
-                }
-              },
-              child: const Text("Tambah"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _addNewFile(String categoryId, String title, String fileId) async {
-    final success = await MusicFileManagement.addFileToCategory(
-      categoryId,
-      fileId,
-      title,
-    );
-
-    if (success) {
-      print("✅ Musik berhasil ditambahkan.");
-      _loadCategories(); // Refresh UI
-    } else {
-      print("❌ Gagal menambahkan musik.");
+      _dbRef
+          .child(widget.kategori)
+          .push()
+          .set({'title': title, 'file_id': fileId})
+          .then((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Musik berhasil ditambahkan.')),
+            );
+            _titleController.clear();
+            _fileIdController.clear();
+          })
+          .catchError((error) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Gagal menambahkan musik: $error')),
+            );
+          });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Kategori Musik")),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : ListView.builder(
-                itemCount: _categories.length,
-                itemBuilder: (context, index) {
-                  final entry = _categories.entries.elementAt(index);
-                  return ListTile(
-                    title: Text(entry.value['name'] ?? 'Unknown'),
-                    trailing: const Icon(Icons.arrow_forward_ios),
-                    onTap:
-                        () =>
-                            _navigateToCategory(entry.key, entry.value['name']),
-                  );
-                },
+      appBar: AppBar(title: Text('Musik - ${widget.kategori}')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Tambah Musik untuk ${widget.kategori}',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 16),
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _titleController,
+                    decoration: InputDecoration(labelText: 'Judul Musik'),
+                    validator:
+                        (value) =>
+                            value!.isEmpty ? 'Judul tidak boleh kosong' : null,
+                  ),
+                  SizedBox(height: 8),
+                  TextFormField(
+                    controller: _fileIdController,
+                    decoration: InputDecoration(
+                      labelText: 'File ID (Google Drive)',
+                    ),
+                    validator:
+                        (value) =>
+                            value!.isEmpty
+                                ? 'File ID tidak boleh kosong'
+                                : null,
+                  ),
+                  SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _addMusic,
+                    child: const Text('Tambahkan Musik'),
+                  ),
+                ],
               ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddMusicDialog,
-        child: const Icon(Icons.add),
+            ),
+          ],
+        ),
       ),
     );
   }
