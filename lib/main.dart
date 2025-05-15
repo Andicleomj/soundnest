@@ -8,7 +8,6 @@ import 'package:soundnest/screens/home/musik/musik_kategori.dart';
 import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/utils/app_routes.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   print("🔧 Menginisialisasi Firebase...");
@@ -34,14 +33,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'SoundNest',
       debugShowCheckedModeBanner: false,
-      initialRoute: '/', 
+      initialRoute: '/',
       routes: {
-        '/': (context) => const AuthCheck(), 
+        '/': (context) => const AuthCheck(),
         ...AppRoutes.getRoutes(),
-        '/music': (context) => const MusicScreen(),
-        '/music/category': (context) => MusicCategoryScreen(),
-        '/music/list': (context) =>
-            DaftarMusikScreen(categoryId: '', categoryName: ''),
+        '/kategori': (context) => const MusikKategoriScreen(),
       },
     );
   }
