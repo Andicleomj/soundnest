@@ -19,7 +19,7 @@ class KendaraanScreen extends StatefulWidget {
 class _KendaraanScreenState extends State<KendaraanScreen> {
   late DatabaseReference databaseRef;
   final AudioPlayer _audioPlayer = AudioPlayer();
-  List<Map<String, dynamic>> musicList = [];
+  List<Map<String, dynamic>> motorList = [];
   bool isLoading = true;
   int currentIndex = -1;
   bool isPlaying = false;
@@ -38,7 +38,7 @@ class _KendaraanScreenState extends State<KendaraanScreen> {
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-        musicList =
+        motorList =
             data.entries.map((e) {
               final value = e.value as Map<dynamic, dynamic>;
               return {
@@ -55,7 +55,7 @@ class _KendaraanScreenState extends State<KendaraanScreen> {
   }
 
   void togglePlayPause(int index) async {
-    final fileId = musicList[index]['file_id'];
+    final fileId = motorList[index]['file_id'];
     final url = 'http://localhost:3000/stream/$fileId';
 
     if (isPlaying && currentIndex == index) {
@@ -89,9 +89,9 @@ class _KendaraanScreenState extends State<KendaraanScreen> {
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : ListView.builder(
-                itemCount: musicList.length,
+                itemCount: motorList.length,
                 itemBuilder: (context, index) {
-                  final music = musicList[index];
+                  final music = motorList[index];
                   final isCurrent = currentIndex == index && isPlaying;
 
                   return ListTile(
