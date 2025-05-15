@@ -4,9 +4,6 @@ import 'package:soundnest/firebase_options.dart';
 import 'package:soundnest/screens/auth/auth_check.dart';
 import 'package:soundnest/service/schedule_service.dart';
 import 'package:soundnest/screens/home/musik/musik_screen.dart';
-import 'package:soundnest/screens/home/musik/musik_kategori.dart';
-import 'package:soundnest/screens/home/musik/daftar_musik.dart';
-import 'package:soundnest/utils/app_routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,8 +30,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'SoundNest',
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
-      routes: {'/': (context) => const AuthCheck(), ...AppRoutes.getRoutes()},
+      initialRoute: '/music',
+      routes: {
+        '/': (context) => const AuthCheck(),
+        '/music': (context) => const MusikKategoriScreen(),
+      },
     );
   }
 }
