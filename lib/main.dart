@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:soundnest/firebase_options.dart';
+import 'package:soundnest/screens/auth/auth_check.dart';
 import 'package:soundnest/service/schedule_service.dart';
-import 'package:soundnest/screens/home/musik/musik_screen.dart'; // Import MusicScreen
-import 'package:soundnest/screens/home/musik/musik_kategori.dart'; // Import MusikKategoriScreen
-import 'package:soundnest/screens/home/musik/daftar_musik.dart'; // Import DaftarMusikScreen
+import 'package:soundnest/screens/home/musik/musik_screen.dart';
+import 'package:soundnest/screens/home/musik/musik_kategori.dart';
+import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/utils/app_routes.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +16,6 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   print("✅ Firebase berhasil diinisialisasi.");
 
-  // Inisialisasi ScheduleService
   final scheduleService = ScheduleService();
   scheduleService.start();
   scheduleService.checkAndRunSchedule();
@@ -34,17 +34,14 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'SoundNest',
       debugShowCheckedModeBanner: false,
-      initialRoute:
-          FirebaseAuth.instance.currentUser == null
-              ? AppRoutes.login
-              : AppRoutes.home,
+      initialRoute: '/', 
       routes: {
+        '/': (context) => const AuthCheck(), 
         ...AppRoutes.getRoutes(),
         '/music': (context) => const MusicScreen(),
-        '/music/category':
-            (context) => MusicCategoryScreen(), // Sesuaikan dengan nama baru
-        '/music/list':
-            (context) => DaftarMusikScreen(categoryId: '', categoryName: ''),
+        '/music/category': (context) => MusicCategoryScreen(),
+        '/music/list': (context) =>
+            DaftarMusikScreen(categoryId: '', categoryName: ''),
       },
     );
   }
