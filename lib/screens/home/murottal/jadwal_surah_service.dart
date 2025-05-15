@@ -18,7 +18,7 @@ class JadwalSurahService {
         for (var item in data.values) {
           if (item['jam'] == now) {
             final fileId = item['fileId'];
-            final url = 'http://192.168.110.224:3000/stream/$fileId';
+            final url = 'http://localhost:3000/stream/$fileId';
             print('Memutar: $url');
             try {
               await _audioPlayer.play(UrlSource(url));
