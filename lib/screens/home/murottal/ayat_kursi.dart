@@ -4,7 +4,7 @@ import 'package:audioplayers/audioplayers.dart';
 
 class AyatKursi extends StatefulWidget {
   final String categoryPath;
-  final String categoryName; 
+  final String categoryName;
 
   const AyatKursi({
     Key? key,
@@ -21,56 +21,69 @@ class _AyatKursiState extends State<AyatKursi> {
   final AudioPlayer _audioPlayer = AudioPlayer();
   List<Map<String, dynamic>> surahList = [];
   bool isLoading = true;
-  int currentIndex = -1;
+  int? currentIndex;
+  bool isPlaying = false;
 
   @override
   void initState() {
     super.initState();
-    databaseRef = FirebaseDatabase.instance.ref('devices/devices_01/murottal/categories/kategori_2/files');
+    databaseRef = FirebaseDatabase.instance.ref(widget.categoryPath);
     fetchSurahData();
   }
 
   void fetchSurahData() async {
     final snapshot = await databaseRef.get();
     if (snapshot.exists) {
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
-      setState(() {
-        surahList = data.entries.map((e) {
-          final value = e.value as Map<dynamic, dynamic>;
-          return {
-            'title': value['title'] ?? 'Tidak ada judul',
-            'fileId': value['fileId'] ?? '',
-          };
-        }).toList();
-        isLoading = false;
-      });
+      try {
+        final data = Map<String, dynamic>.from(snapshot.value as Map);
+        final List<Map<String, dynamic>> tempList = [];
+
+        data.forEach((key, value) {
+          if (value is Map && value.containsKey('title') && value.containsKey('fileId')) {
+            tempList.add({
+              'title': value['title'],
+              'fileId': value['fileId'],
+            });
+          }
+        });
+
+        setState(() {
+          surahList = tempList;
+          isLoading = false;
+        });
+      } catch (e) {
+        print('❌ Gagal parsing data: $e');
+        setState(() => isLoading = false);
+      }
     } else {
-      setState(() {
-        isLoading = false;
-      });
-      print('Data di path ${widget.categoryPath} tidak ditemukan di database.');
+      print('⚠️ Data tidak ditemukan di path: ${widget.categoryPath}');
+      setState(() => isLoading = false);
     }
   }
 
-  void playSurah(int index) async {
+  void togglePlay(int index) async {
     final fileId = surahList[index]['fileId'];
-    final url = 'http://192.168.110.224:3000/stream/$fileId'; 
+    final url = 'http://192.168.110.224:3000/stream/$fileId';
 
-    await _audioPlayer.stop();
-
-    try {
+    // Jika sedang memainkan surah yang sama → PAUSE
+    if (isPlaying && currentIndex == index) {
+      await _audioPlayer.pause();
+      setState(() => isPlaying = false);
+    }
+    // Jika sedang tidak memainkan atau berpindah surah → PLAY
+    else {
+      await _audioPlayer.stop();
       await _audioPlayer.play(UrlSource(url));
       setState(() {
         currentIndex = index;
+        isPlaying = true;
       });
 
       _audioPlayer.onPlayerComplete.listen((event) {
-        if (currentIndex + 1 < surahList.length) {
-          playSurah(currentIndex + 1);
-        }
+        setState(() {
+          isPlaying = false;
+        });
       });
-    } catch (e) {
-      print('❌ Gagal memutar audio: $e');
     }
   }
 
@@ -107,11 +120,13 @@ class _AyatKursiState extends State<AyatKursi> {
                   itemCount: surahList.length,
                   itemBuilder: (context, index) {
                     final surah = surahList[index];
+                    final isCurrent = currentIndex == index && isPlaying;
+
                     return ListTile(
                       title: Text(surah['title']),
                       trailing: IconButton(
-                        icon: const Icon(Icons.play_arrow),
-                        onPressed: () => playSurah(index),
+                        icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
+                        onPressed: () => togglePlay(index),
                       ),
                     );
                   },
