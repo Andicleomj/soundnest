@@ -3,6 +3,8 @@ import 'package:soundnest/screens/home/musik/Olahraga_screen.dart';
 import 'package:soundnest/screens/home/musik/hewan_screen.dart';
 import 'package:soundnest/screens/home/musik/kendaraan_screen.dart';
 import 'package:soundnest/screens/home/musik/profesi_screen.dart';
+import 'package:soundnest/screens/home/musik/adaptasi_screen.dart';
+import 'package:soundnest/screens/home/musik/family_screen.dart';
 
 class MusicScreen extends StatelessWidget {
   const MusicScreen({super.key});
@@ -126,6 +128,21 @@ class MusicScreen extends StatelessWidget {
           categoryName: category,
         );
         break;
+      case 'Masa Adaptasi Sekolah':
+        categoryPath = 'devices/devices_01/music/categories/kategori_004/files';
+        screen = AdaptasiScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+        );
+        break;
+      case 'My Family':
+        categoryPath = 'devices/devices_01/music/categories/kategori_005/files';
+        screen = FamilyScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+        );
+        break;
+
       default:
         throw Exception('Kategori tidak dikenal: $category');
     }
