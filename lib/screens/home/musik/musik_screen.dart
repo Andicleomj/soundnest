@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:soundnest/screens/home/musik/Olahraga_screen.dart';
 import 'package:soundnest/screens/home/musik/hewan_screen.dart';
 import 'package:soundnest/screens/home/musik/kendaraan_screen.dart';
+import 'package:soundnest/screens/home/musik/profesi_screen.dart';
 
 class MusicScreen extends StatelessWidget {
   const MusicScreen({super.key});
@@ -114,6 +115,13 @@ class MusicScreen extends StatelessWidget {
       case 'Aku Suka Olahraga':
         categoryPath = 'devices/devices_01/music/categories/kategori_003/files';
         screen = OlahragaScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+        );
+        break;
+      case 'Profesi':
+        categoryPath = 'devices/devices_01/music/categories/kategori_013/files';
+        screen = ProfesiScreen(
           categoryPath: categoryPath,
           categoryName: category,
         );
