@@ -27,7 +27,9 @@ class _HewanScreenState extends State<HewanScreen> {
   @override
   void initState() {
     super.initState();
-    databaseRef = FirebaseDatabase.instance.ref(widget.categoryPath);
+    databaseRef = FirebaseDatabase.instance.ref(
+      'devices/devices_01/music/categories/kategori_001/files',
+    );
     fetchMusicData();
   }
 
@@ -82,7 +84,9 @@ class _HewanScreenState extends State<HewanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.categoryName)),
+      appBar: AppBar(
+        title: Text('devices/devices_01/music/categories/kategori_001/files'),
+      ),
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
