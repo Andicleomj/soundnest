@@ -7,12 +7,11 @@ class MurottalScreen extends StatelessWidget {
   String getPathFromCategory(String category) {
     switch (category) {
       case 'Surah Pendek':
-        return 'Surah Pendek'; 
+        return 'Surah Pendek';
       case 'Ayat Kursi':
         return 'Ayat Kursi';
       default:
         return 'Surah Pendek';
-      
     }
   }
 
