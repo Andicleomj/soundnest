@@ -54,7 +54,7 @@ class _KendaraanScreenState extends State<KendaraanScreen> {
     }
   }
 
-  void togglePlayPause(int index) async {
+  void togglePlay(int index) async {
     final fileId = motorList[index]['file_id'];
     final url = 'http://localhost:3000/stream/$fileId';
 
@@ -98,7 +98,7 @@ class _KendaraanScreenState extends State<KendaraanScreen> {
                     title: Text(music['title']),
                     trailing: IconButton(
                       icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
-                      onPressed: () => togglePlayPause(index),
+                      onPressed: () => togglePlay(index),
                     ),
                   );
                 },
