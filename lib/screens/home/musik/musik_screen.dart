@@ -9,6 +9,9 @@ import 'package:soundnest/screens/home/musik/bumi_screen.dart';
 import 'package:soundnest/screens/home/musik/hari_screen.dart';
 import 'package:soundnest/screens/home/musik/ramadhan_screen.dart';
 import 'package:soundnest/screens/home/musik/haji_screen.dart';
+import 'package:soundnest/screens/home/musik/mama_screen.dart';
+import 'package:soundnest/screens/home/musik/sunda_screen.dart';
+import 'package:soundnest/screens/home/musik/guru_screen.dart';
 
 class MusicScreen extends StatelessWidget {
   const MusicScreen({super.key});
@@ -164,6 +167,21 @@ class MusicScreen extends StatelessWidget {
       case 'Manasik Haji':
         categoryPath = 'devices/devices_01/music/categories/kategori_009/files';
         screen = HajiScreen(categoryPath: categoryPath, categoryName: category);
+        break;
+      case 'Mother Day':
+        categoryPath = 'devices/devices_01/music/categories/kategori_010/files';
+        screen = MamaScreen(categoryPath: categoryPath, categoryName: category);
+        break;
+      case 'Budaya Sunda':
+        categoryPath = 'devices/devices_01/music/categories/kategori_011/files';
+        screen = SundaScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+        );
+        break;
+      case 'Guruku Tersayang':
+        categoryPath = 'devices/devices_01/music/categories/kategori_012/files';
+        screen = GuruScreen(categoryPath: categoryPath, categoryName: category);
         break;
 
       default:
