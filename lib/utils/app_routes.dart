@@ -8,7 +8,8 @@ import 'package:soundnest/screens/scheduule/schedule.dart';
 import 'package:soundnest/screens/home/dashboard_screen.dart';
 import 'package:soundnest/screens/scheduule/schedule_screen.dart';
 import 'package:soundnest/screens/splash_screen.dart';
-import 'package:soundnest/screens/home/musik/daftar_musik.dart'; // Import DaftarMusikScreen
+import 'package:soundnest/screens/home/musik/daftar_musik.dart';
+import 'package:soundnest/screens/home/musik/musik_kategori.dart';
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -20,8 +21,8 @@ class AppRoutes {
   static const String dashboard = '/dashboard';
   static const String schedule = "/schedule";
   static const String daftarJadwal = "/jadwal";
-  static const String daftarMusik =
-      "/music/category"; // Tambahkan route untuk daftar musik per kategori
+  static const String musikKategori = "/music/kategori-list";
+  static const String daftarMusik = "/music/category";
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -34,11 +35,17 @@ class AppRoutes {
       dashboard: (context) => const DashboardScreen(),
       schedule: (context) => const Schedule(),
       daftarJadwal: (context) => const DaftarJadwal(),
-      daftarMusik:
-          (context) => const DaftarMusikScreen(
-            categoryId: '',
-            categoryName: '',
-          ), // Tambahkan route daftar musik
+      musikKategori: (context) => const MusicCategoryScreen(),
+      daftarMusik: (context) {
+        final args = ModalRoute.of(context)?.settings.arguments as Map?;
+        final String categoryId = args?['categoryId'] ?? '';
+        final String categoryName = args?['categoryName'] ?? '';
+
+        return DaftarMusikScreen(
+          categoryId: categoryId,
+          categoryName: categoryName,
+        );
+      },
     };
   }
 }
