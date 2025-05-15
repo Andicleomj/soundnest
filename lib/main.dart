@@ -46,7 +46,8 @@ class MyApp extends StatelessWidget {
         '/': (context) => const AuthCheck(),
         ...AppRoutes.getRoutes(),
         '/music': (context) => const MusicScreen(),
-        '/music/list': (context) => DaftarMusikScreen(categoryId: '', categoryName: ''),
+        '/music/list':
+            (context) => DaftarMusikScreen(categoryId: '', categoryName: ''),
       },
     );
   }
