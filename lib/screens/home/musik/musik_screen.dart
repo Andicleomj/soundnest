@@ -1,32 +1,66 @@
 import 'package:flutter/material.dart';
-import 'package:soundnest/screens/home/musik/musik_kategori.dart';
+import 'package:firebase_database/firebase_database.dart';
 
-class MusicScreen extends StatelessWidget {
-  final List<String> categories = [
-    'Masa Adaptasi Sekolah',
-    'Hari Besar Nasional',
-    'Olahraga',
-    'Kesenian',
-  ];
+class MusicScreen extends StatefulWidget {
+  const MusicScreen({Key? key}) : super(key: key);
+
+  @override
+  _MusicScreenState createState() => _MusicScreenState();
+}
+
+class _MusicScreenState extends State<MusicScreen> {
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/music/categories',
+  );
+
+  List<Map<String, String>> _categories = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  void _loadCategories() async {
+    final snapshot = await _dbRef.get();
+    if (snapshot.exists && snapshot.value is Map) {
+      setState(() {
+        _categories =
+            (snapshot.value as Map).entries
+                .map((e) {
+                  final value = e.value;
+                  if (value is Map && value.containsKey('nama')) {
+                    return {
+                      'id': e.key.toString(),
+                      'nama': value['nama'] ?? 'Kategori Tanpa Nama',
+                    };
+                  }
+                  return null;
+                })
+                .whereType<Map<String, String>>()
+                .toList();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Daftar Kategori Musik')),
+      appBar: AppBar(title: const Text('Kategori Musik')),
       body: ListView.builder(
-        itemCount: categories.length,
+        itemCount: _categories.length,
         itemBuilder: (context, index) {
+          final category = _categories[index];
           return ListTile(
-            title: Text(categories[index]),
-            trailing: const Icon(Icons.arrow_forward),
+            title: Text(category['nama'] ?? 'Kategori Tanpa Nama'),
             onTap: () {
-              Navigator.push(
+              Navigator.pushNamed(
                 context,
-                MaterialPageRoute(
-                  builder:
-                      (context) =>
-                          MusikKategoriScreen(kategori: categories[index]),
-                ),
+                '/daftar',
+                arguments: {
+                  'categoryId': category['id'],
+                  'categoryName': category['nama'],
+                },
               );
             },
           );
