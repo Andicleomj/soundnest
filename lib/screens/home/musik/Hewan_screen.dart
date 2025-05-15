@@ -95,7 +95,7 @@ class _HewanScreenState extends State<HewanScreen> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.greenAccent, Colors.white],
+              colors: [Color.fromARGB(255, 67, 193, 243), Colors.white],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
