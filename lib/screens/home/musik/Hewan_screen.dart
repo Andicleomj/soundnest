@@ -31,13 +31,6 @@ class _HewanScreenState extends State<HewanScreen> {
       'devices/devices_01/music/categories/kategori_001/files',
     );
     fetchMusicData();
-
-    _audioPlayer.onPlayerComplete.listen((event) {
-      setState(() {
-        isPlaying = false;
-        currentIndex = -1;
-      });
-    });
   }
 
   void fetchMusicData() async {
@@ -80,6 +73,12 @@ class _HewanScreenState extends State<HewanScreen> {
         currentIndex = index;
         isPlaying = true;
       });
+
+      _audioPlayer.onPlayerComplete.listen((event) {
+        setState(() {
+          isPlaying = false;
+        });
+      });
     }
   }
 
@@ -117,10 +116,12 @@ class _HewanScreenState extends State<HewanScreen> {
                 itemCount: musicList.length,
                 itemBuilder: (context, index) {
                   final music = musicList[index];
+                  final isCurrent = currentIndex == index && isPlaying;
+
                   return ListTile(
                     title: Text(music['title']),
                     trailing: IconButton(
-                      icon: const Icon(Icons.play_arrow),
+                      icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
                       onPressed: () => togglePlayPause(index),
                     ),
                   );
