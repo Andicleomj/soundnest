@@ -1,70 +1,68 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
 
-class MusicScreen extends StatefulWidget {
-  const MusicScreen({Key? key}) : super(key: key);
-
-  @override
-  _MusicScreenState createState() => _MusicScreenState();
-}
-
-class _MusicScreenState extends State<MusicScreen> {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref(
-    'devices/devices_01/music/categories',
-  );
-
-  List<Map<String, String>> _categories = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCategories();
-  }
-
-  void _loadCategories() async {
-    final snapshot = await _dbRef.get();
-    if (snapshot.exists && snapshot.value is Map) {
-      setState(() {
-        _categories =
-            (snapshot.value as Map).entries
-                .map((e) {
-                  final value = e.value;
-                  if (value is Map && value.containsKey('nama')) {
-                    return {
-                      'id': e.key.toString(),
-                      'nama': value['nama'] ?? 'Kategori Tanpa Nama',
-                    };
-                  }
-                  return null;
-                })
-                .whereType<Map<String, String>>()
-                .toList();
-      });
-    }
-  }
+class MusicScreen extends StatelessWidget {
+  const MusicScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Kategori Musik')),
-      body: ListView.builder(
-        itemCount: _categories.length,
-        itemBuilder: (context, index) {
-          final category = _categories[index];
-          return ListTile(
-            title: Text(category['nama'] ?? 'Kategori Tanpa Nama'),
-            onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/daftar',
-                arguments: {
-                  'categoryId': category['id'],
-                  'categoryName': category['nama'],
-                },
-              );
-            },
-          );
-        },
+      appBar: AppBar(
+        title: const Text('Kategori Musik'),
+        backgroundColor: Colors.blue,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          children: [
+            _buildCategoryCard(context, 'Rock'),
+            _buildCategoryCard(context, 'Pop'),
+            _buildCategoryCard(context, 'Jazz'),
+            _buildCategoryCard(context, 'Klasik'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryCard(BuildContext context, String category) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MusicCategoryScreen(category: category),
+          ),
+        );
+      },
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 4,
+        child: Center(
+          child: Text(
+            category,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class MusicCategoryScreen extends StatelessWidget {
+  final String category;
+
+  const MusicCategoryScreen({super.key, required this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(category), backgroundColor: Colors.blue),
+      body: Center(
+        child: Text('Daftar musik untuk $category akan ditampilkan di sini.'),
       ),
     );
   }
