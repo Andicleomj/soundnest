@@ -1,19 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:soundnest/screens/home/murottal/surah_screen.dart';
+import 'package:soundnest/screens/home/murottal/ayat_kursi.dart';
 
 class MurottalScreen extends StatelessWidget {
   const MurottalScreen({Key? key}) : super(key: key);
-
-  String getPathFromCategory(String category) {
-    switch (category) {
-      case 'Surah Pendek':
-        return 'Surah Pendek';
-      case 'Ayat Kursi':
-        return 'Ayat Kursi';
-      default:
-        return 'Surah Pendek';
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,15 +45,29 @@ class MurottalScreen extends StatelessWidget {
   Widget _buildCategoryCard(BuildContext context, String category) {
     return GestureDetector(
       onTap: () {
-        final path = getPathFromCategory(category);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) =>
-                    SurahScreen(categoryPath: path, categoryName: category),
-          ),
-        );
+        if (category == 'Ayat Kursi') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AyatKursi(
+                categoryPath:
+                    'devices/devices_01/murottal/categories/Kategori_2/files',
+                categoryName: category,
+              ),
+            ),
+          );
+        } else {
+          // Default ke Surah Pendek
+          final path =
+              'devices/devices_01/murottal/categories/Kategori_1/files';
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  SurahScreen(categoryPath: path, categoryName: category),
+            ),
+          );
+        }
       },
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -3,8 +3,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class SurahScreen extends StatefulWidget {
-  final String categoryPath; // Path lengkap di Firebase Realtime Database
-  final String categoryName; // Nama kategori untuk judul AppBar
+  final String categoryPath; 
+  final String categoryName; 
 
   const SurahScreen({
     Key? key,
@@ -22,12 +22,21 @@ class _SurahScreenState extends State<SurahScreen> {
   List<Map<String, dynamic>> surahList = [];
   bool isLoading = true;
   int currentIndex = -1;
+  bool isPlaying = false;
 
   @override
   void initState() {
     super.initState();
-    databaseRef = FirebaseDatabase.instance.ref('devices/devices_01/murottal/categories/kategori_1/files');
+    // Gunakan categoryPath dari widget supaya dinamis
+    databaseRef = FirebaseDatabase.instance.ref('devices/devices_01/murottal/categories/kategori_1/files'); 
     fetchSurahData();
+
+    _audioPlayer.onPlayerComplete.listen((event) {
+      setState(() {
+        isPlaying = false;
+        currentIndex = -1;
+      });
+    });
   }
 
   void fetchSurahData() async {
@@ -52,25 +61,23 @@ class _SurahScreenState extends State<SurahScreen> {
     }
   }
 
-  void playSurah(int index) async {
+  void togglePlayPause(int index) async {
     final fileId = surahList[index]['fileId'];
-    final url = 'http://192.168.110.224:3000/stream/$fileId'; // Sesuaikan dengan URL servermu
+    final url = 'http://192.168.110.224:3000/stream/$fileId';
 
-    await _audioPlayer.stop();
-
-    try {
+    // Jika sedang memainkan surah yang sama → PAUSE
+    if (isPlaying && currentIndex == index) {
+      await _audioPlayer.pause();
+      setState(() => isPlaying = false);
+    }
+    // Jika sedang tidak memainkan atau berpindah surah → PLAY
+    else {
+      await _audioPlayer.stop();
       await _audioPlayer.play(UrlSource(url));
       setState(() {
         currentIndex = index;
+        isPlaying = true;
       });
-
-      _audioPlayer.onPlayerComplete.listen((event) {
-        if (currentIndex + 1 < surahList.length) {
-          playSurah(currentIndex + 1);
-        }
-      });
-    } catch (e) {
-      print('❌ Gagal memutar audio: $e');
     }
   }
 
@@ -107,11 +114,13 @@ class _SurahScreenState extends State<SurahScreen> {
                   itemCount: surahList.length,
                   itemBuilder: (context, index) {
                     final surah = surahList[index];
+                    final isCurrentPlaying = (currentIndex == index && isPlaying);
+
                     return ListTile(
                       title: Text(surah['title']),
                       trailing: IconButton(
-                        icon: const Icon(Icons.play_arrow),
-                        onPressed: () => playSurah(index),
+                        icon: Icon(isCurrentPlaying ? Icons.pause : Icons.play_arrow),
+                        onPressed: () => togglePlayPause(index),
                       ),
                     );
                   },
