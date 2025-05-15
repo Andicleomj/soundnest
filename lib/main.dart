@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const AuthCheck(),
         ...AppRoutes.getRoutes(),
-        '/kategori': (context) => const MusikKategoriScreen(),
+        '/kategori': (context) => const MusicCategoryScreen(),
       },
     );
   }
