@@ -5,7 +5,6 @@ import 'package:soundnest/screens/auth/auth_check.dart';
 import 'package:soundnest/service/schedule_service.dart';
 import 'package:soundnest/screens/home/murottal/jadwal_surah_service.dart';
 import 'package:soundnest/screens/home/musik/musik_screen.dart';
-import 'package:soundnest/screens/home/musik/musik_kategori.dart';
 import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/utils/app_routes.dart';
 
@@ -47,7 +46,6 @@ class MyApp extends StatelessWidget {
         '/': (context) => const AuthCheck(),
         ...AppRoutes.getRoutes(),
         '/music': (context) => const MusicScreen(),
-        '/music/category': (context) => MusicCategoryScreen(),
         '/music/list': (context) => DaftarMusikScreen(categoryId: '', categoryName: ''),
       },
     );

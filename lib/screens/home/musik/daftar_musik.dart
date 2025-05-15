@@ -1,51 +1,59 @@
-// lib/screens/home/musik/daftar_musik.dart
-
 import 'package:flutter/material.dart';
-import 'package:soundnest/service/music_service.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class DaftarMusikScreen extends StatefulWidget {
   final String categoryId;
   final String categoryName;
 
   const DaftarMusikScreen({
+    Key? key,
     required this.categoryId,
     required this.categoryName,
-  });
+  }) : super(key: key);
 
   @override
   _DaftarMusikScreenState createState() => _DaftarMusikScreenState();
 }
 
 class _DaftarMusikScreenState extends State<DaftarMusikScreen> {
-  final MusicService _musicService = MusicService();
-  List<Map<String, dynamic>> musicList = [];
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/music/categories',
+  );
+
+  List<Map<String, String>> _musicList = [];
 
   @override
   void initState() {
     super.initState();
-    loadMusic();
+    _loadMusicList();
   }
 
-  Future<void> loadMusic() async {
-    final loadedMusic = await _musicService.getMusicByCategory(
-      widget.categoryId,
-    );
-    setState(() {
-      musicList = loadedMusic;
-    });
+  void _loadMusicList() async {
+    final snapshot = await _dbRef.child(widget.categoryId).child('files').get();
+    if (snapshot.exists) {
+      final data = (snapshot.value as Map).values;
+      setState(() {
+        _musicList =
+            data
+                .map<Map<String, String>>(
+                  (e) => {'title': e['title'], 'file_id': e['file_id']},
+                )
+                .toList();
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Musik - ${widget.categoryName}")),
+      appBar: AppBar(title: Text('Musik - ${widget.categoryName}')),
       body: ListView.builder(
-        itemCount: musicList.length,
+        itemCount: _musicList.length,
         itemBuilder: (context, index) {
-          final music = musicList[index];
+          final music = _musicList[index];
           return ListTile(
-            title: Text(music['title']),
-            subtitle: Text(music['file_id']),
+            title: Text(music['title'] ?? 'Judul Tidak Diketahui'),
+            subtitle: Text('File ID: ${music['file_id']}'),
           );
         },
       ),

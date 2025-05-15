@@ -3,13 +3,13 @@ import 'package:soundnest/screens/auth/forget_password_screen.dart';
 import 'package:soundnest/screens/home/home_screen.dart';
 import 'package:soundnest/screens/auth/login_screen.dart';
 import 'package:soundnest/screens/auth/signup_screen.dart';
-import 'package:soundnest/screens/scheduule/daftar_jadwal.dart';
 import 'package:soundnest/screens/scheduule/schedule.dart';
 import 'package:soundnest/screens/home/dashboard_screen.dart';
 import 'package:soundnest/screens/scheduule/schedule_screen.dart';
 import 'package:soundnest/screens/splash_screen.dart';
 import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/screens/home/musik/musik_kategori.dart';
+import 'package:soundnest/screens/home/musik/add_musik.dart';
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -19,10 +19,11 @@ class AppRoutes {
   static const String signup = '/signup';
   static const String schedulescreen = '/schedule-screen';
   static const String dashboard = '/dashboard';
-  static const String schedule = "/schedule";
-  static const String daftarJadwal = "/jadwal";
-  static const String musikKategori = "/music/kategori-list";
-  static const String daftarMusik = "/music/category";
+  static const String schedule = '/schedule';
+  static const String daftarJadwal = '/jadwal';
+  static const String musikKategori = '/kategori';
+  static const String daftarMusik = '/daftar';
+  static const String addMusik = '/add';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -34,12 +35,8 @@ class AppRoutes {
       schedulescreen: (context) => const ScheduleScreen(),
       dashboard: (context) => const DashboardScreen(),
       schedule: (context) => const Schedule(),
-      daftarJadwal: (context) => const DaftarJadwal(),
-      musikKategori: (context) {
-        final args = ModalRoute.of(context)?.settings.arguments as Map?;
-        final String category = args?['category'] ?? '';
-        return DaftarMusikScreen(categoryId: category, categoryName: category);
-      },
+      musikKategori: (context) => const MusikKategoriScreen(),
+
       daftarMusik: (context) {
         final args = ModalRoute.of(context)?.settings.arguments as Map?;
         final String categoryId = args?['categoryId'] ?? '';
@@ -49,6 +46,12 @@ class AppRoutes {
           categoryId: categoryId,
           categoryName: categoryName,
         );
+      },
+
+      addMusik: (context) {
+        final args = ModalRoute.of(context)?.settings.arguments as Map?;
+        final String categoryId = args?['categoryId'] ?? '';
+        return AddMusikScreen(categoryId: categoryId);
       },
     };
   }

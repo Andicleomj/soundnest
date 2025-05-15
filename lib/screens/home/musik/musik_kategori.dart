@@ -1,23 +1,18 @@
-// lib/screens/home/musik/music_category_screen.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:soundnest/service/music_file_management.dart';
-import 'package:soundnest/screens/home/musik/daftar_musik.dart';
-import 'package:soundnest/utils/app_routes.dart';
 
-class MusicCategoryScreen extends StatefulWidget {
-  const MusicCategoryScreen({super.key});
+class MusikKategoriScreen extends StatefulWidget {
+  const MusikKategoriScreen({Key? key}) : super(key: key);
 
   @override
-  State<MusicCategoryScreen> createState() => _MusicCategoryScreenState();
+  State<MusikKategoriScreen> createState() => _MusikKategoriScreenState();
 }
 
-class _MusicCategoryScreenState extends State<MusicCategoryScreen> {
-  final DatabaseReference _musicRef = FirebaseDatabase.instance.ref(
+class _MusikKategoriScreenState extends State<MusikKategoriScreen> {
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref(
     'devices/devices_01/music/categories',
   );
-  Map<String, dynamic> _categories = {};
-  bool _isLoading = true;
+  List<Map<String, String>> _categories = [];
 
   @override
   void initState() {
@@ -25,121 +20,59 @@ class _MusicCategoryScreenState extends State<MusicCategoryScreen> {
     _loadCategories();
   }
 
-  Future<void> _loadCategories() async {
-    final snapshot = await _musicRef.get();
-    if (snapshot.exists) {
+  void _loadCategories() async {
+    final snapshot = await _dbRef.get();
+    print('Snapshot: ${snapshot.value}');
+
+    if (snapshot.exists && snapshot.value is Map) {
       setState(() {
-        _categories = Map<String, dynamic>.from(snapshot.value as Map);
-        _isLoading = false;
+        _categories =
+            (snapshot.value as Map).entries
+                .map((e) {
+                  final value = e.value;
+                  if (value is Map && value.containsKey('nama')) {
+                    return {
+                      'id': e.key.toString(),
+                      'nama':
+                          value['nama']?.toString() ?? 'Kategori Tanpa Nama',
+                    };
+                  }
+                  return null;
+                })
+                .whereType<Map<String, String>>()
+                .toList();
       });
-    }
-  }
-
-  void _navigateToCategory(String categoryId, String categoryName) {
-    Navigator.pushNamed(
-      context,
-      AppRoutes.daftarMusik, // Sesuaikan dengan route yang kamu buat
-      arguments: {'categoryId': categoryId, 'categoryName': categoryName},
-    );
-  }
-
-  void _showAddMusicDialog() async {
-    String? selectedCategory;
-    String title = '';
-    String fileId = '';
-
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Tambah Musik"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                value: selectedCategory,
-                items:
-                    _categories.keys.map((key) {
-                      return DropdownMenuItem(
-                        value: key,
-                        child: Text(_categories[key]['name'] ?? 'Unknown'),
-                      );
-                    }).toList(),
-                onChanged: (value) {
-                  selectedCategory = value;
-                },
-                decoration: const InputDecoration(labelText: "Kategori"),
-              ),
-              TextField(
-                onChanged: (value) => title = value,
-                decoration: const InputDecoration(labelText: "Judul Musik"),
-              ),
-              TextField(
-                onChanged: (value) => fileId = value,
-                decoration: const InputDecoration(labelText: "File ID"),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Batal"),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                if (selectedCategory != null &&
-                    title.isNotEmpty &&
-                    fileId.isNotEmpty) {
-                  _addNewFile(selectedCategory!, title, fileId);
-                }
-              },
-              child: const Text("Tambah"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _addNewFile(String categoryId, String title, String fileId) async {
-    final success = await MusicFileManagement.addFileToCategory(
-      categoryId,
-      fileId,
-      title,
-    );
-
-    if (success) {
-      print("✅ Musik berhasil ditambahkan.");
-      _loadCategories(); // Refresh UI
+      print('Categories: $_categories');
     } else {
-      print("❌ Gagal menambahkan musik.");
+      setState(() {
+        _categories = [];
+      });
+      print('No Categories Found');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Kategori Musik")),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : ListView.builder(
-                itemCount: _categories.length,
-                itemBuilder: (context, index) {
-                  final entry = _categories.entries.elementAt(index);
-                  return ListTile(
-                    title: Text(entry.value['name'] ?? 'Unknown'),
-                    trailing: const Icon(Icons.arrow_forward_ios),
-                    onTap:
-                        () =>
-                            _navigateToCategory(entry.key, entry.value['name']),
-                  );
+      appBar: AppBar(title: const Text('Kategori Musik')),
+      body: ListView.builder(
+        itemCount: _categories.length,
+        itemBuilder: (context, index) {
+          final category = _categories[index];
+          return ListTile(
+            title: Text(category['name'] ?? 'Kategori Tanpa Nama'),
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/daftar',
+                arguments: {
+                  'categoryId': category['id'],
+                  'categoryName': category['name'],
                 },
-              ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddMusicDialog,
-        child: const Icon(Icons.add),
+              );
+            },
+          );
+        },
       ),
     );
   }

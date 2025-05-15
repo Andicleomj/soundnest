@@ -7,6 +7,9 @@ class ScheduleService {
   final DatabaseReference _ref = FirebaseDatabase.instance.ref(
     'devices/devices_01/schedule_001',
   );
+  final DatabaseReference _musicRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/music/categories',
+  );
   final MusicService _musicService = MusicService();
   final MusicPlayerService _playerService = MusicPlayerService();
 
@@ -14,7 +17,7 @@ class ScheduleService {
   bool _isAudioPlaying = false;
 
   bool get isAudioPlaying => _isAudioPlaying;
-  // p
+
   void start() {
     _timer?.cancel();
     _ref.onValue.listen((event) {
@@ -57,10 +60,20 @@ class ScheduleService {
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
     if (_isAudioPlaying) return;
 
-    final fileId = schedule['file_id'];
-    if (fileId == null) return;
+    final categoryId = schedule['categoryId'];
+    final fileId = schedule['fileId'];
 
-    final proxyUrl = "http://localhost:3000/stream/$fileId";
+    if (categoryId == null || fileId == null) return;
+
+    final musicSnapshot =
+        await _musicRef.child('$categoryId/files/$fileId').get();
+
+    if (!musicSnapshot.exists) {
+      print("❌ Musik tidak ditemukan dalam kategori.");
+      return;
+    }
+
+    final proxyUrl = "http://localhost:3000/${fileId}";
     print("🔗 URL: $proxyUrl");
 
     try {
