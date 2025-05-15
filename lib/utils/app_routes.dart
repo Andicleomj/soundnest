@@ -10,7 +10,7 @@ import 'package:soundnest/screens/scheduule/schedule_screen.dart';
 import 'package:soundnest/screens/splash_screen.dart';
 import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/screens/home/musik/musik_kategori.dart';
-import 'package:soundnest/screens/home/musik/add_musik.dart'; // Import AddMusikScreen
+import 'package:soundnest/screens/home/musik/add_musik.dart';
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -20,11 +20,11 @@ class AppRoutes {
   static const String signup = '/signup';
   static const String schedulescreen = '/schedule-screen';
   static const String dashboard = '/dashboard';
-  static const String schedule = "/schedule";
-  static const String daftarJadwal = "/jadwal";
-  static const String musikKategori = "/kategori";
-  static const String daftarMusik = "/daftar";
-  static const String addMusik = "/add"; // Route untuk Add Musik
+  static const String schedule = '/schedule';
+  static const String daftarJadwal = '/jadwal';
+  static const String musikKategori = '/kategori';
+  static const String daftarMusik = '/daftar';
+  static const String addMusik = '/add';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -38,11 +38,10 @@ class AppRoutes {
       schedule: (context) => const Schedule(),
       musikKategori: (context) => const MusikKategoriScreen(),
 
-      // Route untuk daftar musik berdasarkan kategori
       daftarMusik: (context) {
         final args = ModalRoute.of(context)?.settings.arguments as Map?;
-        final String categoryId = args?['categoryId'] ?? 'default';
-        final String categoryName = args?['categoryName'] ?? 'Default Category';
+        final String categoryId = args?['categoryId'] ?? '';
+        final String categoryName = args?['categoryName'] ?? '';
 
         return DaftarMusikScreen(
           categoryId: categoryId,
@@ -50,10 +49,9 @@ class AppRoutes {
         );
       },
 
-      // Route untuk menambahkan musik baru
       addMusik: (context) {
         final args = ModalRoute.of(context)?.settings.arguments as Map?;
-        final String categoryId = args?['categoryId'] ?? 'default';
+        final String categoryId = args?['categoryId'] ?? '';
         return AddMusikScreen(categoryId: categoryId);
       },
     };

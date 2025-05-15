@@ -1,4 +1,3 @@
-// daftar_musik.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -7,55 +6,39 @@ class DaftarMusikScreen extends StatefulWidget {
   final String categoryName;
 
   const DaftarMusikScreen({
+    Key? key,
     required this.categoryId,
     required this.categoryName,
-    Key? key,
   }) : super(key: key);
 
   @override
-  State<DaftarMusikScreen> createState() => _DaftarMusikScreenState();
+  _DaftarMusikScreenState createState() => _DaftarMusikScreenState();
 }
 
 class _DaftarMusikScreenState extends State<DaftarMusikScreen> {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
-  List<Map<String, String>> _musicFiles = [];
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/music/categories',
+  );
+
+  List<Map<String, String>> _musicList = [];
 
   @override
   void initState() {
     super.initState();
-    _loadMusicFiles();
+    _loadMusicList();
   }
 
-  void _loadMusicFiles() async {
-    final snapshot =
-        await _dbRef
-            .child(
-              'devices/devices_01/music/categories/${widget.categoryId}/files',
-            )
-            .get();
-    print('Snapshot Music Files: ${snapshot.value}');
-
-    if (snapshot.exists && snapshot.value is Map) {
+  void _loadMusicList() async {
+    final snapshot = await _dbRef.child(widget.categoryId).child('files').get();
+    if (snapshot.exists) {
+      final data = (snapshot.value as Map).values;
       setState(() {
-        _musicFiles =
-            (snapshot.value as Map).entries
-                .map((e) {
-                  final value = e.value;
-                  if (value is Map && value.containsKey('title')) {
-                    return {
-                      'id': e.key,
-                      'title': value['title']?.toString() ?? 'Unknown Title',
-                      'file_id': value['file_id']?.toString() ?? '',
-                    };
-                  }
-                  return null;
-                })
-                .whereType<Map<String, String>>()
+        _musicList =
+            data
+                .map<Map<String, String>>(
+                  (e) => {'title': e['title'], 'file_id': e['file_id']},
+                )
                 .toList();
-      });
-    } else {
-      setState(() {
-        _musicFiles = [];
       });
     }
   }
@@ -63,29 +46,16 @@ class _DaftarMusikScreenState extends State<DaftarMusikScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.categoryName)),
-      body:
-          _musicFiles.isEmpty
-              ? const Center(child: Text('No Music Files Found'))
-              : ListView.builder(
-                itemCount: _musicFiles.length,
-                itemBuilder: (context, index) {
-                  final file = _musicFiles[index];
-                  return ListTile(
-                    title: Text(file['title'] ?? 'Unknown Title'),
-                    subtitle: Text(file['file_id'] ?? ''),
-                  );
-                },
-              ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(
-            context,
-            '/add',
-            arguments: {'categoryId': widget.categoryId},
+      appBar: AppBar(title: Text('Musik - ${widget.categoryName}')),
+      body: ListView.builder(
+        itemCount: _musicList.length,
+        itemBuilder: (context, index) {
+          final music = _musicList[index];
+          return ListTile(
+            title: Text(music['title'] ?? 'Judul Tidak Diketahui'),
+            subtitle: Text('File ID: ${music['file_id']}'),
           );
         },
-        child: const Icon(Icons.add),
       ),
     );
   }
