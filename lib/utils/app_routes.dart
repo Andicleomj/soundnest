@@ -35,7 +35,11 @@ class AppRoutes {
       dashboard: (context) => const DashboardScreen(),
       schedule: (context) => const Schedule(),
       daftarJadwal: (context) => const DaftarJadwal(),
-      musikKategori: (context) => const MusicCategoryScreen(),
+      musikKategori: (context) {
+        final args = ModalRoute.of(context)?.settings.arguments as Map?;
+        final String category = args?['category'] ?? '';
+        return DaftarMusikScreen(categoryId: category, categoryName: category);
+      },
       daftarMusik: (context) {
         final args = ModalRoute.of(context)?.settings.arguments as Map?;
         final String categoryId = args?['categoryId'] ?? '';
