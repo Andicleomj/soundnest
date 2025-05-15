@@ -63,7 +63,7 @@ class _AyatKursiState extends State<AyatKursi> {
 
   void togglePlay(int index) async {
     final fileId = surahList[index]['fileId'];
-    final url = 'http://192.168.110.224:3000/stream/$fileId';
+    final url = 'http://localhost:3000/stream/$fileId';
 
     // Jika sedang memainkan surah yang sama → PAUSE
     if (isPlaying && currentIndex == index) {
