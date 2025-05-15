@@ -38,14 +38,13 @@ class _HewanScreenState extends State<HewanScreen> {
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-        musicList =
-            data.entries.map((e) {
-              final value = e.value as Map<dynamic, dynamic>;
-              return {
-                'title': value['title'] ?? 'Tidak ada judul',
-                'file_id': value['file_id'] ?? '',
-              };
-            }).toList();
+        musicList = data.entries.map((e) {
+          final value = e.value as Map<dynamic, dynamic>;
+          return {
+            'title': value['title'] ?? 'Tidak ada judul',
+            'file_id': value['file_id'] ?? '',
+          };
+        }).toList();
         isLoading = false;
       });
     } else {
@@ -60,13 +59,10 @@ class _HewanScreenState extends State<HewanScreen> {
     final fileId = musicList[index]['file_id'];
     final url = 'http://localhost:3000/stream/$fileId';
 
-    // Jika sedang memainkan surah yang sama → PAUSE
     if (isPlaying && currentIndex == index) {
       await _audioPlayer.pause();
       setState(() => isPlaying = false);
-    }
-    // Jika sedang tidak memainkan atau berpindah surah → PLAY
-    else {
+    } else {
       await _audioPlayer.stop();
       await _audioPlayer.play(UrlSource(url));
       setState(() {
@@ -93,7 +89,10 @@ class _HewanScreenState extends State<HewanScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(widget.categoryName),
+        title: const Text(
+          'Hewan',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -107,26 +106,25 @@ class _HewanScreenState extends State<HewanScreen> {
           ),
         ),
       ),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : musicList.isEmpty
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : musicList.isEmpty
               ? const Center(child: Text('Data musik tidak tersedia.'))
               : ListView.builder(
-                itemCount: musicList.length,
-                itemBuilder: (context, index) {
-                  final music = musicList[index];
-                  final isCurrent = currentIndex == index && isPlaying;
+                  itemCount: musicList.length,
+                  itemBuilder: (context, index) {
+                    final music = musicList[index];
+                    final isCurrent = currentIndex == index && isPlaying;
 
-                  return ListTile(
-                    title: Text(music['title']),
-                    trailing: IconButton(
-                      icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
-                      onPressed: () => togglePlayPause(index),
-                    ),
-                  );
-                },
-              ),
+                    return ListTile(
+                      title: Text(music['title']),
+                      trailing: IconButton(
+                        icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
+                        onPressed: () => togglePlayPause(index),
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }
