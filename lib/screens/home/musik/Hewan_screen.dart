@@ -80,6 +80,11 @@ class _HewanScreenState extends State<HewanScreen> {
         currentIndex = index;
         isPlaying = true;
       });
+      _audioPlayer.onPlayerComplete.listen((event) {
+        setState(() {
+          isPlaying = false;
+        });
+      });
     }
   }
 
