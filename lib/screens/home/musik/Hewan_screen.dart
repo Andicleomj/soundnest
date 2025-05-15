@@ -22,6 +22,7 @@ class _HewanScreenState extends State<HewanScreen> {
   List<Map<String, dynamic>> musicList = [];
   bool isLoading = true;
   int currentIndex = -1;
+  bool isPlaying = false;
 
   @override
   void initState() {
@@ -30,6 +31,13 @@ class _HewanScreenState extends State<HewanScreen> {
       'devices/devices_01/music/categories/kategori_001/files',
     );
     fetchMusicData();
+
+    _audioPlayer.onPlayerComplete.listen((event) {
+      setState(() {
+        isPlaying = false;
+        currentIndex = -1;
+      });
+    });
   }
 
   void fetchMusicData() async {
@@ -55,25 +63,23 @@ class _HewanScreenState extends State<HewanScreen> {
     }
   }
 
-  void playMusic(int index) async {
+  void togglePlayPause(int index) async {
     final fileId = musicList[index]['file_id'];
-    final url = 'http://localhost:3000/stream/$fileId';
+    final url = 'http://192.168.110.224:3000/stream/$fileId';
 
-    await _audioPlayer.stop();
-
-    try {
+    // Jika sedang memainkan surah yang sama → PAUSE
+    if (isPlaying && currentIndex == index) {
+      await _audioPlayer.pause();
+      setState(() => isPlaying = false);
+    }
+    // Jika sedang tidak memainkan atau berpindah surah → PLAY
+    else {
+      await _audioPlayer.stop();
       await _audioPlayer.play(UrlSource(url));
       setState(() {
         currentIndex = index;
+        isPlaying = true;
       });
-
-      _audioPlayer.onPlayerComplete.listen((event) {
-        if (currentIndex + 1 < musicList.length) {
-          playMusic(currentIndex + 1);
-        }
-      });
-    } catch (e) {
-      print('❌ Gagal memutar audio: $e');
     }
   }
 
@@ -95,7 +101,7 @@ class _HewanScreenState extends State<HewanScreen> {
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [Color.fromARGB(255, 67, 193, 243), Colors.white],
+              colors: [Colors.blueAccent, Colors.white],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -115,7 +121,7 @@ class _HewanScreenState extends State<HewanScreen> {
                     title: Text(music['title']),
                     trailing: IconButton(
                       icon: const Icon(Icons.play_arrow),
-                      onPressed: () => playMusic(index),
+                      onPressed: () => togglePlayPause(index),
                     ),
                   );
                 },
