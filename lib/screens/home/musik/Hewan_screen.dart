@@ -31,35 +31,39 @@ class _HewanScreenState extends State<HewanScreen> {
       'devices/devices_01/music/categories/kategori_001/files',
     );
     fetchMusicData();
-
-    _audioPlayer.onPlayerComplete.listen((event) {
-      setState(() {
-        isPlaying = false;
-        currentIndex = -1;
-      });
-    });
   }
 
   void fetchMusicData() async {
     final snapshot = await databaseRef.get();
     if (snapshot.exists) {
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
-      setState(() {
-        musicList =
-            data.entries.map((e) {
-              final value = e.value as Map<dynamic, dynamic>;
-              return {
-                'title': value['title'] ?? 'Tidak ada judul',
-                'file_id': value['file_id'] ?? '',
-              };
-            }).toList();
-        isLoading = false;
-      });
+      try {
+        final data = Map<String, dynamic>.from(snapshot.value as Map);
+        final List<Map<String, dynamic>> tempList = [];
+
+        data.forEach((key, value) {
+          if (value is Map &&
+              value.containsKey('title') &&
+              value.containsKey('file_id')) {
+            tempList.add({
+              'title': value['title'],
+              'file_id': value['file_id'],
+            });
+          }
+        });
+
+        setState(() {
+          musicList = tempList;
+          isLoading = false;
+        });
+      } catch (e) {
+        print('❌ Gagal parsing data: $e');
+        setState(() => isLoading = false);
+      }
     } else {
-      setState(() {
-        isLoading = false;
-      });
-      print('Data di path ${widget.categoryPath} tidak ditemukan di database.');
+      print(
+        '⚠️ Data tidak ditemukan di path: ${'devices/devices_01/music/categories/kategori_001/files'}',
+      );
+      setState(() => isLoading = false);
     }
   }
 
@@ -80,6 +84,7 @@ class _HewanScreenState extends State<HewanScreen> {
         currentIndex = index;
         isPlaying = true;
       });
+
       _audioPlayer.onPlayerComplete.listen((event) {
         setState(() {
           isPlaying = false;
