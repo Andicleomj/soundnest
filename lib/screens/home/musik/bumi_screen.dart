@@ -28,7 +28,7 @@ class _BumiScreenState extends State<BumiScreen> {
   void initState() {
     super.initState();
     databaseRef = FirebaseDatabase.instance.ref(
-      'devices/devices\_01/music/categories/kategori_006/files',
+      'devices/devices_01/music/categories/kategori_006/files',
     );
     fetchMusicData();
   }
@@ -38,14 +38,13 @@ class _BumiScreenState extends State<BumiScreen> {
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-        musicList =
-            data.entries.map((e) {
-              final value = e.value as Map<dynamic, dynamic>;
-              return {
-                'title': value['title'] ?? 'Tidak ada judul',
-                'file_id': value['file_id'] ?? '',
-              };
-            }).toList();
+        musicList = data.entries.map((e) {
+          final value = e.value as Map<dynamic, dynamic>;
+          return {
+            'title': value['title'] ?? 'Tidak ada judul',
+            'file_id': value['file_id'] ?? '',
+          };
+        }).toList();
         isLoading = false;
       });
     } else {
@@ -84,25 +83,42 @@ class _BumiScreenState extends State<BumiScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.categoryName), centerTitle: true),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : ListView.builder(
-                itemCount: musicList.length,
-                itemBuilder: (context, index) {
-                  final music = musicList[index];
-                  final isCurrent = currentIndex == index && isPlaying;
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text(
+          'Bumi Planet',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: musicList.length,
+              itemBuilder: (context, index) {
+                final music = musicList[index];
+                final isCurrent = currentIndex == index && isPlaying;
 
-                  return ListTile(
-                    title: Text(music['title']),
-                    trailing: IconButton(
-                      icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
-                      onPressed: () => togglePlay(index),
-                    ),
-                  );
-                },
-              ),
+                return ListTile(
+                  title: Text(music['title']),
+                  trailing: IconButton(
+                    icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
+                    onPressed: () => togglePlay(index),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
