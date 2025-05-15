@@ -10,6 +10,7 @@ import 'package:soundnest/screens/scheduule/schedule_screen.dart';
 import 'package:soundnest/screens/splash_screen.dart';
 import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/screens/home/musik/musik_kategori.dart';
+import 'package:soundnest/screens/home/musik/add_musik.dart'; // Import AddMusikScreen
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -21,8 +22,9 @@ class AppRoutes {
   static const String dashboard = '/dashboard';
   static const String schedule = "/schedule";
   static const String daftarJadwal = "/jadwal";
-  static const String musikKategori = "/music/kategori-list";
-  static const String daftarMusik = "/music/category";
+  static const String musikKategori = "/kategori";
+  static const String daftarMusik = "/daftar";
+  static const String addMusik = "/add"; // Route untuk Add Musik
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -34,21 +36,25 @@ class AppRoutes {
       schedulescreen: (context) => const ScheduleScreen(),
       dashboard: (context) => const DashboardScreen(),
       schedule: (context) => const Schedule(),
-      daftarJadwal: (context) => const DaftarJadwal(),
-      musikKategori: (context) {
-        final args = ModalRoute.of(context)?.settings.arguments as Map?;
-        final String category = args?['category'] ?? '';
-        return DaftarMusikScreen(categoryId: category, categoryName: category);
-      },
+      musikKategori: (context) => const MusikKategoriScreen(),
+
+      // Route untuk daftar musik berdasarkan kategori
       daftarMusik: (context) {
         final args = ModalRoute.of(context)?.settings.arguments as Map?;
-        final String categoryId = args?['categoryId'] ?? '';
-        final String categoryName = args?['categoryName'] ?? '';
+        final String categoryId = args?['categoryId'] ?? 'default';
+        final String categoryName = args?['categoryName'] ?? 'Default Category';
 
         return DaftarMusikScreen(
           categoryId: categoryId,
           categoryName: categoryName,
         );
+      },
+
+      // Route untuk menambahkan musik baru
+      addMusik: (context) {
+        final args = ModalRoute.of(context)?.settings.arguments as Map?;
+        final String categoryId = args?['categoryId'] ?? 'default';
+        return AddMusikScreen(categoryId: categoryId);
       },
     };
   }

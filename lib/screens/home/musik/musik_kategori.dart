@@ -2,93 +2,77 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class MusikKategoriScreen extends StatefulWidget {
-  final String kategori;
-
-  const MusikKategoriScreen({Key? key, required this.kategori})
-    : super(key: key);
+  const MusikKategoriScreen({Key? key}) : super(key: key);
 
   @override
-  _MusikKategoriScreenState createState() => _MusikKategoriScreenState();
+  State<MusikKategoriScreen> createState() => _MusikKategoriScreenState();
 }
 
 class _MusikKategoriScreenState extends State<MusikKategoriScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _fileIdController = TextEditingController();
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/music/categories',
+  );
+  List<Map<String, String>> _categories = [];
 
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref('music');
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
 
-  void _addMusic() {
-    if (_formKey.currentState!.validate()) {
-      final title = _titleController.text.trim();
-      final fileId = _fileIdController.text.trim();
+  void _loadCategories() async {
+    final snapshot = await _dbRef.get();
+    print('Snapshot: ${snapshot.value}');
 
-      _dbRef
-          .child(widget.kategori)
-          .push()
-          .set({'title': title, 'file_id': fileId})
-          .then((_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Musik berhasil ditambahkan.')),
-            );
-            _titleController.clear();
-            _fileIdController.clear();
-          })
-          .catchError((error) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Gagal menambahkan musik: $error')),
-            );
-          });
+    if (snapshot.exists && snapshot.value is Map) {
+      setState(() {
+        _categories =
+            (snapshot.value as Map).entries
+                .map((e) {
+                  final value = e.value;
+                  if (value is Map && value.containsKey('nama')) {
+                    return {
+                      'id': e.key.toString(),
+                      'nama':
+                          value['nama']?.toString() ?? 'Kategori Tanpa Nama',
+                    };
+                  }
+                  return null;
+                })
+                .whereType<Map<String, String>>()
+                .toList();
+      });
+      print('Categories: $_categories');
+    } else {
+      setState(() {
+        _categories = [];
+      });
+      print('No Categories Found');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Musik - ${widget.kategori}')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Tambah Musik untuk ${widget.kategori}',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _titleController,
-                    decoration: InputDecoration(labelText: 'Judul Musik'),
-                    validator:
-                        (value) =>
-                            value!.isEmpty ? 'Judul tidak boleh kosong' : null,
-                  ),
-                  SizedBox(height: 8),
-                  TextFormField(
-                    controller: _fileIdController,
-                    decoration: InputDecoration(
-                      labelText: 'File ID (Google Drive)',
-                    ),
-                    validator:
-                        (value) =>
-                            value!.isEmpty
-                                ? 'File ID tidak boleh kosong'
-                                : null,
-                  ),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _addMusic,
-                    child: const Text('Tambahkan Musik'),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+      appBar: AppBar(title: const Text('Kategori Musik')),
+      body: ListView.builder(
+        itemCount: _categories.length,
+        itemBuilder: (context, index) {
+          final category = _categories[index];
+          return ListTile(
+            title: Text(category['name'] ?? 'Kategori Tanpa Nama'),
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/daftar',
+                arguments: {
+                  'categoryId': category['id'],
+                  'categoryName': category['name'],
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }

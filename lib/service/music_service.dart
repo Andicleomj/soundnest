@@ -6,6 +6,7 @@ class MusicService {
     'devices/devices_01/music/categories',
   );
 
+  /// Menambahkan file musik ke kategori tertentu
   Future<void> addMusic({
     required String category,
     required String title,
@@ -21,16 +22,44 @@ class MusicService {
     }
   }
 
+  /// Mendapatkan daftar kategori musik
+  Future<List<Map<String, String>>> getCategories() async {
+    try {
+      final snapshot = await _musicRef.get();
+      if (snapshot.exists && snapshot.value is Map) {
+        return (snapshot.value as Map).entries
+            .map((e) {
+              final value = e.value;
+              if (value is Map && value.containsKey('nama')) {
+                return {
+                  'id': e.key.toString(),
+                  'nama': value['nama']?.toString() ?? 'Kategori Tanpa Nama',
+                };
+              }
+              return null;
+            })
+            .whereType<Map<String, String>>()
+            .toList();
+      }
+    } catch (e) {
+      print("❌ Error fetching categories: $e");
+    }
+    return [];
+  }
+
+  /// Mendapatkan daftar musik berdasarkan kategori
   Future<List<Map<String, dynamic>>> getMusicByCategory(
     String categoryId,
   ) async {
     try {
       final categoryRef = _musicRef.child('$categoryId/files');
       final snapshot = await categoryRef.get();
-      if (snapshot.exists) {
+      if (snapshot.exists && snapshot.value is Map) {
         final files = Map<String, dynamic>.from(snapshot.value as Map);
-        return files.values.map((file) {
+        return files.entries.map((entry) {
+          final file = entry.value;
           return {
+            'id': entry.key,
             'title': file['title'] ?? 'Unknown Title',
             'file_id': file['file_id'] ?? '',
           };

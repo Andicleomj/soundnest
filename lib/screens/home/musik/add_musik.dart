@@ -1,54 +1,60 @@
-// lib/musik/add_musik.dart
-
+// add_musik.dart
 import 'package:flutter/material.dart';
-import 'package:soundnest/service/music_service.dart';
+import 'package:firebase_database/firebase_database.dart';
 
-class AddMusicScreen extends StatelessWidget {
-  final TextEditingController categoryController = TextEditingController();
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController fileIdController = TextEditingController();
-  final MusicService _musicService = MusicService();
+class AddMusikScreen extends StatefulWidget {
+  final String categoryId;
 
-  AddMusicScreen({super.key});
+  const AddMusikScreen({required this.categoryId, Key? key}) : super(key: key);
+
+  @override
+  State<AddMusikScreen> createState() => _AddMusikScreenState();
+}
+
+class _AddMusikScreenState extends State<AddMusikScreen> {
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _fileIdController = TextEditingController();
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+
+  void _addMusicFile() async {
+    final title = _titleController.text.trim();
+    final fileId = _fileIdController.text.trim();
+
+    if (title.isEmpty || fileId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Title dan File ID tidak boleh kosong")),
+      );
+      return;
+    }
+
+    await _dbRef
+        .child('devices/devices_01/music/categories/${widget.categoryId}/files')
+        .push()
+        .set({'title': title, 'file_id': fileId});
+
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Musik')),
+      appBar: AppBar(title: const Text("Tambah Musik")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
-              controller: categoryController,
-              decoration: const InputDecoration(labelText: 'Kategori Musik'),
+              controller: _titleController,
+              decoration: const InputDecoration(labelText: "Title"),
             ),
-            const SizedBox(height: 12),
             TextField(
-              controller: titleController,
-              decoration: const InputDecoration(labelText: 'Judul Musik'),
+              controller: _fileIdController,
+              decoration: const InputDecoration(labelText: "File ID"),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: fileIdController,
-              decoration: const InputDecoration(
-                labelText: 'File ID (Google Drive)',
-              ),
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () async {
-                await _musicService.addMusic(
-                  category: categoryController.text,
-                  title: titleController.text,
-                  fileId: fileIdController.text,
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Musik berhasil ditambahkan!')),
-                );
-                Navigator.pop(context);
-              },
-              child: const Text('Simpan Musik'),
+              onPressed: _addMusicFile,
+              child: const Text("Tambahkan Musik"),
             ),
           ],
         ),
