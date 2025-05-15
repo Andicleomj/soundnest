@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:soundnest/service/music_file_management.dart';
 import 'package:soundnest/screens/home/musik/daftar_musik.dart';
+import 'package:soundnest/utils/app_routes.dart';
 
 class MusicCategoryScreen extends StatefulWidget {
   const MusicCategoryScreen({super.key});
@@ -35,15 +36,10 @@ class _MusicCategoryScreenState extends State<MusicCategoryScreen> {
   }
 
   void _navigateToCategory(String categoryId, String categoryName) {
-    Navigator.push(
+    Navigator.pushNamed(
       context,
-      MaterialPageRoute(
-        builder:
-            (context) => DaftarMusikScreen(
-              categoryId: categoryId,
-              categoryName: categoryName,
-            ),
-      ),
+      AppRoutes.daftarMusik, // Sesuaikan dengan route yang kamu buat
+      arguments: {'categoryId': categoryId, 'categoryName': categoryName},
     );
   }
 

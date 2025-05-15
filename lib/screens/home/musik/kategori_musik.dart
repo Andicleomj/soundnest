@@ -17,10 +17,23 @@ class MusikKategoriScreen extends StatelessWidget {
       body: StreamBuilder(
         stream: filesRef.onValue,
         builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return const Center(child: Text("Terjadi kesalahan."));
+          }
+
           if (snapshot.hasData && snapshot.data!.snapshot.value != null) {
             final files = Map<String, dynamic>.from(
               snapshot.data!.snapshot.value as Map,
             );
+
+            if (files.isEmpty) {
+              return const Center(child: Text("Tidak ada musik."));
+            }
+
             return ListView(
               children:
                   files.values.map((file) {
@@ -31,6 +44,7 @@ class MusikKategoriScreen extends StatelessWidget {
                   }).toList(),
             );
           }
+
           return const Center(child: Text("Tidak ada musik."));
         },
       ),
