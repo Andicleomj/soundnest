@@ -31,6 +31,13 @@ class _HewanScreenState extends State<HewanScreen> {
       'devices/devices_01/music/categories/kategori_001/files',
     );
     fetchMusicData();
+
+    _audioPlayer.onPlayerComplete.listen((event) {
+      setState(() {
+        isPlaying = false;
+        currentIndex = -1;
+      });
+    });
   }
 
   void fetchMusicData() async {
@@ -39,38 +46,39 @@ class _HewanScreenState extends State<HewanScreen> {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
         musicList =
-            data.entries
-                .map(
-                  (e) => {
-                    'title': e.value['title'] ?? 'Tidak ada judul',
-                    'file_id': e.value['file_id'] ?? '',
-                  },
-                )
-                .toList();
+            data.entries.map((e) {
+              final value = e.value as Map<dynamic, dynamic>;
+              return {
+                'title': value['title'] ?? 'Tidak ada judul',
+                'file_id': value['file_id'] ?? '',
+              };
+            }).toList();
         isLoading = false;
       });
     } else {
-      setState(() => isLoading = false);
+      setState(() {
+        isLoading = false;
+      });
+      print('Data di path ${widget.categoryPath} tidak ditemukan di database.');
     }
   }
 
   void togglePlayPause(int index) async {
-    if (currentIndex == index && isPlaying) {
+    final fileId = musicList[index]['file_id'];
+    final url = 'http://localhost:3000/stream/$fileId';
+
+    // Jika sedang memainkan surah yang sama → PAUSE
+    if (isPlaying && currentIndex == index) {
       await _audioPlayer.pause();
       setState(() => isPlaying = false);
-    } else {
+    }
+    // Jika sedang tidak memainkan atau berpindah surah → PLAY
+    else {
       await _audioPlayer.stop();
-      final fileId = musicList[index]['file_id'];
-      final url = 'http://localhost:3000/stream/$fileId';
-
       await _audioPlayer.play(UrlSource(url));
       setState(() {
         currentIndex = index;
         isPlaying = true;
-      });
-
-      _audioPlayer.onPlayerComplete.listen((event) {
-        setState(() => isPlaying = false);
       });
     }
   }
@@ -84,12 +92,27 @@ class _HewanScreenState extends State<HewanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('devices/devices_01/music/categories/kategori_001/files'),
+        title: Text(widget.categoryName),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
       ),
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
+              : musicList.isEmpty
+              ? const Center(child: Text('Data musik tidak tersedia.'))
               : ListView.builder(
                 itemCount: musicList.length,
                 itemBuilder: (context, index) {
@@ -97,11 +120,7 @@ class _HewanScreenState extends State<HewanScreen> {
                   return ListTile(
                     title: Text(music['title']),
                     trailing: IconButton(
-                      icon: Icon(
-                        currentIndex == index && isPlaying
-                            ? Icons.pause
-                            : Icons.play_arrow,
-                      ),
+                      icon: const Icon(Icons.play_arrow),
                       onPressed: () => togglePlayPause(index),
                     ),
                   );
