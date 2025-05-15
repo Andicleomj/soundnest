@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soundnest/screens/home/musik/hewan_screen.dart';
+import 'package:soundnest/screens/home/musik/kendaraan_screen.dart';
 
 class MusicScreen extends StatelessWidget {
   const MusicScreen({super.key});
@@ -35,7 +36,7 @@ class MusicScreen extends StatelessWidget {
       case 'Kendaraan':
         return 'Kendaraan';
       default:
-        return 'Surah Pendek';
+        return ' Kategori tidak ditemukan';
     }
   }
 
@@ -92,16 +93,33 @@ class MusicScreen extends StatelessWidget {
   Widget _buildCategoryCard(BuildContext context, String category) {
     return GestureDetector(
       onTap: () {
-        final path = getPathFromCategory(category);
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) =>
-                    HewanScreen(categoryPath: path, categoryName: category),
-          ),
-        );
+        if (category == 'Hewan') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) => HewanScreen(
+                    categoryPath:
+                        'devices/devices_01/music/categories/kategori_001/files',
+                    categoryName: category,
+                  ),
+            ),
+          );
+        } else {
+          final path = 'devices/devices_01/music/categories/kategori_002/files';
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) => KendaraanScreen(
+                    categoryPath: path,
+                    categoryName: category,
+                  ),
+            ),
+          );
+        }
       },
+
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 4,

@@ -27,7 +27,9 @@ class _KendaraanScreenState extends State<KendaraanScreen> {
   @override
   void initState() {
     super.initState();
-    databaseRef = FirebaseDatabase.instance.ref(widget.categoryPath);
+    databaseRef = FirebaseDatabase.instance.ref(
+      'devices/devices_01/music/categories/kategori_002/files',
+    );
 
     fetchMusicData();
   }
