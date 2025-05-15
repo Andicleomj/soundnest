@@ -7,22 +7,19 @@ class MurottalScreen extends StatelessWidget {
   String getPathFromCategory(String category) {
     switch (category) {
       case 'Surah Pendek':
-        return 'Surah Pendek';  // sesuaikan path Firebase kamu
-      case 'Juz Amma':
-        return 'Juz Amma';
-      case 'Surah Pilihan':
-        return 'Surah Pilihan';
-      case 'Al-Qur\'an Lengkap':
-        return 'Al-Quran Lengkap';
+        return 'Surah Pendek'; 
+      case 'Ayat Kursi':
+        return 'Ayat Kursi';
       default:
         return 'Surah Pendek';
+      
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, 
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
           'Kategori Murottal',
@@ -48,10 +45,8 @@ class MurottalScreen extends StatelessWidget {
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
           children: [
-            _buildCategoryCard(context, 'Juz Amma'),
             _buildCategoryCard(context, 'Surah Pendek'),
-            _buildCategoryCard(context, 'Surah Pilihan'),
-            _buildCategoryCard(context, 'Al-Qur\'an Lengkap'),
+            _buildCategoryCard(context, 'Ayat Kursi'),
           ],
         ),
       ),
@@ -65,11 +60,9 @@ class MurottalScreen extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => SurahScreen(
-            categoryPath: path,
-            categoryName: category,
-          ),
-
+            builder:
+                (context) =>
+                    SurahScreen(categoryPath: path, categoryName: category),
           ),
         );
       },
