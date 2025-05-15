@@ -5,6 +5,8 @@ import 'package:soundnest/screens/home/musik/kendaraan_screen.dart';
 import 'package:soundnest/screens/home/musik/profesi_screen.dart';
 import 'package:soundnest/screens/home/musik/adaptasi_screen.dart';
 import 'package:soundnest/screens/home/musik/family_screen.dart';
+import 'package:soundnest/screens/home/musik/bumi_screen.dart';
+import 'package:soundnest/screens/home/musik/hari_screen.dart';
 
 class MusicScreen extends StatelessWidget {
   const MusicScreen({super.key});
@@ -142,7 +144,15 @@ class MusicScreen extends StatelessWidget {
           categoryName: category,
         );
         break;
-
+      case 'Bumi Planet':
+        categoryPath = 'devices/devices_01/music/categories/kategori_006/files';
+        screen = BumiScreen(categoryPath: categoryPath, categoryName: category);
+        break;
+      case 'Hari Kemerdekaan':
+        categoryPath = 'devices/devices_01/music/categories/kategori_007/files';
+        screen = HariScreen(categoryPath: categoryPath, categoryName: category);
+        break;
+      case 'Ramadhan':
       default:
         throw Exception('Kategori tidak dikenal: $category');
     }
