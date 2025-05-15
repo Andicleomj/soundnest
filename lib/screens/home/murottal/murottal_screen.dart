@@ -1,42 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:soundnest/screens/home/murottal/surah_screen.dart';
 
 class MurottalScreen extends StatelessWidget {
-  const MurottalScreen({Key? key}) : super(key: key);
-
-  String getPathFromCategory(String category) {
-    switch (category) {
-      case 'Surah Pendek':
-        return 'Surah Pendek'; 
-      case 'Ayat Kursi':
-        return 'Ayat Kursi';
-      default:
-        return 'Surah Pendek';
-      
-    }
-  }
+  const MurottalScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'Kategori Murottal',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.white],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
+        title: const Text('Kategori Murottal'),
+        backgroundColor: Colors.blue,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -45,8 +17,10 @@ class MurottalScreen extends StatelessWidget {
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
           children: [
+            _buildCategoryCard(context, 'Juz Amma'),
             _buildCategoryCard(context, 'Surah Pendek'),
-            _buildCategoryCard(context, 'Ayat Kursi'),
+            _buildCategoryCard(context, 'Surah Pilihan'),
+            _buildCategoryCard(context, 'Al-Qur\'an Lengkap'),
           ],
         ),
       ),
@@ -56,13 +30,10 @@ class MurottalScreen extends StatelessWidget {
   Widget _buildCategoryCard(BuildContext context, String category) {
     return GestureDetector(
       onTap: () {
-        final path = getPathFromCategory(category);
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder:
-                (context) =>
-                    SurahScreen(categoryPath: path, categoryName: category),
+            builder: (context) => MurottalCategoryScreen(category: category),
           ),
         );
       },
@@ -75,6 +46,24 @@ class MurottalScreen extends StatelessWidget {
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class MurottalCategoryScreen extends StatelessWidget {
+  final String category;
+
+  const MurottalCategoryScreen({super.key, required this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(category), backgroundColor: Colors.blue),
+      body: Center(
+        child: Text(
+          'Daftar murottal untuk $category akan ditampilkan di sini.',
         ),
       ),
     );

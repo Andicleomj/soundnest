@@ -63,9 +63,7 @@ class HomeScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder:
-                                (context) =>
-                                    const MusicScreen(kategori: 'Hewan'),
+                            builder: (context) => const MusicScreen(),
                           ),
                         );
                       },
