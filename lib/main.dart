@@ -34,11 +34,7 @@ class MyApp extends StatelessWidget {
       title: 'SoundNest',
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
-      routes: {
-        '/': (context) => const AuthCheck(),
-        ...AppRoutes.getRoutes(),
-        '/kategori': (context) => const MusicCategoryScreen(),
-      },
+      routes: {'/': (context) => const AuthCheck(), ...AppRoutes.getRoutes()},
     );
   }
 }
