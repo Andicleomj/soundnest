@@ -53,8 +53,17 @@ class MusicScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return Stack(
+    children: [
+      // Background Image
+      Positioned.fill(
+        child: Image.asset(
+          'assets/musik.jpg',
+          fit: BoxFit.cover,
+        ),
+      ), 
+    Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text(
           'Kategori Musik',
@@ -75,11 +84,12 @@ class MusicScreen extends StatelessWidget {
       ),
 
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(15.0),
         child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
+          crossAxisCount: 1,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 8,
           children: [
             _buildCategoryCard(context, 'Masa Adaptasi Sekolah'),
             _buildCategoryCard(context, 'Aku Suka Olahraga'),
@@ -98,8 +108,10 @@ class MusicScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+    ],
+  );
+ }
 
   // Fungsi navigasi dinamis
   void navigateToCategoryScreen(BuildContext context, String category) {
@@ -196,15 +208,23 @@ class MusicScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () => navigateToCategoryScreen(context, category),
       child: Card(
+       shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 3,
+      color: Colors.blue.shade100, 
+      child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
           child: Text(
             category,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             textAlign: TextAlign.center,
           ),
         ),
       ),
+      ),
     );
+    
   }
 }

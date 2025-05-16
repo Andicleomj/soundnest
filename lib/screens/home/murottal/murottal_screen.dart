@@ -7,8 +7,17 @@ class MurottalScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return Stack(
+    children: [
+      // Background Image
+      Positioned.fill(
+        child: Image.asset(
+          'assets/alquran.jpg',
+          fit: BoxFit.cover,
+        ),
+      ), 
+    Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text(
           'Kategori Murottal',
@@ -28,17 +37,20 @@ class MurottalScreen extends StatelessWidget {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(15.0),
         child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
+          crossAxisCount: 1,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 8,
           children: [
             _buildCategoryCard(context, 'Surah Pendek'),
             _buildCategoryCard(context, 'Ayat Kursi'),
           ],
         ),
       ),
+    ),
+    ],
     );
   }
 
@@ -71,14 +83,17 @@ class MurottalScreen extends StatelessWidget {
       },
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 4,
-        child: Center(
+        color: Colors.blue.shade100, 
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
           child: Text(
             category,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             textAlign: TextAlign.center,
           ),
         ),
+      ),
       ),
     );
   }

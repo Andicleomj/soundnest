@@ -44,6 +44,7 @@ dependencies:
   http: ^1.3.0
   intl: ^0.18.1
   url_launcher: ^6.1.7
+  speech_to_text: ^6.1.1
 
 dev_dependencies:
   flutter_test:
@@ -70,6 +71,9 @@ flutter:
   assets:
     - assets/Logo 1.png
     - assets/bg home.jpg
+    - assets/musik.jpg
+    - assets/music.jpg
+    - assets/alquran.jpg
     - assets/icons/bell.png
     - assets/icons/musik.png
     - assets/icons/murottal.png

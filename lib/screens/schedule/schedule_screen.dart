@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soundnest/screens/home/murottal/murottal_screen.dart';
-import 'package:soundnest/screens/scheduule/penjadwalan_musik.dart';
+import 'package:soundnest/screens/home/musik/musik_screen.dart';
+
 
 
 class ScheduleScreen extends StatelessWidget {
@@ -43,7 +44,7 @@ class ScheduleScreen extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const PenjadwalanMusik()),
+                  MaterialPageRoute(builder: (context) => const MusicScreen()),
                 );
               },
               child: Container(
