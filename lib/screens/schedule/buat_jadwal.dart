@@ -62,7 +62,7 @@ class ScheduleScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const BuatJadwalMurottal(),
+                    builder: (context) => const JadwalMurottal(),
                   ),
                 );
               },
