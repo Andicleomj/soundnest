@@ -17,8 +17,8 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
   List<String> surahList = [];
 
   final Map<String, String> categoryPaths = {
-    "Surah Pendek": "kategori_1/files",
-    "Ayat Kursi": "kategori_2/files",
+    "Surah Pendek": 'devices/devices_01/murottal/categories/kategori_1/files',
+    "Ayat Kursi": 'devices/devices_01/murottal/categories/kategori_2/files',
   };
 
   @override
@@ -27,18 +27,17 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
     _fetchSurahList();
   }
 
-  /// Fungsi untuk mengambil daftar surah berdasarkan kategori
+  /// Mengambil daftar surah dari Firebase berdasarkan kategori
   void _fetchSurahList() async {
     final path = categoryPaths[selectedCategory];
     if (path == null) return;
 
     final ref = FirebaseDatabase.instance.ref(path);
     final snapshot = await ref.get();
-
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-        surahList = data.keys.toList();
+        surahList = data.values.map((e) => e['title'].toString()).toList();
         selectedSurah = surahList.isNotEmpty ? surahList.first : null;
       });
     } else {
@@ -103,10 +102,8 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
               onChanged: (value) {
                 setState(() {
                   selectedCategory = value!;
-                  selectedSurah = null;
-                  surahList = [];
+                  _fetchSurahList();
                 });
-                _fetchSurahList();
               },
               decoration: const InputDecoration(labelText: 'Kategori Murottal'),
             ),

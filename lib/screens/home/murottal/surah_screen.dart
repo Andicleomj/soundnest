@@ -3,8 +3,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class SurahScreen extends StatefulWidget {
-  final String categoryPath; 
-  final String categoryName; 
+  final String categoryPath;
+  final String categoryName;
 
   const SurahScreen({
     Key? key,
@@ -28,7 +28,9 @@ class _SurahScreenState extends State<SurahScreen> {
   void initState() {
     super.initState();
     // Gunakan categoryPath dari widget supaya dinamis
-    databaseRef = FirebaseDatabase.instance.ref('devices/devices_01/murottal/categories/kategori_1/files'); 
+    databaseRef = FirebaseDatabase.instance.ref(
+      'devices/devices_01/murottal/categories/kategori_1/files',
+    );
     fetchSurahData();
 
     _audioPlayer.onPlayerComplete.listen((event) {
@@ -44,13 +46,14 @@ class _SurahScreenState extends State<SurahScreen> {
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-        surahList = data.entries.map((e) {
-          final value = e.value as Map<dynamic, dynamic>;
-          return {
-            'title': value['title'] ?? 'Tidak ada judul',
-            'fileId': value['fileId'] ?? '',
-          };
-        }).toList();
+        surahList =
+            data.entries.map((e) {
+              final value = e.value as Map<dynamic, dynamic>;
+              return {
+                'title': value['title'] ?? 'Tidak ada judul',
+                'fileId': value['fileId'] ?? '',
+              };
+            }).toList();
         isLoading = false;
       });
     } else {
@@ -59,6 +62,11 @@ class _SurahScreenState extends State<SurahScreen> {
       });
       print('Data di path ${widget.categoryPath} tidak ditemukan di database.');
     }
+  }
+
+  /// Fungsi untuk mendapatkan daftar surah secara eksternal (untuk JadwalMurottal)
+  List<String> getSurahList() {
+    return surahList.map((surah) => surah['title'] as String).toList();
   }
 
   void togglePlayPause(int index) async {
@@ -106,25 +114,28 @@ class _SurahScreenState extends State<SurahScreen> {
           ),
         ),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : surahList.isEmpty
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : surahList.isEmpty
               ? const Center(child: Text('Data surah tidak tersedia.'))
               : ListView.builder(
-                  itemCount: surahList.length,
-                  itemBuilder: (context, index) {
-                    final surah = surahList[index];
-                    final isCurrentPlaying = (currentIndex == index && isPlaying);
+                itemCount: surahList.length,
+                itemBuilder: (context, index) {
+                  final surah = surahList[index];
+                  final isCurrentPlaying = (currentIndex == index && isPlaying);
 
-                    return ListTile(
-                      title: Text(surah['title']),
-                      trailing: IconButton(
-                        icon: Icon(isCurrentPlaying ? Icons.pause : Icons.play_arrow),
-                        onPressed: () => togglePlayPause(index),
+                  return ListTile(
+                    title: Text(surah['title']),
+                    trailing: IconButton(
+                      icon: Icon(
+                        isCurrentPlaying ? Icons.pause : Icons.play_arrow,
                       ),
-                    );
-                  },
-                ),
+                      onPressed: () => togglePlayPause(index),
+                    ),
+                  );
+                },
+              ),
     );
   }
 }

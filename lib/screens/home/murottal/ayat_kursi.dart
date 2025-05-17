@@ -39,11 +39,10 @@ class _AyatKursiState extends State<AyatKursi> {
         final List<Map<String, dynamic>> tempList = [];
 
         data.forEach((key, value) {
-          if (value is Map && value.containsKey('title') && value.containsKey('fileId')) {
-            tempList.add({
-              'title': value['title'],
-              'fileId': value['fileId'],
-            });
+          if (value is Map &&
+              value.containsKey('title') &&
+              value.containsKey('fileId')) {
+            tempList.add({'title': value['title'], 'fileId': value['fileId']});
           }
         });
 
@@ -59,6 +58,11 @@ class _AyatKursiState extends State<AyatKursi> {
       print('⚠️ Data tidak ditemukan di path: ${widget.categoryPath}');
       setState(() => isLoading = false);
     }
+  }
+
+  /// Fungsi untuk mendapatkan daftar surah secara eksternal (untuk JadwalMurottal)
+  List<String> getSurahList() {
+    return surahList.map((surah) => surah['title'] as String).toList();
   }
 
   void togglePlay(int index) async {
@@ -112,25 +116,26 @@ class _AyatKursiState extends State<AyatKursi> {
           ),
         ),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : surahList.isEmpty
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : surahList.isEmpty
               ? const Center(child: Text('Data surah tidak tersedia.'))
               : ListView.builder(
-                  itemCount: surahList.length,
-                  itemBuilder: (context, index) {
-                    final surah = surahList[index];
-                    final isCurrent = currentIndex == index && isPlaying;
+                itemCount: surahList.length,
+                itemBuilder: (context, index) {
+                  final surah = surahList[index];
+                  final isCurrent = currentIndex == index && isPlaying;
 
-                    return ListTile(
-                      title: Text(surah['title']),
-                      trailing: IconButton(
-                        icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
-                        onPressed: () => togglePlay(index),
-                      ),
-                    );
-                  },
-                ),
+                  return ListTile(
+                    title: Text(surah['title']),
+                    trailing: IconButton(
+                      icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
+                      onPressed: () => togglePlay(index),
+                    ),
+                  );
+                },
+              ),
     );
   }
 }
