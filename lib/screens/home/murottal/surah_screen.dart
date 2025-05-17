@@ -10,6 +10,7 @@ class SurahScreen extends StatefulWidget {
     Key? key,
     required this.categoryPath,
     required this.categoryName,
+    required String categoryId,
   }) : super(key: key);
 
   @override
@@ -27,10 +28,14 @@ class _SurahScreenState extends State<SurahScreen> {
   @override
   void initState() {
     super.initState();
+<<<<<<< HEAD
     // Gunakan categoryPath dari widget supaya dinamis
     databaseRef = FirebaseDatabase.instance.ref(
       'devices/devices_01/murottal/categories/kategori_1/files',
     );
+=======
+    databaseRef = FirebaseDatabase.instance.ref(widget.categoryPath);
+>>>>>>> ff25e9ab0d4a69015451a0fdc8fa3904a4b8b08c
     fetchSurahData();
 
     _audioPlayer.onPlayerComplete.listen((event) {
@@ -41,11 +46,12 @@ class _SurahScreenState extends State<SurahScreen> {
     });
   }
 
-  void fetchSurahData() async {
+  Future<void> fetchSurahData() async {
     final snapshot = await databaseRef.get();
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
+<<<<<<< HEAD
         surahList =
             data.entries.map((e) {
               final value = e.value as Map<dynamic, dynamic>;
@@ -54,32 +60,49 @@ class _SurahScreenState extends State<SurahScreen> {
                 'fileId': value['fileId'] ?? '',
               };
             }).toList();
+=======
+        surahList = data.entries.map((entry) {
+          final value = entry.value as Map<dynamic, dynamic>;
+          return {
+            'title': value['title'] ?? 'Tanpa Judul',
+            'fileId': value['fileId'] ?? '',
+          };
+        }).toList();
+>>>>>>> ff25e9ab0d4a69015451a0fdc8fa3904a4b8b08c
         isLoading = false;
       });
     } else {
       setState(() {
         isLoading = false;
       });
-      print('Data di path ${widget.categoryPath} tidak ditemukan di database.');
+      debugPrint('Data tidak ditemukan di path: ${widget.categoryPath}');
     }
   }
 
+<<<<<<< HEAD
   /// Fungsi untuk mendapatkan daftar surah secara eksternal (untuk JadwalMurottal)
   List<String> getSurahList() {
     return surahList.map((surah) => surah['title'] as String).toList();
   }
 
   void togglePlayPause(int index) async {
+=======
+  Future<void> togglePlayPause(int index) async {
+>>>>>>> ff25e9ab0d4a69015451a0fdc8fa3904a4b8b08c
     final fileId = surahList[index]['fileId'];
+    if (fileId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('FileId tidak tersedia')),
+      );
+      return;
+    }
+
     final url = 'http://localhost:3000/stream/$fileId';
 
-    // Jika sedang memainkan surah yang sama → PAUSE
     if (isPlaying && currentIndex == index) {
       await _audioPlayer.pause();
       setState(() => isPlaying = false);
-    }
-    // Jika sedang tidak memainkan atau berpindah surah → PLAY
-    else {
+    } else {
       await _audioPlayer.stop();
       await _audioPlayer.play(UrlSource(url));
       setState(() {
@@ -125,11 +148,21 @@ class _SurahScreenState extends State<SurahScreen> {
                   final surah = surahList[index];
                   final isCurrentPlaying = (currentIndex == index && isPlaying);
 
+<<<<<<< HEAD
                   return ListTile(
                     title: Text(surah['title']),
                     trailing: IconButton(
                       icon: Icon(
                         isCurrentPlaying ? Icons.pause : Icons.play_arrow,
+=======
+                    return ListTile(
+                      title: Text(surah['title']),
+                      trailing: IconButton(
+                        icon: Icon(
+                          isCurrentPlaying ? Icons.pause : Icons.play_arrow,
+                        ),
+                        onPressed: () => togglePlayPause(index),
+>>>>>>> ff25e9ab0d4a69015451a0fdc8fa3904a4b8b08c
                       ),
                       onPressed: () => togglePlayPause(index),
                     ),
