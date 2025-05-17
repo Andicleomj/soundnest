@@ -146,58 +146,31 @@ class ScheduleService {
   }
 
   Future<String?> _getAudioUrl(String category) async {
-    return await _fetchAudioUrl(_musicRef, category) ??
-        await _fetchAudioUrl(_murottalRef, category);
+    return await _fetchAudioUrlImproved(_musicRef, category) ??
+        await _fetchAudioUrlImproved(_murottalRef, category);
   }
 
-  Future<String?> _fetchAudioUrl(DatabaseReference ref, String category) async {
+  Future<String?> _fetchAudioUrlImproved(
+    DatabaseReference ref,
+    String category,
+  ) async {
     final snapshot = await ref.get();
     if (snapshot.exists) {
-      final data = snapshot.value as Map;
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
       print("📂 Data Firebase: ${data}");
 
-      // Mencari kategori berdasarkan nama kategori (nama)
       for (var cat in data.values) {
-        if (cat is Map && cat.containsKey('nama')) {
-          final categoryName = cat['nama']?.toString().toLowerCase() ?? '';
-          final categoryParts = category.toLowerCase().split(' - ');
-
-          if (categoryParts.length == 2) {
-            final mainCategory = categoryParts[0].trim();
-            final fileTitle = categoryParts[1].trim();
-
-            if (categoryName.contains(mainCategory)) {
-              print("✅ Kategori ditemukan: $categoryName");
-
-              if (cat.containsKey('files')) {
-                for (var file in cat['files'].values) {
-                  if (file is Map && file.containsKey('title')) {
-                    final fileName =
-                        file['title']?.toString().toLowerCase() ?? '';
-                    if (fileName.contains(fileTitle)) {
-                      print("🎵 File ditemukan: ${file['title']}");
-                      return "http://localhost:3000/drive/${file['fileId']}";
-                    }
-                  }
-                }
-              }
-            }
-          } else if (categoryName.contains(category.toLowerCase())) {
-            print("✅ Kategori ditemukan: $categoryName");
-
-            // Jika kategori ditemukan, cek file di dalamnya
-            if (cat.containsKey('files')) {
-              for (var file in cat['files'].values) {
-                if (file is Map && file.containsKey('fileId')) {
-                  print("🎵 File ditemukan: ${file['title']}");
-                  return "http://localhost:3000/drive/${file['fileId']}";
-                }
-              }
+        if (cat is Map &&
+            cat['nama']?.toString().toLowerCase() == category.toLowerCase()) {
+          for (var file in cat['files'].values) {
+            if (file is Map && file.containsKey('fileId')) {
+              return "http://localhost:3000/drive/${file['fileId']}";
             }
           }
         }
       }
     }
+
     print("❌ URL audio tidak ditemukan untuk kategori: $category");
     return null;
   }
