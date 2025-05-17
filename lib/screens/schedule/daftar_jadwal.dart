@@ -35,7 +35,7 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
 
   Future<void> _loadSchedules() async {
     final manualSnapshot = await _manualRef.get();
-    if (manualSnapshot.exists && manualSnapshot.value is Map) {
+    if (mounted && manualSnapshot.exists && manualSnapshot.value is Map) {
       final schedules = Map<String, dynamic>.from(manualSnapshot.value as Map);
       setState(() {
         _manualSchedules =
@@ -48,23 +48,31 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
     final currentDay = _getDayName(DateTime.now());
     final autoSnapshot = await _autoRef.child(currentDay).get();
 
-    if (autoSnapshot.exists && autoSnapshot.value is Map) {
+    if (mounted && autoSnapshot.exists && autoSnapshot.value is Map) {
       final schedule = Map<String, dynamic>.from(autoSnapshot.value as Map);
       List<Map<String, dynamic>> autoList = [];
 
       if (schedule['content'] != null) {
-        autoList.add(await _fetchContent(schedule['content'], _musicRef));
+        final musicContent = await _fetchContent(
+          schedule['content'],
+          _musicRef,
+        );
+        autoList.add(musicContent);
       }
 
       if (schedule['content_murottal'] != null) {
-        autoList.add(
-          await _fetchContent(schedule['content_murottal'], _murottalRef),
+        final murottalContent = await _fetchContent(
+          schedule['content_murottal'],
+          _murottalRef,
         );
+        autoList.add(murottalContent);
       }
 
-      setState(() {
-        _autoSchedules = autoList;
-      });
+      if (mounted) {
+        setState(() {
+          _autoSchedules = autoList;
+        });
+      }
     }
   }
 
@@ -73,13 +81,13 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
     DatabaseReference ref,
   ) async {
     final categorySnapshot = await ref.child(category).get();
-
     if (categorySnapshot.exists && categorySnapshot.value is Map) {
       final contents = (categorySnapshot.value as Map).values.toList();
-      final randomContent = contents[Random().nextInt(contents.length)];
-      return Map<String, dynamic>.from(randomContent);
+      if (contents.isNotEmpty) {
+        final randomContent = contents[Random().nextInt(contents.length)];
+        return Map<String, dynamic>.from(randomContent);
+      }
     }
-
     return {'title': 'Konten tidak tersedia', 'file_id': ''};
   }
 
@@ -94,6 +102,15 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
       'minggu',
     ];
     return days[(date.weekday - 1) % 7];
+  }
+
+  @override
+  void dispose() {
+    _manualRef.onDisconnect();
+    _autoRef.onDisconnect();
+    _musicRef.onDisconnect();
+    _murottalRef.onDisconnect();
+    super.dispose();
   }
 
   @override
@@ -138,7 +155,7 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
         final schedule = schedules[index];
         return ListTile(
           title: Text(schedule['title'] ?? 'Tanpa Judul'),
-          subtitle: Text("File ID: ${schedule['file_id']}"),
+          subtitle: Text("File ID: ${schedule['file_id'] ?? 'Tidak ada'}"),
         );
       },
     );
