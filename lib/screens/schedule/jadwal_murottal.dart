@@ -59,46 +59,66 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
     }
   }
 
-  void _saveSchedule() async {
+  Future<void> _saveSchedule() async {
     final time = _timeController.text.trim();
     final duration = _durationController.text.trim();
 
-    if (time.isNotEmpty && duration.isNotEmpty && selectedSurah != null) {
-      final path = categoryPaths[selectedCategory];
-      final ref = FirebaseDatabase.instance.ref(path);
-      final snapshot = await ref.get();
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
-
-      final selectedAudio = data.values.firstWhere(
-        (e) => e['title'] == selectedSurah,
-        orElse: () => null,
-      );
-
-      if (selectedAudio == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Audio tidak ditemukan.')));
-        return;
-      }
-
-      final audioUrl = "http://localhost:3000/drive/${selectedAudio['fileId']}";
-
-      await ScheduleService().saveManualSchedule(
-        time,
-        duration,
-        "$selectedCategory - $selectedSurah",
-        selectedDay,
-        audioUrl, // Menyimpan URL audio di jadwal
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Jadwal murottal berhasil disimpan.')),
-      );
-
-      _timeController.clear();
-      _durationController.clear();
-      setState(() => selectedSurah = null);
+    if (time.isEmpty || duration.isEmpty || selectedSurah == null) {
+      _showMessage('Harap lengkapi semua data.');
+      return;
     }
+
+    final fileId = await _getFileId(selectedCategory, selectedSurah!);
+    if (fileId == null) {
+      _showMessage('Audio tidak ditemukan untuk surah yang dipilih.');
+      return;
+    }
+
+    final audioUrl = "http://localhost:3000/drive/$fileId";
+
+    await ScheduleService().saveManualSchedule(
+      time,
+      duration,
+      "murottal",
+      selectedCategory,
+      selectedSurah!,
+      selectedDay,
+    );
+
+    _showMessage('Jadwal murottal berhasil disimpan.');
+    _clearFields();
+  }
+
+  Future<String?> _getFileId(String category, String surah) async {
+    final path = categoryPaths[category];
+    if (path == null) return null;
+
+    final ref = FirebaseDatabase.instance.ref(path);
+    final snapshot = await ref.get();
+
+    if (snapshot.exists) {
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+      for (var file in data.values) {
+        if (file['title'] == surah) {
+          return file['fileId'];
+        }
+      }
+    }
+    return null;
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _clearFields() {
+    _timeController.clear();
+    _durationController.clear();
+    setState(() {
+      selectedSurah = null;
+    });
   }
 
   @override

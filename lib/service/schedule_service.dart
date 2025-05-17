@@ -130,23 +130,59 @@ class ScheduleService {
     String time,
     String duration,
     String category,
+    String selectedCategory,
+    String surah,
     String day,
-    String audioUrl,
   ) async {
+    final fileId = await _getFileIdFromSurah(category, selectedCategory, surah);
+
+    if (fileId == null) {
+      print(
+        "❌ File ID tidak ditemukan untuk surah $surah di kategori $selectedCategory",
+      );
+      return;
+    }
+
+    final audioUrl = "http://localhost:3000/drive/$fileId";
+
     await _manualRef.push().set({
       'time_start': time,
       'duration': duration,
       'category': category,
-      'day': day,
+      'surah': surah,
       'audio_url': audioUrl,
+      'day': day,
       'isActive': true,
     });
-    print("✅ Jadwal manual berhasil disimpan.");
+    print("✅ Jadwal manual berhasil disimpan dengan audio: $audioUrl");
   }
 
-  void dispose() {
+  Future<String?> _getFileIdFromSurah(
+    String category,
+    String selectedCategory,
+    String surah,
+  ) async {
+    final snapshot =
+        await FirebaseDatabase.instance
+            .ref(
+              'devices/devices_01/$category/categories/$selectedCategory/files',
+            )
+            .get();
+
+    if (snapshot.exists) {
+      final files = Map<String, dynamic>.from(snapshot.value as Map);
+      for (var file in files.values) {
+        if (file is Map && file['title'] == surah) {
+          return file['fileId'];
+        }
+      }
+    }
+    return null;
+  }
+
+  Future<void> stop() async {
     _timer?.cancel();
-    _playerService.stopMusic();
-    print("🛑 ScheduleService dihentikan.");
+    await _playerService.stopMusic();
+    print("✅ ScheduleService stopped.");
   }
 }
