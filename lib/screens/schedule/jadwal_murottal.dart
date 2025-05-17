@@ -1,6 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 
+class ScheduleScreen extends StatelessWidget {
+  const ScheduleScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Penjadwalan"), centerTitle: true),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const BuatJadwalMurottal(),
+                    ),
+                  ),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text("Murottal Al-Qur’an"),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class BuatJadwalMurottal extends StatefulWidget {
   const BuatJadwalMurottal({super.key});
 
@@ -16,17 +52,8 @@ class _BuatJadwalMurottalState extends State<BuatJadwalMurottal> {
   final TextEditingController _timeController = TextEditingController();
   final TextEditingController _durationController = TextEditingController();
 
-  Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _timeController.text = picked.format(context);
-      });
-    }
-  }
+  String selectedCategory = "Surah Pendek";
+  final List<String> categories = ["Surah Pendek", "Ayat Kursi"];
 
   void _saveSchedule() async {
     final time = _timeController.text.trim();
@@ -37,6 +64,7 @@ class _BuatJadwalMurottalState extends State<BuatJadwalMurottal> {
         'time_start': time,
         'duration': duration,
         'content': 'Murottal',
+        'category': selectedCategory,
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -59,16 +87,25 @@ class _BuatJadwalMurottalState extends State<BuatJadwalMurottal> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            DropdownButtonFormField<String>(
+              value: selectedCategory,
+              items:
+                  categories.map((category) {
+                    return DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+              onChanged: (value) => setState(() => selectedCategory = value!),
+              decoration: const InputDecoration(labelText: 'Kategori Murottal'),
+            ),
             TextField(
-              readOnly: true,
               controller: _timeController,
               decoration: const InputDecoration(labelText: 'Waktu (HH:MM)'),
-              onTap: () => _selectTime(context),
             ),
             TextField(
               controller: _durationController,
               decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
-              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
             ElevatedButton(
