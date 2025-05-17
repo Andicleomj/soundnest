@@ -31,14 +31,12 @@ class ScheduleService {
       const Duration(seconds: 60),
       (_) => checkAndRunSchedule(),
     );
-
     _ref.onValue.listen((event) => checkAndRunSchedule());
     print("✅ ScheduleService started.");
   }
 
   Future<void> checkAndRunSchedule() async {
     if (_isAudioPlaying) return;
-
     print("⏰ Mengecek jadwal...");
     final now = DateTime.now();
     final schedules = await getSchedules();
@@ -92,13 +90,13 @@ class ScheduleService {
   bool _isToday(String day) {
     final today =
         [
-          'Senin',
-          'Selasa',
-          'Rabu',
-          'Kamis',
-          'Jumat',
-          'Sabtu',
-          'Minggu',
+          "Senin",
+          "Selasa",
+          "Rabu",
+          "Kamis",
+          "Jumat",
+          "Sabtu",
+          "Minggu",
         ][DateTime.now().weekday - 1];
     return day == today;
   }
