@@ -67,27 +67,46 @@ class ScheduleService {
   }
 
   Future<List<Map<String, dynamic>>> getSchedules() async {
-    return [
-      ...await _fetchSchedules(_manualRef),
-      ...await _fetchSchedules(_autoRef),
-    ];
-  }
-
-  Future<List<Map<String, dynamic>>> _fetchSchedules(
-    DatabaseReference ref,
-  ) async {
-    try {
-      final snapshot = await ref.get();
-      if (snapshot.exists) {
-        return (snapshot.value as Map).values
+    final snapshot = await _ref.get();
+    if (snapshot.exists) {
+      final data = snapshot.value;
+      if (data is Map) {
+        return data.values
             .whereType<Map>()
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
       }
-    } catch (e) {
-      print("❌ Error fetching schedules: $e");
     }
     return [];
+  }
+
+  Future<String?> _fetchAudioUrl(DatabaseReference ref, String category) async {
+    final snapshot = await ref.get();
+    if (snapshot.exists) {
+      final data = snapshot.value as Map;
+      print("📂 Data Firebase: ${data}");
+
+      for (var cat in data.values) {
+        if (cat is Map && cat.containsKey('nama')) {
+          final categoryName = cat['nama']?.toString().toLowerCase() ?? '';
+          if (categoryName.contains(category.toLowerCase())) {
+            print("✅ Kategori ditemukan: $categoryName");
+
+            if (cat.containsKey('files')) {
+              for (var file in cat['files'].values) {
+                if (file is Map && file.containsKey('fileId')) {
+                  print("🎵 File ditemukan: ${file['title']}");
+                  return "http://localhost:3000/drive/${file['fileId']}";
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    print("❌ URL audio tidak ditemukan untuk kategori: $category");
+    return null;
   }
 
   bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
