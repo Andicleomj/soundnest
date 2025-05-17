@@ -5,7 +5,7 @@ import 'package:soundnest/screens/auth/login_screen.dart';
 import 'package:soundnest/screens/auth/signup_screen.dart';
 import 'package:soundnest/screens/schedule/schedule.dart';
 import 'package:soundnest/screens/home/dashboard_screen.dart';
-import 'package:soundnest/screens/schedule/schedule_screen.dart';
+import 'package:soundnest/screens/schedule/buat_jadwal.dart';
 import 'package:soundnest/screens/splash_screen.dart';
 import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/screens/home/musik/musik_kategori.dart';
