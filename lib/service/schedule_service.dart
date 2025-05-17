@@ -100,16 +100,27 @@ class ScheduleService {
     if (_isAudioPlaying) return;
 
     final audioUrl = schedule['audio_url'];
-    if (audioUrl == null) return;
+    if (audioUrl == null) {
+      print("❌ URL audio tidak ada.");
+      return;
+    }
 
     print("🔊 Memutar audio dari URL: $audioUrl.");
     _isAudioPlaying = true;
 
     try {
-      await _playerService.playMusicFromProxy(audioUrl);
+      // Uji dengan URL tanpa /stream/
+      final validAudioUrl =
+          audioUrl.contains('/stream/')
+              ? audioUrl.replaceAll('/stream/', '')
+              : audioUrl;
+
+      await _playerService.playMusicFromProxy(validAudioUrl);
       await Future.delayed(
         Duration(minutes: int.tryParse(schedule['duration']) ?? 1),
       );
+    } catch (e) {
+      print("❌ Error saat memutar audio: $e");
     } finally {
       _isAudioPlaying = false;
     }
