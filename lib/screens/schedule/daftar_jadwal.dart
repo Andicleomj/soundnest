@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:audioplayers/audioplayers.dart';
 
 class DaftarJadwal extends StatefulWidget {
   const DaftarJadwal({super.key});
@@ -19,8 +18,6 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
 
   List<Map<String, dynamic>> _manualSchedules = [];
   bool _isLoading = true;
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  String? _currentPlayingId;
 
   @override
   void initState() {
@@ -43,7 +40,6 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
                     'duration': data['duration'] ?? '00:00',
                     'time_start': data['time_start'] ?? 'Tidak ada waktu',
                     'is_active': data['is_active'] ?? false,
-                    'audio_url': data['audio_url'] ?? '', // URL Audio
                   };
                 }).toList()
                 : [];
@@ -65,28 +61,6 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
             return schedule;
           }).toList();
     });
-  }
-
-  // Fungsi untuk memutar audio
-  void _playAudio(String id, String url) async {
-    if (_currentPlayingId == id) {
-      await _audioPlayer.stop();
-      setState(() {
-        _currentPlayingId = null;
-      });
-    } else {
-      await _audioPlayer.stop();
-      await _audioPlayer.play(UrlSource(url));
-      setState(() {
-        _currentPlayingId = id;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
   }
 
   @override
@@ -114,32 +88,11 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
                         Text("Mulai: ${schedule['time_start']}"),
                       ],
                     ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Tombol Play/Pause
-                        IconButton(
-                          icon: Icon(
-                            _currentPlayingId == schedule['id']
-                                ? Icons.pause
-                                : Icons.play_arrow,
-                          ),
-                          onPressed:
-                              schedule['audio_url'].isNotEmpty
-                                  ? () => _playAudio(
-                                    schedule['id'],
-                                    schedule['audio_url'],
-                                  )
-                                  : null,
-                        ),
-                        // Switch Aktivasi Jadwal
-                        Switch(
-                          value: schedule['is_active'],
-                          onChanged:
-                              (value) =>
-                                  _toggleScheduleStatus(schedule['id'], value),
-                        ),
-                      ],
+                    trailing: Switch(
+                      value: schedule['is_active'],
+                      onChanged:
+                          (value) =>
+                              _toggleScheduleStatus(schedule['id'], value),
                     ),
                   );
                 },

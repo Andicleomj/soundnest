@@ -59,66 +59,27 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
     }
   }
 
-  Future<void> _saveSchedule() async {
+  // baru
+  void _saveSchedule() async {
     final time = _timeController.text.trim();
     final duration = _durationController.text.trim();
 
-    if (time.isEmpty || duration.isEmpty || selectedSurah == null) {
-      _showMessage('Harap lengkapi semua data.');
-      return;
+    if (time.isNotEmpty && duration.isNotEmpty && selectedSurah != null) {
+      await ScheduleService().saveManualSchedule(
+        time,
+        duration,
+        "$selectedCategory - $selectedSurah",
+        selectedDay, // Menyimpan hari yang dipilih
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Jadwal murottal berhasil disimpan.')),
+      );
+
+      _timeController.clear();
+      _durationController.clear();
+      setState(() => selectedSurah = null);
     }
-
-    final fileId = await _getFileId(selectedCategory, selectedSurah!);
-    if (fileId == null) {
-      _showMessage('Audio tidak ditemukan untuk surah yang dipilih.');
-      return;
-    }
-
-    final audioUrl = "http://localhost:3000/drive/$fileId";
-
-    await ScheduleService().saveManualSchedule(
-      time,
-      duration,
-      "murottal",
-      selectedCategory,
-      selectedSurah!,
-      selectedDay,
-    );
-
-    _showMessage('Jadwal murottal berhasil disimpan.');
-    _clearFields();
-  }
-
-  Future<String?> _getFileId(String category, String surah) async {
-    final path = categoryPaths[category];
-    if (path == null) return null;
-
-    final ref = FirebaseDatabase.instance.ref(path);
-    final snapshot = await ref.get();
-
-    if (snapshot.exists) {
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
-      for (var file in data.values) {
-        if (file['title'] == surah) {
-          return file['fileId'];
-        }
-      }
-    }
-    return null;
-  }
-
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  void _clearFields() {
-    _timeController.clear();
-    _durationController.clear();
-    setState(() {
-      selectedSurah = null;
-    });
   }
 
   @override

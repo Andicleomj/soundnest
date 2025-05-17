@@ -12,6 +12,12 @@ class ScheduleService {
   final DatabaseReference _autoRef = FirebaseDatabase.instance.ref(
     'devices/devices_01/schedule/otomatis',
   );
+  final DatabaseReference _musicRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/music/categories',
+  );
+  final DatabaseReference _murottalRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/murottal/categories',
+  );
 
   final MusicPlayerService _playerService = MusicPlayerService();
   Timer? _timer;
@@ -28,6 +34,22 @@ class ScheduleService {
 
     _ref.onValue.listen((event) => checkAndRunSchedule());
     print("✅ ScheduleService started.");
+  }
+
+  Future<void> saveManualSchedule(
+    String time,
+    String duration,
+    String category,
+    String day,
+  ) async {
+    await _manualRef.push().set({
+      'time_start': time,
+      'duration': duration,
+      'category': category,
+      'day': day,
+      'isActive': true,
+    });
+    print("✅ Jadwal manual berhasil disimpan.");
   }
 
   Future<void> checkAndRunSchedule() async {
@@ -57,8 +79,9 @@ class ScheduleService {
     try {
       final snapshot = await ref.get();
       if (snapshot.exists) {
-        return (snapshot.value as Map).entries
-            .map((e) => {...Map<String, dynamic>.from(e.value), 'id': e.key})
+        return (snapshot.value as Map).values
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
             .toList();
       }
     } catch (e) {
@@ -99,90 +122,67 @@ class ScheduleService {
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
     if (_isAudioPlaying) return;
 
-    final audioUrl = schedule['audio_url'];
+    final category = schedule['category'];
+    final duration = schedule['duration'];
+
+    if (category == null) return;
+
+    final audioUrl = await _getAudioUrl(category);
+
     if (audioUrl == null) {
-      print("❌ URL audio tidak ada.");
+      print("❌ URL audio tidak ditemukan untuk kategori: $category");
       return;
     }
 
-    print("🔊 Memutar audio dari URL: $audioUrl.");
+    print("🔊 Memutar audio dari URL: $audioUrl selama $duration menit.");
     _isAudioPlaying = true;
 
     try {
-      // Uji dengan URL tanpa /stream/
-      final validAudioUrl =
-          audioUrl.contains('/stream/')
-              ? audioUrl.replaceAll('/stream/', '')
-              : audioUrl;
-
-      await _playerService.playMusicFromProxy(validAudioUrl);
-      await Future.delayed(
-        Duration(minutes: int.tryParse(schedule['duration']) ?? 1),
-      );
-    } catch (e) {
-      print("❌ Error saat memutar audio: $e");
+      await _playerService.playMusicFromProxy(audioUrl);
+      await Future.delayed(Duration(minutes: int.tryParse(duration) ?? 1));
     } finally {
       _isAudioPlaying = false;
     }
   }
 
-  Future<void> saveManualSchedule(
-    String time,
-    String duration,
-    String category,
-    String selectedCategory,
-    String surah,
-    String day,
-  ) async {
-    final fileId = await _getFileIdFromSurah(category, selectedCategory, surah);
-
-    if (fileId == null) {
-      print(
-        "❌ File ID tidak ditemukan untuk surah $surah di kategori $selectedCategory",
-      );
-      return;
-    }
-
-    final audioUrl = "http://localhost:3000/drive/$fileId";
-
-    await _manualRef.push().set({
-      'time_start': time,
-      'duration': duration,
-      'category': category,
-      'surah': surah,
-      'audio_url': audioUrl,
-      'day': day,
-      'isActive': true,
-    });
-    print("✅ Jadwal manual berhasil disimpan dengan audio: $audioUrl");
+  Future<String?> _getAudioUrl(String category) async {
+    return await _fetchAudioUrl(_musicRef, category) ??
+        await _fetchAudioUrl(_murottalRef, category);
   }
 
-  Future<String?> _getFileIdFromSurah(
-    String category,
-    String selectedCategory,
-    String surah,
-  ) async {
-    final snapshot =
-        await FirebaseDatabase.instance
-            .ref(
-              'devices/devices_01/$category/categories/$selectedCategory/files',
-            )
-            .get();
-
+  Future<String?> _fetchAudioUrl(DatabaseReference ref, String category) async {
+    final snapshot = await ref.get();
     if (snapshot.exists) {
-      final files = Map<String, dynamic>.from(snapshot.value as Map);
-      for (var file in files.values) {
-        if (file is Map && file['title'] == surah) {
-          return file['fileId'];
+      final data = snapshot.value as Map;
+      print("📂 Data Firebase: ${data}");
+
+      // Mencari kategori berdasarkan nama kategori (nama)
+      for (var cat in data.values) {
+        if (cat is Map && cat.containsKey('nama')) {
+          final categoryName = cat['nama']?.toString().toLowerCase() ?? '';
+          if (categoryName.contains(category.toLowerCase())) {
+            print("✅ Kategori ditemukan: $categoryName");
+
+            // Jika kategori ditemukan, cek file di dalamnya
+            if (cat.containsKey('files')) {
+              for (var file in cat['files'].values) {
+                if (file is Map && file.containsKey('fileId')) {
+                  print("🎵 File ditemukan: ${file['title']}");
+                  return "http://localhost:3000/drive/${file['fileId']}";
+                }
+              }
+            }
+          }
         }
       }
     }
+    print("❌ URL audio tidak ditemukan untuk kategori: $category");
     return null;
   }
 
-  Future<void> stop() async {
+  void dispose() {
     _timer?.cancel();
-    await _playerService.stopMusic();
-    print("✅ ScheduleService stopped.");
+    _playerService.stopMusic();
+    print("🛑 ScheduleService dihentikan.");
   }
 }
