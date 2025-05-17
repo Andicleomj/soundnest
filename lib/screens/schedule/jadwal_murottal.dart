@@ -14,12 +14,23 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
   final TextEditingController _durationController = TextEditingController();
   String selectedCategory = "Surah Pendek";
   String? selectedSurah;
+  String selectedDay = "Senin";
   List<String> surahList = [];
 
   final Map<String, String> categoryPaths = {
     "Surah Pendek": 'devices/devices_01/murottal/categories/kategori_1/files',
     "Ayat Kursi": 'devices/devices_01/murottal/categories/kategori_2/files',
   };
+
+  final List<String> daysOfWeek = [
+    "Senin",
+    "Selasa",
+    "Rabu",
+    "Kamis",
+    "Jumat",
+    "Sabtu",
+    "Minggu",
+  ];
 
   @override
   void initState() {
@@ -57,6 +68,7 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
         time,
         duration,
         "$selectedCategory - $selectedSurah",
+        selectedDay, // Menyimpan hari yang dipilih
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -79,6 +91,7 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DropdownButtonFormField<String>(
               value: selectedCategory,
@@ -97,6 +110,7 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
               },
               decoration: const InputDecoration(labelText: 'Kategori Murottal'),
             ),
+            const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: selectedSurah,
               items:
@@ -106,13 +120,27 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
               onChanged: (value) => setState(() => selectedSurah = value),
               decoration: const InputDecoration(labelText: 'Pilih Surah'),
             ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: selectedDay,
+              items:
+                  daysOfWeek.map((day) {
+                    return DropdownMenuItem(value: day, child: Text(day));
+                  }).toList(),
+              onChanged: (value) => setState(() => selectedDay = value!),
+              decoration: const InputDecoration(labelText: 'Pilih Hari'),
+            ),
+            const SizedBox(height: 16),
             TextField(
               controller: _timeController,
               decoration: const InputDecoration(labelText: 'Waktu (HH:MM)'),
+              keyboardType: TextInputType.datetime,
             ),
+            const SizedBox(height: 8),
             TextField(
               controller: _durationController,
               decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
+              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
             SizedBox(

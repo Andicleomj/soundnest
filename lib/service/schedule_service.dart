@@ -38,12 +38,14 @@ class ScheduleService {
     String time,
     String duration,
     String category,
+    String day,
   ) async {
     try {
       await _manualRef.push().set({
         'time_start': time,
         'duration': duration,
         'category': category,
+        'day': day,
         'isActive': true,
       });
       print("✅ Jadwal manual berhasil disimpan.");
@@ -95,6 +97,39 @@ class ScheduleService {
     }
   }
 
+  bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
+    final timeStart = schedule['time_start']?.toString();
+    final day = schedule['day']?.toString();
+
+    if (timeStart == null || day == null) return false;
+
+    final parts = timeStart.split(':');
+    if (parts.length != 2) return false;
+
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+
+    if (hour == null || minute == null) return false;
+
+    return now.hour == hour && now.minute == minute && _isToday(day);
+  }
+
+  bool _isToday(String day) {
+    final now = DateTime.now();
+    final today =
+        [
+          'Senin',
+          'Selasa',
+          'Rabu',
+          'Kamis',
+          'Jumat',
+          'Sabtu',
+          'Minggu',
+        ][now.weekday - 1];
+
+    return day == today;
+  }
+
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
     if (_isAudioPlaying) return;
 
@@ -114,20 +149,6 @@ class ScheduleService {
     } finally {
       _isAudioPlaying = false;
     }
-  }
-
-  bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
-    final timeStart = schedule['time_start']?.toString();
-    if (timeStart == null) return false;
-
-    final parts = timeStart.split(':');
-    if (parts.length != 2) return false;
-
-    final hour = int.tryParse(parts[0]);
-    final minute = int.tryParse(parts[1]);
-    if (hour == null || minute == null) return false;
-
-    return now.hour == hour && now.minute == minute;
   }
 
   void dispose() {
