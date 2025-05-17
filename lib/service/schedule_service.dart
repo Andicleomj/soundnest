@@ -218,6 +218,9 @@ class ScheduleService {
 
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
     try {
+      print('🔍 Starting audio playback process...');
+
+      // 1. Map display names to Firebase categories
       final categoryMap = {
         "Ayat Kursi": "kategori_1",
         "Surah Pendek": "kategori_2",
@@ -225,44 +228,62 @@ class ScheduleService {
       final categoryKey = categoryMap[schedule['category']] ?? 'kategori_1';
       final fileKey = schedule['fileKey'] ?? 'file_1';
 
-      // 1. Get the actual file ID from Firebase
+      // 2. Construct the correct Firebase reference
       final audioRef = FirebaseDatabase.instance.ref(
         'devices/devices_01/murottal/categories/$categoryKey/files/$fileKey',
       );
-      final snapshot = await audioRef.get();
+      print('📡 Firebase path: ${audioRef.path}');
 
-      if (!snapshot.exists) {
-        print('❌ Audio metadata not found');
+      // 3. Fetch audio metadata with timeout
+      final snapshot = await audioRef.get().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          print('⏱ Timeout while fetching audio metadata');
+          throw TimeoutException('Timeout while fetching audio metadata');
+        },
+      );
+
+      if (snapshot == null || !snapshot.exists) {
+        print('❌ Audio metadata does not exist at this path');
         return;
       }
 
+      // 4. Debug print all available fields
       final audioData = Map<String, dynamic>.from(snapshot.value as Map);
-      final fileId = audioData['file1']?.toString();
+      print('🔊 Audio metadata fields: ${audioData.keys}');
 
-      if (fileId == null || fileId.isEmpty) {
-        print('❌ No fileId found in audio data');
+      // 5. Try alternative field names if file1 doesn't exist
+      final fileId =
+          audioData['file1'] ??
+          audioData['fileId'] ??
+          audioData['file_name'] ??
+          audioData['id'];
+
+      if (fileId == null || fileId.toString().isEmpty) {
+        print('❌ No valid file ID found in audio data. Available fields:');
+        audioData.forEach((key, value) => print('$key: $value'));
         return;
       }
 
-      // 2. Construct PROPER audio URL (no spaces, no double processing)
-      final encodedFileId = Uri.encodeComponent(fileId);
-      final audioUrl = "http://localhost:3000/drive/$encodedFileId";
+      // 6. Construct and verify audio URL
+      final encodedFileId = Uri.encodeComponent(fileId.toString());
+      final audioUrl = "http://localhost:3000/audios/$encodedFileId.mp3";
+      print('🔗 Attempting to play from: $audioUrl');
 
-      print('🔊 Attempting to play: $audioUrl');
-
-      // 3. Verify URL before playing
+      // 7. Verify URL exists before playing
       final response = await http.head(Uri.parse(audioUrl));
       if (response.statusCode != 200) {
         print('❌ Audio file not available (HTTP ${response.statusCode})');
         return;
       }
 
+      // 8. Start playback
       _isAudioPlaying = true;
       await _playerService.play(audioUrl);
 
-      // ... rest of playback logic ...
+      // ... rest of your playback logic ...
     } catch (e) {
-      print('❌ Playback error: $e');
+      print('❌ Critical error in audio playback: $e');
     } finally {
       _isAudioPlaying = false;
     }
