@@ -28,14 +28,7 @@ class _SurahScreenState extends State<SurahScreen> {
   @override
   void initState() {
     super.initState();
-<<<<<<< HEAD
-    // Gunakan categoryPath dari widget supaya dinamis
-    databaseRef = FirebaseDatabase.instance.ref(
-      'devices/devices_01/murottal/categories/kategori_1/files',
-    );
-=======
     databaseRef = FirebaseDatabase.instance.ref(widget.categoryPath);
->>>>>>> ff25e9ab0d4a69015451a0fdc8fa3904a4b8b08c
     fetchSurahData();
 
     _audioPlayer.onPlayerComplete.listen((event) {
@@ -51,24 +44,14 @@ class _SurahScreenState extends State<SurahScreen> {
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-<<<<<<< HEAD
         surahList =
-            data.entries.map((e) {
-              final value = e.value as Map<dynamic, dynamic>;
+            data.entries.map((entry) {
+              final value = entry.value as Map<dynamic, dynamic>;
               return {
                 'title': value['title'] ?? 'Tidak ada judul',
                 'fileId': value['fileId'] ?? '',
               };
             }).toList();
-=======
-        surahList = data.entries.map((entry) {
-          final value = entry.value as Map<dynamic, dynamic>;
-          return {
-            'title': value['title'] ?? 'Tanpa Judul',
-            'fileId': value['fileId'] ?? '',
-          };
-        }).toList();
->>>>>>> ff25e9ab0d4a69015451a0fdc8fa3904a4b8b08c
         isLoading = false;
       });
     } else {
@@ -79,21 +62,17 @@ class _SurahScreenState extends State<SurahScreen> {
     }
   }
 
-<<<<<<< HEAD
   /// Fungsi untuk mendapatkan daftar surah secara eksternal (untuk JadwalMurottal)
   List<String> getSurahList() {
     return surahList.map((surah) => surah['title'] as String).toList();
   }
 
-  void togglePlayPause(int index) async {
-=======
   Future<void> togglePlayPause(int index) async {
->>>>>>> ff25e9ab0d4a69015451a0fdc8fa3904a4b8b08c
     final fileId = surahList[index]['fileId'];
     if (fileId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('FileId tidak tersedia')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('FileId tidak tersedia')));
       return;
     }
 
@@ -148,21 +127,11 @@ class _SurahScreenState extends State<SurahScreen> {
                   final surah = surahList[index];
                   final isCurrentPlaying = (currentIndex == index && isPlaying);
 
-<<<<<<< HEAD
                   return ListTile(
                     title: Text(surah['title']),
                     trailing: IconButton(
                       icon: Icon(
                         isCurrentPlaying ? Icons.pause : Icons.play_arrow,
-=======
-                    return ListTile(
-                      title: Text(surah['title']),
-                      trailing: IconButton(
-                        icon: Icon(
-                          isCurrentPlaying ? Icons.pause : Icons.play_arrow,
-                        ),
-                        onPressed: () => togglePlayPause(index),
->>>>>>> ff25e9ab0d4a69015451a0fdc8fa3904a4b8b08c
                       ),
                       onPressed: () => togglePlayPause(index),
                     ),
