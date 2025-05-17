@@ -66,7 +66,7 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Penjadwalan Musik"), centerTitle: true),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,6 +79,7 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
                 ? const Text("Tidak ada jadwal manual.")
                 : ListView.builder(
                   shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: _manualSchedules.length,
                   itemBuilder: (context, index) {
                     final schedule = _manualSchedules[index];
@@ -99,16 +100,19 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
                 ? const Text("Tidak ada jadwal otomatis hari ini.")
                 : ListView.builder(
                   shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: _autoSchedules.length,
                   itemBuilder: (context, index) {
                     final schedule = _autoSchedules[index];
+                    final content =
+                        schedule['content'] != null
+                            ? (schedule['content'] as List).join(', ')
+                            : "Tidak ada konten";
                     return ListTile(
                       title: Text(
                         "${schedule['time']} (Durasi: ${schedule['duration']})",
                       ),
-                      subtitle: Text(
-                        "Konten: ${schedule['cotent']?.join(', ')}",
-                      ),
+                      subtitle: Text("Konten: $content"),
                     );
                   },
                 ),
