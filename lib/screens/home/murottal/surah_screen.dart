@@ -3,13 +3,14 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class SurahScreen extends StatefulWidget {
-  final String categoryPath; 
-  final String categoryName; 
+  final String categoryPath;
+  final String categoryName;
 
   const SurahScreen({
     Key? key,
     required this.categoryPath,
     required this.categoryName,
+    required String categoryId,
   }) : super(key: key);
 
   @override
@@ -27,8 +28,7 @@ class _SurahScreenState extends State<SurahScreen> {
   @override
   void initState() {
     super.initState();
-    // Gunakan categoryPath dari widget supaya dinamis
-    databaseRef = FirebaseDatabase.instance.ref('devices/devices_01/murottal/categories/kategori_1/files'); 
+    databaseRef = FirebaseDatabase.instance.ref(widget.categoryPath);
     fetchSurahData();
 
     _audioPlayer.onPlayerComplete.listen((event) {
@@ -39,15 +39,15 @@ class _SurahScreenState extends State<SurahScreen> {
     });
   }
 
-  void fetchSurahData() async {
+  Future<void> fetchSurahData() async {
     final snapshot = await databaseRef.get();
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-        surahList = data.entries.map((e) {
-          final value = e.value as Map<dynamic, dynamic>;
+        surahList = data.entries.map((entry) {
+          final value = entry.value as Map<dynamic, dynamic>;
           return {
-            'title': value['title'] ?? 'Tidak ada judul',
+            'title': value['title'] ?? 'Tanpa Judul',
             'fileId': value['fileId'] ?? '',
           };
         }).toList();
@@ -57,21 +57,25 @@ class _SurahScreenState extends State<SurahScreen> {
       setState(() {
         isLoading = false;
       });
-      print('Data di path ${widget.categoryPath} tidak ditemukan di database.');
+      debugPrint('Data tidak ditemukan di path: ${widget.categoryPath}');
     }
   }
 
-  void togglePlayPause(int index) async {
+  Future<void> togglePlayPause(int index) async {
     final fileId = surahList[index]['fileId'];
+    if (fileId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('FileId tidak tersedia')),
+      );
+      return;
+    }
+
     final url = 'http://localhost:3000/stream/$fileId';
 
-    // Jika sedang memainkan surah yang sama → PAUSE
     if (isPlaying && currentIndex == index) {
       await _audioPlayer.pause();
       setState(() => isPlaying = false);
-    }
-    // Jika sedang tidak memainkan atau berpindah surah → PLAY
-    else {
+    } else {
       await _audioPlayer.stop();
       await _audioPlayer.play(UrlSource(url));
       setState(() {
@@ -119,7 +123,9 @@ class _SurahScreenState extends State<SurahScreen> {
                     return ListTile(
                       title: Text(surah['title']),
                       trailing: IconButton(
-                        icon: Icon(isCurrentPlaying ? Icons.pause : Icons.play_arrow),
+                        icon: Icon(
+                          isCurrentPlaying ? Icons.pause : Icons.play_arrow,
+                        ),
                         onPressed: () => togglePlayPause(index),
                       ),
                     );

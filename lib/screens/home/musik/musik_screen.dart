@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:soundnest/screens/home/musik/Olahraga_screen.dart';
 import 'package:soundnest/screens/home/musik/hewan_screen.dart';
 import 'package:soundnest/screens/home/musik/kendaraan_screen.dart';
@@ -13,107 +14,222 @@ import 'package:soundnest/screens/home/musik/mama_screen.dart';
 import 'package:soundnest/screens/home/musik/sunda_screen.dart';
 import 'package:soundnest/screens/home/musik/guru_screen.dart';
 
-class MusicScreen extends StatelessWidget {
+class MusicScreen extends StatefulWidget {
   const MusicScreen({super.key});
 
-  String getPathFromCategory(String category) {
-    switch (category) {
-      case 'Masa Adaptasi Sekolah':
-        return 'Masa Adaptasi Sekolah';
-      case 'Aku Suka Olahraga':
-        return 'Aku Suka Olahraga';
-      case 'My Family':
-        return 'My Family';
-      case 'Bumi Planet':
-        return 'Bumi Planet';
-      case 'Hari Kemerdekaan':
-        return 'Hari Kemerdekaan';
-      case 'Ramadhan':
-        return 'Ramadhan';
-      case 'Hewan':
-        return 'Hewan';
-      case 'Manasik Haji':
-        return 'Manasik Haji';
-      case 'Budaya Sunda':
-        return 'Budaya Sunda';
-      case 'Batik':
-        return 'Batik';
-      case 'Mother Day':
-        return 'Mother Day';
-      case 'Guruku Tersayang':
-        return 'Guruku Tersayang';
-      case 'Profesi':
-        return 'Profesi';
-      case 'Kendaraan':
-        return 'Kendaraan';
-      default:
-        return ' Kategori tidak ditemukan';
-    }
+  @override
+  State<MusicScreen> createState() => _MusicScreenState();
+}
+
+class _MusicScreenState extends State<MusicScreen> {
+  List<Map<String, dynamic>> dynamicCategories = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchDynamicCategories();
+  }
+
+  void fetchDynamicCategories() {
+    final dbRef = FirebaseDatabase.instance.ref('devices/devices_01/music/categories');
+    dbRef.onValue.listen((event) {
+      final data = event.snapshot.value;
+      if (data != null && data is Map) {
+        final List<Map<String, dynamic>> loadedCategories = [];
+        data.forEach((key, value) {
+          if (value is Map && value['name'] != null) {
+            loadedCategories.add({'key': key, 'name': value['name']});
+          }
+        });
+        setState(() {
+          dynamicCategories = loadedCategories;
+        });
+      } else {
+        setState(() {
+          dynamicCategories = [];
+        });
+      }
+    });
+  }
+
+  void deleteCategory(String key) async {
+    final dbRef = FirebaseDatabase.instance.ref('devices/devices_01/music/categories/$key');
+    await dbRef.remove();
   }
 
   @override
   Widget build(BuildContext context) {
+    return MusicScreenWithDynamicCategories(
+      dynamicCategories: dynamicCategories,
+      onDelete: deleteCategory,
+    );
+  }
+}
+
+class MusicScreenWithDynamicCategories extends StatelessWidget {
+  final List<Map<String, dynamic>> dynamicCategories;
+  final Function(String key) onDelete;
+
+  const MusicScreenWithDynamicCategories({
+    super.key,
+    required this.dynamicCategories,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Stack(
-    children: [
-      // Background Image
-      Positioned.fill(
-        child: Image.asset(
-          'assets/musik.jpg',
-          fit: BoxFit.cover,
+      children: [
+        Positioned.fill(
+          child: Image.asset(
+            'assets/musik.jpg',
+            fit: BoxFit.cover,
+          ),
         ),
-      ), 
-    Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        title: const Text(
-          'Kategori Musik',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.white],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: const Text(
+              'Kategori Musik',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+            ),
+            centerTitle: true,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blueAccent, Colors.white],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.add, color: Colors.black),
+                onPressed: () {
+                  showAddCategoryDialog(context);
+                },
+              ),
+            ],
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildCategoryGrid(context, [
+                    'Masa Adaptasi Sekolah',
+                    'Aku Suka Olahraga',
+                    'My Family',
+                    'Bumi Planet',
+                    'Hari Kemerdekaan',
+                    'Ramadhan',
+                    'Hewan',
+                    'Manasik Haji',
+                    'Budaya Sunda',
+                    'Batik',
+                    'Mother Day',
+                    'Guruku Tersayang',
+                    'Profesi',
+                    'Kendaraan',
+                  ], isDeletable: true),
+
+                  const SizedBox(height: 20),
+
+                  if (dynamicCategories.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    _buildDynamicCategoryGrid(context),
+                  ],
+                ],
+              ),
             ),
           ),
         ),
-      ),
+      ],
+    );
+  }
 
-      body: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 13,
-          mainAxisSpacing: 13,
-          childAspectRatio: 3,
+  Widget _buildCategoryGrid(BuildContext context, List<String> categories, {bool isDeletable = false}) {
+    return GridView.count(
+      crossAxisCount: 2,
+      crossAxisSpacing: 13,
+      mainAxisSpacing: 13,
+      childAspectRatio: 3,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      children: categories.map((category) {
+        // Untuk kategori statis, keyOrName kita isi dengan nama kategori agar tombol hapus muncul
+        return _buildCategoryCard(context, category, isDeletable ? category : null);
+      }).toList(),
+    );
+  }
+
+  Widget _buildDynamicCategoryGrid(BuildContext context) {
+    return GridView.count(
+      crossAxisCount: 2,
+      crossAxisSpacing: 13,
+      mainAxisSpacing: 13,
+      childAspectRatio: 3,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      children: dynamicCategories.map((cat) {
+        return _buildCategoryCard(context, cat['name'], cat['key']);
+      }).toList(),
+    );
+  }
+
+  Widget _buildCategoryCard(BuildContext context, String category, String? keyOrName) {
+  return Card(
+    color: Colors.blue.shade100,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    child: InkWell(
+      onTap: () {
+        navigateToCategoryScreen(context, category);
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
           children: [
-            _buildCategoryCard(context, 'Masa Adaptasi Sekolah'),
-            _buildCategoryCard(context, 'Aku Suka Olahraga'),
-            _buildCategoryCard(context, 'My Family'),
-            _buildCategoryCard(context, 'Bumi Planet'),
-            _buildCategoryCard(context, 'Hari Kemerdekaan'),
-            _buildCategoryCard(context, 'Ramadhan'),
-            _buildCategoryCard(context, 'Hewan'),
-            _buildCategoryCard(context, 'Manasik Haji'),
-            _buildCategoryCard(context, 'Budaya Sunda'),
-            _buildCategoryCard(context, 'Batik'),
-            _buildCategoryCard(context, 'Mother Day'),
-            _buildCategoryCard(context, 'Guruku Tersayang'),
-            _buildCategoryCard(context, 'Profesi'),
-            _buildCategoryCard(context, 'Kendaraan'),
+            // Tulisan kategori rata kiri dan ambil space sebanyak mungkin
+            Expanded(
+              child: Text(
+                category,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                textAlign: TextAlign.left,
+              ),
+            ),
+
+            // Jika ada keyOrName (kategori yang bisa dihapus), tampilkan icon delete
+            if (keyOrName != null)
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                onPressed: () async {
+                  if (keyOrName.startsWith('kategori_') || keyOrName.length <= 20) {
+                    onDelete(keyOrName);
+                  } else {
+                    final dbRef = FirebaseDatabase.instance.ref('devices/devices_01/music/categories');
+                    final snapshot = await dbRef.orderByChild('name').equalTo(keyOrName).get();
+                    if (snapshot.exists) {
+                      final data = snapshot.value as Map;
+                      final deleteKey = data.keys.first;
+                      onDelete(deleteKey);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Kategori "$keyOrName" tidak ditemukan di database')),
+                      );
+                    }
+                  }
+                },
+              ),
           ],
         ),
       ),
     ),
-    ],
   );
- }
+}
 
-  // Fungsi navigasi dinamis
   void navigateToCategoryScreen(BuildContext context, String category) {
     String categoryPath;
     Widget screen;
@@ -121,45 +237,27 @@ class MusicScreen extends StatelessWidget {
     switch (category) {
       case 'Hewan':
         categoryPath = 'devices/devices_01/music/categories/kategori_001/files';
-        screen = HewanScreen(
-          categoryPath: categoryPath,
-          categoryName: category,
-        );
+        screen = HewanScreen(categoryPath: categoryPath, categoryName: category);
         break;
       case 'Kendaraan':
         categoryPath = 'devices/devices_01/music/categories/kategori_002/files';
-        screen = KendaraanScreen(
-          categoryPath: categoryPath,
-          categoryName: category,
-        );
+        screen = KendaraanScreen(categoryPath: categoryPath, categoryName: category);
         break;
       case 'Aku Suka Olahraga':
         categoryPath = 'devices/devices_01/music/categories/kategori_003/files';
-        screen = OlahragaScreen(
-          categoryPath: categoryPath,
-          categoryName: category,
-        );
+        screen = OlahragaScreen(categoryPath: categoryPath, categoryName: category);
         break;
       case 'Profesi':
         categoryPath = 'devices/devices_01/music/categories/kategori_013/files';
-        screen = ProfesiScreen(
-          categoryPath: categoryPath,
-          categoryName: category,
-        );
+        screen = ProfesiScreen(categoryPath: categoryPath, categoryName: category);
         break;
       case 'Masa Adaptasi Sekolah':
         categoryPath = 'devices/devices_01/music/categories/kategori_004/files';
-        screen = AdaptasiScreen(
-          categoryPath: categoryPath,
-          categoryName: category,
-        );
+        screen = AdaptasiScreen(categoryPath: categoryPath, categoryName: category);
         break;
       case 'My Family':
         categoryPath = 'devices/devices_01/music/categories/kategori_005/files';
-        screen = FamilyScreen(
-          categoryPath: categoryPath,
-          categoryName: category,
-        );
+        screen = FamilyScreen(categoryPath: categoryPath, categoryName: category);
         break;
       case 'Bumi Planet':
         categoryPath = 'devices/devices_01/music/categories/kategori_006/files';
@@ -171,60 +269,79 @@ class MusicScreen extends StatelessWidget {
         break;
       case 'Ramadhan':
         categoryPath = 'devices/devices_01/music/categories/kategori_008/files';
-        screen = RamadhanScreen(
-          categoryPath: categoryPath,
-          categoryName: category,
-        );
+        screen = RamadhanScreen(categoryPath: categoryPath, categoryName: category);
         break;
       case 'Manasik Haji':
         categoryPath = 'devices/devices_01/music/categories/kategori_009/files';
         screen = HajiScreen(categoryPath: categoryPath, categoryName: category);
         break;
-      case 'Mother Day':
+      case 'Budaya Sunda':
         categoryPath = 'devices/devices_01/music/categories/kategori_010/files';
+        screen = SundaScreen(categoryPath: categoryPath, categoryName: category);
+        break;
+      case 'Batik':
+        categoryPath = 'devices/devices_01/music/categories/kategori_011/files';
+        screen = SundaScreen(categoryPath: categoryPath, categoryName: category);
+        break;
+      case 'Mother Day':
+        categoryPath = 'devices/devices_01/music/categories/kategori_012/files';
         screen = MamaScreen(categoryPath: categoryPath, categoryName: category);
         break;
-      case 'Budaya Sunda':
-        categoryPath = 'devices/devices_01/music/categories/kategori_011/files';
-        screen = SundaScreen(
-          categoryPath: categoryPath,
-          categoryName: category,
-        );
-        break;
       case 'Guruku Tersayang':
-        categoryPath = 'devices/devices_01/music/categories/kategori_012/files';
+        categoryPath = 'devices/devices_01/music/categories/kategori_014/files';
         screen = GuruScreen(categoryPath: categoryPath, categoryName: category);
         break;
-
       default:
-        throw Exception('Kategori tidak dikenal: $category');
+        // Default jika kategori tidak dikenal
+        categoryPath = '';
+        screen = Scaffold(
+          appBar: AppBar(title: Text(category)),
+          body: Center(child: Text('Kategori "$category" belum tersedia')),
+        );
     }
 
-    Navigator.push(context, MaterialPageRoute(builder: (context) => screen));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 
-  // Widget _buildCategoryCard yang lebih singkat
-  Widget _buildCategoryCard(BuildContext context, String category) {
-    return GestureDetector(
-      onTap: () => navigateToCategoryScreen(context, category),
-      child: Card(
-       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      elevation: 3,
-      color: Colors.blue.shade100, 
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
-          child: Text(
-            category,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-            textAlign: TextAlign.center,
+  void showAddCategoryDialog(BuildContext context) {
+    final TextEditingController _nameController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Tambah Kategori Baru'),
+          content: TextField(
+            controller: _nameController,
+            decoration: const InputDecoration(hintText: 'Masukkan nama kategori'),
           ),
-        ),
-      ),
-      ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final name = _nameController.text.trim();
+                if (name.isNotEmpty) {
+                  addCategoryToFirebase(name);
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Tambah'),
+            ),
+          ],
+        );
+      },
     );
-    
+  }
+
+  void addCategoryToFirebase(String name) {
+    final dbRef = FirebaseDatabase.instance.ref('devices/devices_01/music/categories');
+    final newKey = dbRef.push().key;
+    if (newKey != null) {
+      dbRef.child(newKey).set({'name': name});
+    }
   }
 }
