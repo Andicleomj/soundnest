@@ -18,8 +18,8 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
   List<String> surahList = [];
 
   final Map<String, String> categoryPaths = {
-    "Surah Pendek": 'devices/devices_01/murottal/categories/kategori_1/files',
-    "Ayat Kursi": 'devices/devices_01/murottal/categories/kategori_2/files',
+    "Surah Pendek": 'devices/devices_01/murottal/categories/kategori_2/files',
+    "Ayat Kursi": 'devices/devices_01/murottal/categories/kategori_1/files',
   };
 
   final List<String> daysOfWeek = [

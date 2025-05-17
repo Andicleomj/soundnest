@@ -28,7 +28,7 @@ class ScheduleService {
   void start() {
     _timer?.cancel();
     _timer = Timer.periodic(
-      const Duration(seconds: 30),
+      const Duration(seconds: 60),
       (_) => checkAndRunSchedule(),
     );
 
@@ -155,18 +155,22 @@ class ScheduleService {
     if (snapshot.exists) {
       final data = snapshot.value as Map;
       print("📂 Data Firebase: ${data}");
+
+      // Mencari kategori berdasarkan nama kategori (nama)
       for (var cat in data.values) {
-        if (cat is Map && cat.containsKey('files')) {
-          for (var file in cat['files'].values) {
-            print("🎵 Cek file: ${file['title']} atau ${file['nama']}");
-            final title = file['title']?.toLowerCase() ?? '';
-            final nama = file['nama']?.toLowerCase() ?? '';
-            if (title.contains(category.toLowerCase()) ||
-                nama.contains(category.toLowerCase())) {
-              print(
-                "✅ URL ditemukan: ${"http://localhost:3000/drive/${file['fileId']}"}",
-              );
-              return "http://localhost:3000/drive/${file['fileId']}";
+        if (cat is Map && cat.containsKey('nama')) {
+          final categoryName = cat['nama']?.toString().toLowerCase() ?? '';
+          if (categoryName.contains(category.toLowerCase())) {
+            print("✅ Kategori ditemukan: $categoryName");
+
+            // Jika kategori ditemukan, cek file di dalamnya
+            if (cat.containsKey('files')) {
+              for (var file in cat['files'].values) {
+                if (file is Map && file.containsKey('fileId')) {
+                  print("🎵 File ditemukan: ${file['title']}");
+                  return "http://localhost:3000/drive/${file['fileId']}";
+                }
+              }
             }
           }
         }
