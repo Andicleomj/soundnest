@@ -49,14 +49,14 @@ class _VolumeScreenState extends State<VolumeScreen>
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
-          "Smart Volume",
+          "Volume",
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.black), // warna hitam
           onPressed: () => Navigator.pop(context),
         ),
         flexibleSpace: Container(
@@ -114,7 +114,6 @@ class _VolumeScreenState extends State<VolumeScreen>
                 ),
               ),
 
-              // Tombol volume (+ dan -)
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -136,7 +135,6 @@ class _VolumeScreenState extends State<VolumeScreen>
 
               const SizedBox(height: 40),
 
-              // Tombol simpan
               ElevatedButton.icon(
                 onPressed: _saveVolume,
                 icon: const Icon(Icons.save, color: Colors.white),

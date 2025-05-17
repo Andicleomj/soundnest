@@ -5,16 +5,16 @@ class BellScreen extends StatefulWidget {
   const BellScreen({super.key});
 
   @override
-  _BellScreenState createState() => _BellScreenState();
+  State<BellScreen> createState() => _BellScreenState();
 }
 
 class _BellScreenState extends State<BellScreen> {
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   void _playBellSound() async {
-  await _audioPlayer.setSourceAsset('sounds/bell.mp3');
-  await _audioPlayer.resume();
-}
+    await _audioPlayer.setSourceAsset('sounds/bell.mp3');
+    await _audioPlayer.resume();
+  }
 
   @override
   void dispose() {
@@ -25,17 +25,20 @@ class _BellScreenState extends State<BellScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.white, // Set background putih
       appBar: AppBar(
+        elevation: 0,
+        centerTitle: true,
         title: const Text(
           "Bel",
-        style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black),
+          style: TextStyle(
+            fontSize: 22,
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         flexibleSpace: Container(
@@ -48,21 +51,83 @@ class _BellScreenState extends State<BellScreen> {
           ),
         ),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text(
-              "Klik untuk membunyikan bel",
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+            const SizedBox(height: 40),
+
+            // Card bel
+            Expanded(
+              child: Center(
+                child: Container(
+                  width: 250,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 145, 204, 233),
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.blueAccent,
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.notifications_active_rounded,
+                        size: 80,
+                        color: Colors.black87,
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _playBellSound,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 14),
+                        ),
+                        child: const Text(
+                          "Bunyikan Bel",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 20),
-            GestureDetector(
-              onTap: _playBellSound,
-              child: const Icon(
-                Icons.notifications,
-                size: 100,
-                color: Colors.black,
+
+            const SizedBox(height: 30),
+
+            const Text(
+              "Klik tombol untuk membunyikan bel.\nPastikan volume aktif.",
+              style: TextStyle(
+                color: Colors.black54,
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 12),
+            const Text(
+              "📢 Tetap semangat dan disiplin waktu!",
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 13,
               ),
             ),
           ],

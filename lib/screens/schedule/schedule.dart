@@ -21,7 +21,7 @@ class Schedule extends StatelessWidget {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),  // Warna hitam di sini
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
