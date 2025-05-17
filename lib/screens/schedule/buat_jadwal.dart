@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:soundnest/screens/home/murottal/murottal_screen.dart';
-import 'package:soundnest/screens/home/musik/musik_screen.dart';
+import 'package:soundnest/screens/schedule/jadwal_murottal.dart';
+import 'package:soundnest/screens/schedule/jadwal_musik.dart';
 
 class ScheduleScreen extends StatelessWidget {
   const ScheduleScreen({super.key});
@@ -41,26 +41,8 @@ class ScheduleScreen extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const MusicScreen()),
-                );
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text("Musik"),
-              ),
-            ),
-            const SizedBox(height: 10),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
                   MaterialPageRoute(
-                    builder: (context) => const MurottalScreen(),
+                    builder: (context) => const BuatJadwalMusik(),
                   ),
                 );
               },
@@ -71,43 +53,28 @@ class ScheduleScreen extends StatelessWidget {
                   color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text("Murottal Al-Qur’an"),
+                child: const Text("Jadwal Musik"),
               ),
             ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Colors.blueAccent,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.home, color: Colors.white),
-                Text(
-                  "Home",
-                  style: TextStyle(color: Colors.white, fontSize: 12),
+            const SizedBox(height: 10),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BuatJadwalMurottal(),
+                  ),
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ],
-            ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.schedule, color: Colors.white),
-                Text(
-                  "Penjadwalan",
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ],
+                child: const Text("Jadwal Murottal"),
+              ),
             ),
           ],
         ),
