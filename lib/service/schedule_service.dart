@@ -173,7 +173,7 @@ class ScheduleService {
       for (var cat in data.values) {
         for (var file in (cat['files'] as Map).values) {
           if (file['title'] == category) {
-            return "http://localhost:3000/drive/${file['file_id']}";
+            return "http://localhost:3000/drive/${file['fileId']}";
           }
         }
       }
