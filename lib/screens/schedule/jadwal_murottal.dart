@@ -16,6 +16,11 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
   String? selectedSurah;
   List<String> surahList = [];
 
+  final Map<String, String> categoryPaths = {
+    "Surah Pendek": "surah_pendek",
+    "Ayat Kursi": "ayat_kursi",
+  };
+
   @override
   void initState() {
     super.initState();
@@ -23,7 +28,10 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
   }
 
   void _fetchSurahList() async {
-    final ref = FirebaseDatabase.instance.ref('surah_pendek');
+    final path = categoryPaths[selectedCategory];
+    if (path == null) return;
+
+    final ref = FirebaseDatabase.instance.ref(path);
     final snapshot = await ref.get();
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
@@ -67,13 +75,17 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
           children: [
             DropdownButtonFormField<String>(
               value: selectedCategory,
-              items: [
-                DropdownMenuItem(
-                  value: "Surah Pendek",
-                  child: Text("Surah Pendek"),
-                ),
-              ],
-              onChanged: (value) => setState(() => selectedCategory = value!),
+              items:
+                  categoryPaths.keys.map((category) {
+                    return DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+              onChanged: (value) {
+                setState(() => selectedCategory = value!);
+                _fetchSurahList();
+              },
               decoration: const InputDecoration(labelText: 'Kategori Murottal'),
             ),
             const SizedBox(height: 16),
