@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:soundnest/service/music_player_service.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class ScheduleService {
   final DatabaseReference _manualRef = FirebaseDatabase.instance.ref(
@@ -31,7 +32,6 @@ class ScheduleService {
       (_) => checkAndRunSchedule(),
     );
 
-    // Cancel previous subscriptions to avoid duplicates
     _manualSubscription?.cancel();
     _autoSubscription?.cancel();
 
@@ -51,7 +51,7 @@ class ScheduleService {
     String fileId,
   ) async {
     try {
-      // Validate inputs before saving
+      // Validate inputs
       if (time.isEmpty ||
           duration.isEmpty ||
           category.isEmpty ||
@@ -61,12 +61,10 @@ class ScheduleService {
         throw Exception("All schedule fields must be filled");
       }
 
-      // Validate time format (HH:MM)
       if (!RegExp(r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$').hasMatch(time)) {
         throw Exception("Invalid time format. Use HH:MM");
       }
 
-      // Validate duration is a positive number
       if (int.tryParse(duration) == null || int.parse(duration) <= 0) {
         throw Exception("Duration must be a positive number");
       }
@@ -81,16 +79,16 @@ class ScheduleService {
         'isActive': true,
         'createdAt': ServerValue.timestamp,
       });
-      print("✅ Manual schedule saved: $surah at $time on $day");
+      print("✅ Saved schedule for surah: $surah at $time");
     } catch (e) {
-      print("❌ Error saving manual schedule: $e");
+      print("❌ Error saving schedule: $e");
       rethrow;
     }
   }
 
   Future<void> checkAndRunSchedule() async {
     if (_isAudioPlaying) {
-      print("⏯ Audio is already playing, skipping schedule check");
+      print("⏯ Audio already playing, skipping check");
       return;
     }
 
@@ -102,11 +100,9 @@ class ScheduleService {
       try {
         if ((schedule['isActive'] ?? false) &&
             _isScheduleValid(schedule, now)) {
-          print(
-            "🎯 Found matching schedule: ${schedule['surah']} at ${schedule['time_start']}",
-          );
+          print("🎯 Found matching schedule: ${schedule['surah']}");
           await _runScheduledAudio(schedule);
-          break; // Only run one schedule at a time
+          break;
         }
       } catch (e) {
         print("⚠️ Error processing schedule: $e");
@@ -116,13 +112,11 @@ class ScheduleService {
 
   Future<List<Map<String, dynamic>>> getSchedules() async {
     try {
-      final manualSchedules = await _fetchSchedules(_manualRef);
-      final autoSchedules = await _fetchSchedules(_autoRef);
-
-      // Combine and sort by time_start (optional)
-      return [...manualSchedules, ...autoSchedules]..sort((a, b) {
-        final timeA = a['time_start']?.toString() ?? '';
-        final timeB = b['time_start']?.toString() ?? '';
+      final manual = await _fetchSchedules(_manualRef);
+      final auto = await _fetchSchedules(_autoRef);
+      return [...manual, ...auto]..sort((a, b) {
+        final timeA = a['time_start'] ?? '';
+        final timeB = b['time_start'] ?? '';
         return timeA.compareTo(timeB);
       });
     } catch (e) {
@@ -138,18 +132,18 @@ class ScheduleService {
       final snapshot = await ref.get();
       if (snapshot.exists && snapshot.value != null) {
         final data = snapshot.value as Map<dynamic, dynamic>;
-
         return data.entries.map<Map<String, dynamic>>((entry) {
-          final value = entry.value;
           return {
             'key': entry.key,
-            ...(value is Map ? Map<String, dynamic>.from(value as Map) : {}),
+            ...(entry.value is Map
+                ? Map<String, dynamic>.from(entry.value as Map)
+                : {}),
           };
         }).toList();
       }
       return [];
     } catch (e) {
-      print("❌ Error fetching schedules from ${ref.path}: $e");
+      print("❌ Error fetching schedules: $e");
       return [];
     }
   }
@@ -159,37 +153,17 @@ class ScheduleService {
       final timeStart = schedule['time_start']?.toString();
       final day = schedule['day']?.toString();
 
-      if (timeStart == null || day == null) {
-        print("⚠️ Schedule missing time_start or day");
-        return false;
-      }
+      if (timeStart == null || day == null) return false;
 
       final parts = timeStart.split(':');
-      if (parts.length != 2) {
-        print("⚠️ Invalid time format: $timeStart");
-        return false;
-      }
+      if (parts.length != 2) return false;
 
       final hour = int.tryParse(parts[0]);
       final minute = int.tryParse(parts[1]);
 
-      if (hour == null || minute == null) {
-        print("⚠️ Invalid hour or minute in time: $timeStart");
-        return false;
-      }
+      if (hour == null || minute == null) return false;
 
-      final isTimeMatch = hour == now.hour && minute == now.minute;
-      final isDayMatch = _isToday(day);
-
-      if (isTimeMatch && isDayMatch) {
-        print("✅ Schedule matches current time: $timeStart $day");
-      } else {
-        print(
-          "⏱ Schedule doesn't match (Current: ${now.hour}:${now.minute} $day)",
-        );
-      }
-
-      return isTimeMatch && isDayMatch;
+      return hour == now.hour && minute == now.minute && _isToday(day);
     } catch (e) {
       print("❌ Error validating schedule: $e");
       return false;
@@ -207,8 +181,7 @@ class ScheduleService {
         "Sabtu",
         "Minggu",
       ];
-      final today = days[DateTime.now().weekday - 1];
-      return day == today;
+      return day == days[DateTime.now().weekday - 1];
     } catch (e) {
       print("❌ Error checking day: $e");
       return false;
@@ -218,34 +191,27 @@ class ScheduleService {
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
     try {
       final fileId = schedule['fileId']?.toString();
-      final surah = schedule['surah']?.toString() ?? 'Unknown';
       final duration = schedule['duration']?.toString();
 
-      if (fileId == null || fileId.isEmpty) {
-        print("⚠️ No fileId found in schedule");
-        return;
-      }
+      if (fileId == null || fileId.isEmpty) return;
 
-      final audioUrl = "http://localhost:3000/drive/$fileId";
+      final audioUrl = "http://your-server.com/audio/$fileId";
       final durationMinutes = int.tryParse(duration ?? '1') ?? 1;
 
-      print(
-        "🔊 Playing audio: $surah from URL: $audioUrl for $durationMinutes minutes",
-      );
+      print("🔊 Playing audio for $durationMinutes minutes");
 
       _isAudioPlaying = true;
-      await _playerService.playMusicFromProxy(audioUrl);
+      await _playerService.play(audioUrl);
 
-      // Wait for the duration but allow early cancellation
       final stopwatch = Stopwatch()..start();
       while (stopwatch.elapsed.inMinutes < durationMinutes && _isAudioPlaying) {
         await Future.delayed(const Duration(seconds: 10));
       }
     } catch (e) {
-      print("❌ Error playing scheduled audio: $e");
+      print("❌ Error playing audio: $e");
     } finally {
       _isAudioPlaying = false;
-      print("⏹ Finished playing scheduled audio");
+      print("⏹ Finished playing audio");
     }
   }
 
@@ -253,7 +219,7 @@ class ScheduleService {
     _timer?.cancel();
     _manualSubscription?.cancel();
     _autoSubscription?.cancel();
-    _playerService.stopMusic();
-    print("🛑 ScheduleService stopped.");
+    _playerService.dispose();
+    print("🛑 ScheduleService stopped");
   }
 }
