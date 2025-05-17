@@ -12,40 +12,28 @@ class JadwalMurottal extends StatefulWidget {
 class _JadwalMurottalState extends State<JadwalMurottal> {
   final TextEditingController _timeController = TextEditingController();
   final TextEditingController _durationController = TextEditingController();
-  String? selectedCategory;
+  String selectedCategory = "Surah Pendek";
   String? selectedSurah;
-  List<String> categoryList = [];
   List<String> surahList = [];
+
+  final Map<String, String> categoryPaths = {
+    "Surah Pendek": "kategori_1/files",
+    "Ayat Kursi": "kategori_2/files",
+  };
 
   @override
   void initState() {
     super.initState();
-    _fetchCategoryList();
+    _fetchSurahList();
   }
 
-  void _fetchCategoryList() async {
-    final ref = FirebaseDatabase.instance.ref();
-    final snapshot = await ref.get();
-    print('Data Firebase (Kategori): ${snapshot.value}');
+  /// Fungsi untuk mengambil daftar surah berdasarkan kategori
+  void _fetchSurahList() async {
+    final path = categoryPaths[selectedCategory];
+    if (path == null) return;
 
-    if (snapshot.exists) {
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
-      setState(() {
-        categoryList = data.keys.toList();
-        selectedCategory = categoryList.isNotEmpty ? categoryList.first : null;
-        if (selectedCategory != null) {
-          _fetchSurahList(selectedCategory!);
-        }
-      });
-    } else {
-      print("Database kosong atau tidak ditemukan.");
-    }
-  }
-
-  void _fetchSurahList(String category) async {
-    final ref = FirebaseDatabase.instance.ref('$category/files');
+    final ref = FirebaseDatabase.instance.ref(path);
     final snapshot = await ref.get();
-    print('Data Firebase (Surah - $category): ${snapshot.value}');
 
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
@@ -58,18 +46,20 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
         surahList = [];
         selectedSurah = null;
       });
-      print("Tidak ada surah di kategori $category.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Tidak ada surah di kategori $selectedCategory.'),
+        ),
+      );
     }
   }
 
+  /// Fungsi untuk menyimpan jadwal murottal
   void _saveSchedule() async {
     final time = _timeController.text.trim();
     final duration = _durationController.text.trim();
 
-    if (time.isNotEmpty &&
-        duration.isNotEmpty &&
-        selectedSurah != null &&
-        selectedCategory != null) {
+    if (time.isNotEmpty && duration.isNotEmpty && selectedSurah != null) {
       await ScheduleService().saveManualSchedule(
         time,
         duration,
@@ -99,11 +89,12 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DropdownButtonFormField<String>(
               value: selectedCategory,
               items:
-                  categoryList.map((category) {
+                  categoryPaths.keys.map((category) {
                     return DropdownMenuItem(
                       value: category,
                       child: Text(category),
@@ -111,11 +102,11 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
                   }).toList(),
               onChanged: (value) {
                 setState(() {
-                  selectedCategory = value;
+                  selectedCategory = value!;
                   selectedSurah = null;
                   surahList = [];
                 });
-                if (value != null) _fetchSurahList(value);
+                _fetchSurahList();
               },
               decoration: const InputDecoration(labelText: 'Kategori Murottal'),
             ),
@@ -133,15 +124,21 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
             TextField(
               controller: _timeController,
               decoration: const InputDecoration(labelText: 'Waktu (HH:MM)'),
+              keyboardType: TextInputType.datetime,
             ),
+            const SizedBox(height: 8),
             TextField(
               controller: _durationController,
               decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
+              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _saveSchedule,
-              child: const Text('Simpan Jadwal'),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _saveSchedule,
+                child: const Text('Simpan Jadwal'),
+              ),
             ),
           ],
         ),
