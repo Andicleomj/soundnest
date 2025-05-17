@@ -17,81 +17,35 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
   final DatabaseReference _autoRef = FirebaseDatabase.instance.ref(
     'devices/devices_01/schedule/otomatis',
   );
-  final DatabaseReference _musicRef = FirebaseDatabase.instance.ref(
-    'devices/devices_01/music/categories',
-  );
 
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  Timer? _scheduleTimer;
+  List<Map<String, dynamic>> _manualSchedules = [];
+  List<Map<String, dynamic>> _autoSchedules = [];
 
   @override
   void initState() {
     super.initState();
-    _startScheduleChecker();
+    _loadSchedules();
   }
 
-  void _startScheduleChecker() {
-    _scheduleTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
-      final now = DateTime.now();
-      await _checkManualSchedules(now);
-      await _checkAutomaticSchedules(now);
-    });
-  }
-
-  Future<void> _checkManualSchedules(DateTime now) async {
-    final snapshot = await _manualRef.get();
-    if (snapshot.exists && snapshot.value is Map) {
-      final schedules = Map<String, dynamic>.from(snapshot.value as Map);
-      for (var entry in schedules.entries) {
-        final schedule = entry.value;
-        if (schedule['isActive'] == true) {
-          final startTime = DateTime.tryParse(schedule['time_start'] ?? '');
-          final endTime = DateTime.tryParse(schedule['time_end'] ?? '');
-
-          if (startTime != null &&
-              endTime != null &&
-              now.isAfter(startTime) &&
-              now.isBefore(endTime)) {
-            await _playMusic(schedule['content']);
-            return; // Prioritaskan jadwal manual
-          }
-        }
-      }
+  Future<void> _loadSchedules() async {
+    final manualSnapshot = await _manualRef.get();
+    if (manualSnapshot.exists && manualSnapshot.value is Map) {
+      final schedules = Map<String, dynamic>.from(manualSnapshot.value as Map);
+      setState(() {
+        _manualSchedules =
+            schedules.entries
+                .map((entry) => Map<String, dynamic>.from(entry.value))
+                .toList();
+      });
     }
-  }
 
-  Future<void> _checkAutomaticSchedules(DateTime now) async {
-    final currentDay = _getDayName(now);
-    final autoScheduleSnapshot = await _autoRef.child(currentDay).get();
-
-    if (autoScheduleSnapshot.exists && autoScheduleSnapshot.value is Map) {
-      final schedule = Map<String, dynamic>.from(
-        autoScheduleSnapshot.value as Map,
-      );
-      if (schedule.containsKey('time') &&
-          schedule.containsKey('duration') &&
-          schedule.containsKey('content')) {
-        final timeParts = schedule['time'].split(':');
-        final startTime = DateTime(
-          now.year,
-          now.month,
-          now.day,
-          int.tryParse(timeParts[0]) ?? 0,
-          int.tryParse(timeParts[1]) ?? 0,
-        );
-        final duration = Duration(
-          minutes: int.tryParse(schedule['duration'].split(':')[1]) ?? 0,
-        );
-        final endTime = startTime.add(duration);
-
-        if (now.isAfter(startTime) && now.isBefore(endTime)) {
-          final categories = List<String>.from(schedule['cotent'] ?? []);
-          if (categories.isNotEmpty) {
-            final index = now.weekday % categories.length;
-            await _playMusic(categories[index]);
-          }
-        }
-      }
+    final currentDay = _getDayName(DateTime.now());
+    final autoSnapshot = await _autoRef.child(currentDay).get();
+    if (autoSnapshot.exists && autoSnapshot.value is Map) {
+      final schedule = Map<String, dynamic>.from(autoSnapshot.value as Map);
+      setState(() {
+        _autoSchedules = [schedule];
+      });
     }
   }
 
@@ -108,30 +62,59 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
     return days[(date.weekday - 1) % 7];
   }
 
-  Future<void> _playMusic(String categoryId) async {
-    final musicSnapshot = await _musicRef.child(categoryId).get();
-    if (musicSnapshot.exists && musicSnapshot.value is Map) {
-      final musicData = Map<String, dynamic>.from(musicSnapshot.value as Map);
-      final fileId = musicData['file_id'];
-      if (fileId != null) {
-        final url = 'http://localhost:3000/stream/$fileId';
-        await _audioPlayer.play(UrlSource(url));
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    _scheduleTimer?.cancel();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Penjadwalan Musik"), centerTitle: true),
-      body: const Center(child: Text("Jadwal Otomatis dan Manual")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Jadwal Manual",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            _manualSchedules.isEmpty
+                ? const Text("Tidak ada jadwal manual.")
+                : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _manualSchedules.length,
+                  itemBuilder: (context, index) {
+                    final schedule = _manualSchedules[index];
+                    return ListTile(
+                      title: Text(
+                        "${schedule['time_start']} - ${schedule['time_end']}",
+                      ),
+                      subtitle: Text("Konten: ${schedule['content']}"),
+                    );
+                  },
+                ),
+            const SizedBox(height: 16),
+            const Text(
+              "Jadwal Otomatis",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            _autoSchedules.isEmpty
+                ? const Text("Tidak ada jadwal otomatis hari ini.")
+                : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _autoSchedules.length,
+                  itemBuilder: (context, index) {
+                    final schedule = _autoSchedules[index];
+                    return ListTile(
+                      title: Text(
+                        "${schedule['time']} (Durasi: ${schedule['duration']})",
+                      ),
+                      subtitle: Text(
+                        "Konten: ${schedule['cotent']?.join(', ')}",
+                      ),
+                    );
+                  },
+                ),
+          ],
+        ),
+      ),
     );
   }
 }
