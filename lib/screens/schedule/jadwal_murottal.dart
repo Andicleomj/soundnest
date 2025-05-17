@@ -68,8 +68,9 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
       await ScheduleService().saveManualSchedule(
         time,
         duration,
-        "$selectedCategory - $selectedSurah",
-        selectedDay, // Menyimpan hari yang dipilih
+        selectedCategory,
+        selectedSurah!, // Nama surah disimpan
+        selectedDay,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(

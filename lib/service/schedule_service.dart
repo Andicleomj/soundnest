@@ -40,12 +40,14 @@ class ScheduleService {
     String time,
     String duration,
     String category,
+    String surah,
     String day,
   ) async {
     await _manualRef.push().set({
       'time_start': time,
       'duration': duration,
       'category': category,
+      'surah': surah,
       'day': day,
       'isActive': true,
     });
@@ -76,16 +78,12 @@ class ScheduleService {
   Future<List<Map<String, dynamic>>> _fetchSchedules(
     DatabaseReference ref,
   ) async {
-    try {
-      final snapshot = await ref.get();
-      if (snapshot.exists) {
-        return (snapshot.value as Map).values
-            .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      }
-    } catch (e) {
-      print("❌ Error fetching schedules: $e");
+    final snapshot = await ref.get();
+    if (snapshot.exists) {
+      return (snapshot.value as Map).values
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
     }
     return [];
   }
@@ -97,8 +95,6 @@ class ScheduleService {
     if (timeStart == null || day == null) return false;
 
     final parts = timeStart.split(':');
-    if (parts.length != 2) return false;
-
     final hour = int.tryParse(parts[0]);
     final minute = int.tryParse(parts[1]);
 
@@ -108,29 +104,30 @@ class ScheduleService {
   bool _isToday(String day) {
     final today =
         [
-          'Senin',
-          'Selasa',
-          'Rabu',
-          'Kamis',
-          'Jumat',
-          'Sabtu',
-          'Minggu',
+          "Senin",
+          "Selasa",
+          "Rabu",
+          "Kamis",
+          "Jumat",
+          "Sabtu",
+          "Minggu",
         ][DateTime.now().weekday - 1];
     return day == today;
   }
 
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
-    if (_isAudioPlaying) return;
-
     final category = schedule['category'];
+    final surah = schedule['surah'];
     final duration = schedule['duration'];
 
-    if (category == null) return;
+    if (category == null || surah == null) return;
 
-    final audioUrl = await _getAudioUrl(category);
+    final audioUrl = await _getAudioUrl(category, surah);
 
     if (audioUrl == null) {
-      print("❌ URL audio tidak ditemukan untuk kategori: $category");
+      print(
+        "❌ URL audio tidak ditemukan untuk kategori: $category dan surah: $surah",
+      );
       return;
     }
 
@@ -145,38 +142,25 @@ class ScheduleService {
     }
   }
 
-  Future<String?> _getAudioUrl(String category) async {
-    return await _fetchAudioUrl(_musicRef, category) ??
-        await _fetchAudioUrl(_murottalRef, category);
-  }
-
-  Future<String?> _fetchAudioUrl(DatabaseReference ref, String category) async {
+  Future<String?> _getAudioUrl(String category, String surah) async {
+    final ref =
+        category.toLowerCase().contains('murottal') ? _murottalRef : _musicRef;
     final snapshot = await ref.get();
+
     if (snapshot.exists) {
       final data = snapshot.value as Map;
-      print("📂 Data Firebase: ${data}");
 
-      // Mencari kategori berdasarkan nama kategori (nama)
       for (var cat in data.values) {
-        if (cat is Map && cat.containsKey('nama')) {
-          final categoryName = cat['nama']?.toString().toLowerCase() ?? '';
-          if (categoryName.contains(category.toLowerCase())) {
-            print("✅ Kategori ditemukan: $categoryName");
-
-            // Jika kategori ditemukan, cek file di dalamnya
-            if (cat.containsKey('files')) {
-              for (var file in cat['files'].values) {
-                if (file is Map && file.containsKey('fileId')) {
-                  print("🎵 File ditemukan: ${file['title']}");
-                  return "http://localhost:3000/drive/${file['fileId']}";
-                }
-              }
+        if (cat is Map && cat.containsKey('files')) {
+          for (var file in cat['files'].values) {
+            if (file['title'].toString().toLowerCase() == surah.toLowerCase()) {
+              return "http://localhost:3000/drive/${file['fileId']}";
             }
           }
         }
       }
     }
-    print("❌ URL audio tidak ditemukan untuk kategori: $category");
+
     return null;
   }
 
