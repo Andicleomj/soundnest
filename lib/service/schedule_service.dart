@@ -20,9 +20,7 @@ class ScheduleService {
     'devices/devices_01/murottal/categories',
   );
 
-  final MusicService _musicService = MusicService();
   final MusicPlayerService _playerService = MusicPlayerService();
-
   Timer? _timer;
   bool _isAudioPlaying = false;
 
@@ -35,12 +33,7 @@ class ScheduleService {
       (_) => checkAndRunSchedule(),
     );
 
-    _ref.onValue.listen((event) {
-      if (event.snapshot.exists) {
-        checkAndRunSchedule();
-      }
-    });
-
+    _ref.onValue.listen((event) => checkAndRunSchedule());
     print("✅ ScheduleService started.");
   }
 
@@ -77,25 +70,28 @@ class ScheduleService {
   Future<List<Map<String, dynamic>>> getSchedules() async {
     List<Map<String, dynamic>> schedules = [];
 
-    final manualSnapshot = await _manualRef.get();
-    if (manualSnapshot.exists) {
-      schedules.addAll(
-        (manualSnapshot.value as Map).values
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList(),
-      );
-    }
-
-    final autoSnapshot = await _autoRef.get();
-    if (autoSnapshot.exists) {
-      schedules.addAll(
-        (autoSnapshot.value as Map).values
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList(),
-      );
-    }
+    schedules.addAll(await _fetchSchedules(_manualRef));
+    schedules.addAll(await _fetchSchedules(_autoRef));
 
     return schedules;
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchSchedules(
+    DatabaseReference ref,
+  ) async {
+    try {
+      final snapshot = await ref.get();
+      if (snapshot.exists) {
+        final data = snapshot.value as Map<dynamic, dynamic>;
+        return data.values
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      }
+    } catch (e) {
+      print("❌ Error fetching schedules: $e");
+    }
+    return [];
   }
 
   bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
@@ -145,26 +141,21 @@ class ScheduleService {
 
     try {
       await _playerService.playMusicFromProxy(audioUrl);
-      await Future.delayed(Duration(minutes: int.parse(duration)));
-    } catch (e) {
-      print("❌ Error saat memutar audio: $e");
+      await Future.delayed(Duration(minutes: int.tryParse(duration) ?? 1));
     } finally {
       _isAudioPlaying = false;
     }
   }
 
   Future<String?> _getAudioUrl(String category) async {
-    final musicUrl = await _fetchAudioUrl(_musicRef, category);
-    if (musicUrl != null) return musicUrl;
-
-    final murottalUrl = await _fetchAudioUrl(_murottalRef, category);
-    return murottalUrl;
+    return await _fetchAudioUrl(_musicRef, category) ??
+        await _fetchAudioUrl(_murottalRef, category);
   }
 
   Future<String?> _fetchAudioUrl(DatabaseReference ref, String category) async {
     final snapshot = await ref.get();
     if (snapshot.exists) {
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
+      final data = snapshot.value as Map<dynamic, dynamic>;
       for (var cat in data.values) {
         if (cat is Map && cat['title'] == category) {
           return "http://localhost:3000/drive/${cat['fileId']}";
