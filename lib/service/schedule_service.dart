@@ -79,57 +79,83 @@ class ScheduleService {
   Future<List<Map<String, dynamic>>> _fetchSchedules(
     DatabaseReference ref,
   ) async {
-    final snapshot = await ref.get();
-    if (snapshot.exists) {
-      return (snapshot.value as Map).values
-          .whereType<Map>()
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
+    try {
+      final snapshot = await ref.get();
+      if (snapshot.exists && snapshot.value != null) {
+        final value = snapshot.value as Map;
+        return value.values
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      print("Error fetching schedules: $e");
+      return [];
     }
-    return [];
   }
 
   bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
-    final timeStart = schedule['time_start'];
-    final day = schedule['day'];
+    try {
+      final timeStart = schedule['time_start']?.toString();
+      final day = schedule['day']?.toString();
 
-    if (timeStart == null || day == null) return false;
+      if (timeStart == null || day == null) return false;
 
-    final parts = timeStart.split(':');
-    final hour = int.tryParse(parts[0]);
-    final minute = int.tryParse(parts[1]);
+      // More robust time parsing
+      final parts = timeStart.split(':');
+      if (parts.length != 2) return false;
 
-    return hour == now.hour && minute == now.minute && _isToday(day);
+      final hour = int.tryParse(parts[0]);
+      final minute = int.tryParse(parts[1]);
+
+      if (hour == null || minute == null) return false;
+
+      return hour == now.hour && minute == now.minute && _isToday(day);
+    } catch (e) {
+      print("Error validating schedule: $e");
+      return false;
+    }
   }
 
   bool _isToday(String day) {
-    final today =
-        [
-          "Senin",
-          "Selasa",
-          "Rabu",
-          "Kamis",
-          "Jumat",
-          "Sabtu",
-          "Minggu",
-        ][DateTime.now().weekday - 1];
-    return day == today;
+    try {
+      final today =
+          [
+            "Senin",
+            "Selasa",
+            "Rabu",
+            "Kamis",
+            "Jumat",
+            "Sabtu",
+            "Minggu",
+          ][DateTime.now().weekday - 1];
+      return day == today;
+    } catch (e) {
+      print("Error checking day: $e");
+      return false;
+    }
   }
 
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
-    final fileId = schedule['fileId'];
-    final duration = schedule['duration'];
-
-    if (fileId == null) return;
-
-    final audioUrl = "http://localhost:3000/drive/$fileId";
-
-    print("🔊 Memutar audio dari URL: $audioUrl selama $duration menit.");
-    _isAudioPlaying = true;
-
     try {
+      final fileId = schedule['fileId']?.toString();
+      final duration = schedule['duration']?.toString();
+
+      if (fileId == null || fileId.isEmpty) return;
+
+      final audioUrl = "http://localhost:3000/drive/$fileId";
+      final durationMinutes = int.tryParse(duration ?? '1') ?? 1;
+
+      print(
+        "🔊 Memutar audio dari URL: $audioUrl selama $durationMinutes menit.",
+      );
+      _isAudioPlaying = true;
+
       await _playerService.playMusicFromProxy(audioUrl);
-      await Future.delayed(Duration(minutes: int.tryParse(duration) ?? 1));
+      await Future.delayed(Duration(minutes: durationMinutes));
+    } catch (e) {
+      print("Error running scheduled audio: $e");
     } finally {
       _isAudioPlaying = false;
     }
