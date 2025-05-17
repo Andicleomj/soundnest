@@ -40,15 +40,18 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
 
   Future<void> _checkManualSchedules(DateTime now) async {
     final snapshot = await _manualRef.get();
-    if (snapshot.exists) {
+    if (snapshot.exists && snapshot.value is Map) {
       final schedules = Map<String, dynamic>.from(snapshot.value as Map);
       for (var entry in schedules.entries) {
         final schedule = entry.value;
         if (schedule['isActive'] == true) {
-          final startTime = DateTime.parse(schedule['time_start']);
-          final endTime = DateTime.parse(schedule['time_end']);
+          final startTime = DateTime.tryParse(schedule['time_start'] ?? '');
+          final endTime = DateTime.tryParse(schedule['time_end'] ?? '');
 
-          if (now.isAfter(startTime) && now.isBefore(endTime)) {
+          if (startTime != null &&
+              endTime != null &&
+              now.isAfter(startTime) &&
+              now.isBefore(endTime)) {
             await _playMusic(schedule['content']);
             return; // Prioritaskan jadwal manual
           }
@@ -61,25 +64,33 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
     final currentDay = _getDayName(now);
     final autoScheduleSnapshot = await _autoRef.child(currentDay).get();
 
-    if (autoScheduleSnapshot.exists) {
-      final schedule = autoScheduleSnapshot.value as Map<dynamic, dynamic>;
-      final timeParts = schedule['time'].split(':');
-      final startTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        int.parse(timeParts[0]),
-        int.parse(timeParts[1]),
+    if (autoScheduleSnapshot.exists && autoScheduleSnapshot.value is Map) {
+      final schedule = Map<String, dynamic>.from(
+        autoScheduleSnapshot.value as Map,
       );
-      final duration = Duration(
-        minutes: int.parse(schedule['duration'].split(':')[1]),
-      );
-      final endTime = startTime.add(duration);
+      if (schedule.containsKey('time') &&
+          schedule.containsKey('duration') &&
+          schedule.containsKey('content')) {
+        final timeParts = schedule['time'].split(':');
+        final startTime = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          int.tryParse(timeParts[0]) ?? 0,
+          int.tryParse(timeParts[1]) ?? 0,
+        );
+        final duration = Duration(
+          minutes: int.tryParse(schedule['duration'].split(':')[1]) ?? 0,
+        );
+        final endTime = startTime.add(duration);
 
-      if (now.isAfter(startTime) && now.isBefore(endTime)) {
-        final categories = List<String>.from(schedule['content']);
-        final index = now.weekday % categories.length;
-        await _playMusic(categories[index]);
+        if (now.isAfter(startTime) && now.isBefore(endTime)) {
+          final categories = List<String>.from(schedule['content'] ?? []);
+          if (categories.isNotEmpty) {
+            final index = now.weekday % categories.length;
+            await _playMusic(categories[index]);
+          }
+        }
       }
     }
   }
@@ -99,11 +110,13 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
 
   Future<void> _playMusic(String categoryId) async {
     final musicSnapshot = await _musicRef.child(categoryId).get();
-    if (musicSnapshot.exists) {
+    if (musicSnapshot.exists && musicSnapshot.value is Map) {
       final musicData = Map<String, dynamic>.from(musicSnapshot.value as Map);
       final fileId = musicData['file_id'];
-      final url = 'http://localhost:3000/stream/$fileId';
-      await _audioPlayer.play(UrlSource(url));
+      if (fileId != null) {
+        final url = 'http://localhost:3000/stream/$fileId';
+        await _audioPlayer.play(UrlSource(url));
+      }
     }
   }
 
