@@ -86,7 +86,7 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
     final time = _timeController.text.trim();
     final duration = _durationController.text.trim();
 
-    // Validate time format (HH:MM)
+    // Validate inputs
     if (!RegExp(r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$').hasMatch(time)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -96,17 +96,14 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
       return;
     }
 
-    // Validate duration is a positive number
-    if (duration.isEmpty ||
-        int.tryParse(duration) == null ||
-        int.parse(duration) <= 0) {
+    if (duration.isEmpty || int.tryParse(duration) == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Durasi harus angka positif')),
+        const SnackBar(content: Text('Durasi harus berupa angka')),
       );
       return;
     }
 
-    if (selectedSurah == null || selectedSurah!.isEmpty) {
+    if (selectedSurah == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pilih surah terlebih dahulu')),
       );
@@ -116,21 +113,45 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
     setState(() => _isLoading = true);
 
     try {
-      await ScheduleService().saveManualSchedule(
-        time,
-        duration,
-        selectedCategory,
-        selectedSurah!,
-        selectedDay,
-        '', // You might want to pass the actual file ID here
-      );
+      // First get the file ID for the selected surah
+      final path = categoryPaths[selectedCategory];
+      if (path == null) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Jadwal murottal berhasil disimpan')),
-      );
+      final ref = FirebaseDatabase.instance.ref(path);
+      final snapshot = await ref.get();
 
-      _timeController.clear();
-      _durationController.clear();
+      if (snapshot.exists) {
+        final data = Map<String, dynamic>.from(snapshot.value as Map);
+        final surahData = data.values.firstWhere(
+          (e) => e['title'] == selectedSurah,
+          orElse: () => null,
+        );
+
+        if (surahData != null) {
+          final fileId = surahData['fileId']?.toString() ?? '';
+
+          // Now save the schedule with all required data
+          await ScheduleService().saveManualSchedule(
+            time,
+            duration,
+            selectedCategory,
+            selectedSurah!, // Save the actual surah name
+            selectedDay,
+            fileId, // Save the file ID for audio access
+          );
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Jadwal murottal berhasil disimpan')),
+          );
+
+          _timeController.clear();
+          _durationController.clear();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Data surah tidak ditemukan')),
+          );
+        }
+      }
     } catch (e) {
       ScaffoldMessenger.of(
         context,
