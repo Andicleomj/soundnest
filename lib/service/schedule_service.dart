@@ -36,22 +36,6 @@ class ScheduleService {
     print("✅ ScheduleService started.");
   }
 
-  Future<void> saveManualSchedule(
-    String time,
-    String duration,
-    String category,
-    String day,
-  ) async {
-    await _manualRef.push().set({
-      'time_start': time,
-      'duration': duration,
-      'category': category,
-      'day': day,
-      'isActive': true,
-    });
-    print("✅ Jadwal manual berhasil disimpan.");
-  }
-
   Future<void> checkAndRunSchedule() async {
     if (_isAudioPlaying) return;
 
@@ -157,7 +141,6 @@ class ScheduleService {
     final snapshot = await ref.get();
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
-      print("📂 Data Firebase: ${data}");
 
       for (var cat in data.values) {
         if (cat is Map &&
