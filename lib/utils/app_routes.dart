@@ -10,6 +10,7 @@ import 'package:soundnest/screens/splash_screen.dart';
 import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/screens/home/musik/musik_kategori.dart';
 import 'package:soundnest/screens/home/musik/add_musik.dart';
+import 'package:soundnest/screens/schedule/daftar_jadwal.dart';
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -35,6 +36,7 @@ class AppRoutes {
       schedulescreen: (context) => const ScheduleScreen(),
       dashboard: (context) => const DashboardScreen(),
       schedule: (context) => const Schedule(),
+      daftarJadwal: (context) => const DaftarJadwal(),
       musikKategori: (context) => const MusikKategoriScreen(),
 
       daftarMusik: (context) {
