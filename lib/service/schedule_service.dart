@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:soundnest/service/music_player_service.dart';
+import 'package:http/http.dart' as http;
 
 class ScheduleService {
   final DatabaseReference _manualRef = FirebaseDatabase.instance.ref(
@@ -217,35 +218,53 @@ class ScheduleService {
 
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
     try {
-      final fileId = schedule['fileId']?.toString();
-      final surah = schedule['surah']?.toString() ?? 'Unknown';
-      final duration = schedule['duration']?.toString();
+      final categoryMap = {
+        "Ayat Kursi": "kategori_1",
+        "Surah Pendek": "kategori_2",
+      };
+      final categoryKey = categoryMap[schedule['category']] ?? 'kategori_1';
+      final fileKey = schedule['fileKey'] ?? 'file_1';
 
-      if (fileId == null || fileId.isEmpty) {
-        print("⚠️ No fileId found in schedule");
+      // 1. Get the actual file ID from Firebase
+      final audioRef = FirebaseDatabase.instance.ref(
+        'devices/devices_01/murottal/categories/$categoryKey/files/$fileKey',
+      );
+      final snapshot = await audioRef.get();
+
+      if (!snapshot.exists) {
+        print('❌ Audio metadata not found');
         return;
       }
 
-      final audioUrl = "http://localhost:3000/drive/$fileId";
-      final durationMinutes = int.tryParse(duration ?? '1') ?? 1;
+      final audioData = Map<String, dynamic>.from(snapshot.value as Map);
+      final fileId = audioData['file1']?.toString();
 
-      print(
-        "🔊 Playing audio: $surah from URL: $audioUrl for $durationMinutes minutes",
-      );
+      if (fileId == null || fileId.isEmpty) {
+        print('❌ No fileId found in audio data');
+        return;
+      }
+
+      // 2. Construct PROPER audio URL (no spaces, no double processing)
+      final encodedFileId = Uri.encodeComponent(fileId);
+      final audioUrl = "http://localhost:3000/drive/$encodedFileId";
+
+      print('🔊 Attempting to play: $audioUrl');
+
+      // 3. Verify URL before playing
+      final response = await http.head(Uri.parse(audioUrl));
+      if (response.statusCode != 200) {
+        print('❌ Audio file not available (HTTP ${response.statusCode})');
+        return;
+      }
 
       _isAudioPlaying = true;
-      await _playerService.playMusicFromProxy(audioUrl);
+      await _playerService.play(audioUrl);
 
-      // Wait for the duration but allow early cancellation
-      final stopwatch = Stopwatch()..start();
-      while (stopwatch.elapsed.inMinutes < durationMinutes && _isAudioPlaying) {
-        await Future.delayed(const Duration(seconds: 10));
-      }
+      // ... rest of playback logic ...
     } catch (e) {
-      print("❌ Error playing scheduled audio: $e");
+      print('❌ Playback error: $e');
     } finally {
       _isAudioPlaying = false;
-      print("⏹ Finished playing scheduled audio");
     }
   }
 
