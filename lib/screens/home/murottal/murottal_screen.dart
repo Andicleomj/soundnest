@@ -52,33 +52,33 @@ class _MurottalScreenState extends State<MurottalScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
-                title: const Text('Tambah Kategori Baru'),
-                content: TextField(
-                  controller: _controller,
-                  decoration: const InputDecoration(hintText: 'Nama kategori'),
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Batal'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final name = _controller.text.trim();
-                      if (name.isNotEmpty) {
-                        final newRef = categoriesRef.push();
-                        await newRef.set({'name': name, 'files': {}});
-                        Navigator.pop(context);
-                        fetchCustomCategories();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Kategori "$name" ditambahkan')),
-                        );
-                      }
-                    },
-                    child: const Text('Tambah'),
-                  ),
-                ],
+            title: const Text('Tambah Kategori Baru'),
+            content: TextField(
+              controller: _controller,
+              decoration: const InputDecoration(hintText: 'Nama kategori'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Batal'),
               ),
+              ElevatedButton(
+                onPressed: () async {
+                  final name = _controller.text.trim();
+                  if (name.isNotEmpty) {
+                    final newRef = categoriesRef.push();
+                    await newRef.set({'name': name, 'files': {}});
+                    Navigator.pop(context);
+                    fetchCustomCategories();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Kategori "$name" ditambahkan')),
+                    );
+                  }
+                },
+                child: const Text('Tambah'),
+              ),
+            ],
+          ),
     );
   }
 
@@ -111,23 +111,26 @@ class _MurottalScreenState extends State<MurottalScreen> {
   void _confirmDeleteCategory(BuildContext context, String category) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Hapus Kategori'),
-        content: Text('Apakah Anda yakin ingin menghapus kategori "$category"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
+      builder:
+          (context) => AlertDialog(
+            title: Text('Hapus Kategori'),
+            content: Text(
+              'Apakah Anda yakin ingin menghapus kategori "$category"?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await _deleteCategory(category);
+                },
+                child: const Text('Hapus'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _deleteCategory(category);
-            },
-            child: const Text('Hapus'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -157,9 +160,9 @@ class _MurottalScreenState extends State<MurottalScreen> {
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menghapus kategori: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal menghapus kategori: $e')));
     }
   }
 
@@ -174,7 +177,7 @@ class _MurottalScreenState extends State<MurottalScreen> {
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: const Text(
-              'Kategori Musik',
+              'Kategori Musrottal',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
@@ -237,7 +240,10 @@ class _MurottalScreenState extends State<MurottalScreen> {
               Expanded(
                 child: Text(
                   category,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               IconButton(
