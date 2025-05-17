@@ -1,135 +1,124 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'dart:async';
 
 class DaftarJadwal extends StatefulWidget {
   const DaftarJadwal({super.key});
 
   @override
-  State<DaftarJadwal> createState() => _DaftarJadwalState();
+  _DaftarJadwalState createState() => _DaftarJadwalState();
 }
 
 class _DaftarJadwalState extends State<DaftarJadwal> {
-  final DatabaseReference _ref = FirebaseDatabase.instance.ref(
-    'devices/devices_01/schedule_001',
+  final DatabaseReference _manualRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/schedule/manual',
+  );
+  final DatabaseReference _autoRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/schedule/otomatis',
+  );
+  final DatabaseReference _musicRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/music/categories',
   );
 
-  Map<String, bool> switchStates = {};
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  Timer? _scheduleTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startScheduleChecker();
+  }
+
+  void _startScheduleChecker() {
+    _scheduleTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
+      final now = DateTime.now();
+      await _checkManualSchedules(now);
+      await _checkAutomaticSchedules(now);
+    });
+  }
+
+  Future<void> _checkManualSchedules(DateTime now) async {
+    final snapshot = await _manualRef.get();
+    if (snapshot.exists) {
+      final schedules = Map<String, dynamic>.from(snapshot.value as Map);
+      for (var entry in schedules.entries) {
+        final schedule = entry.value;
+        if (schedule['isActive'] == true) {
+          final startTime = DateTime.parse(schedule['time_start']);
+          final endTime = DateTime.parse(schedule['time_end']);
+
+          if (now.isAfter(startTime) && now.isBefore(endTime)) {
+            await _playMusic(schedule['content']);
+            return; // Prioritaskan jadwal manual
+          }
+        }
+      }
+    }
+  }
+
+  Future<void> _checkAutomaticSchedules(DateTime now) async {
+    final currentDay = _getDayName(now);
+    final autoScheduleSnapshot = await _autoRef.child(currentDay).get();
+
+    if (autoScheduleSnapshot.exists) {
+      final schedule = autoScheduleSnapshot.value as Map<dynamic, dynamic>;
+      final timeParts = schedule['time'].split(':');
+      final startTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        int.parse(timeParts[0]),
+        int.parse(timeParts[1]),
+      );
+      final duration = Duration(
+        minutes: int.parse(schedule['duration'].split(':')[1]),
+      );
+      final endTime = startTime.add(duration);
+
+      if (now.isAfter(startTime) && now.isBefore(endTime)) {
+        final categories = List<String>.from(schedule['content']);
+        final index = now.weekday % categories.length;
+        await _playMusic(categories[index]);
+      }
+    }
+  }
+
+  String _getDayName(DateTime date) {
+    const days = [
+      'senin',
+      'selasa',
+      'rabu',
+      'kamis',
+      'jumat',
+      'sabtu',
+      'minggu',
+    ];
+    return days[(date.weekday - 1) % 7];
+  }
+
+  Future<void> _playMusic(String categoryId) async {
+    final musicSnapshot = await _musicRef.child(categoryId).get();
+    if (musicSnapshot.exists) {
+      final musicData = Map<String, dynamic>.from(musicSnapshot.value as Map);
+      final fileId = musicData['file_id'];
+      final url = 'http://localhost:3000/stream/$fileId';
+      await _audioPlayer.play(UrlSource(url));
+    }
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    _scheduleTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          "Daftar Jadwal",
-        style: TextStyle(fontWeight: FontWeight.bold,color: Colors.black),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.white],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
-      ),
-      body: StreamBuilder(
-        stream: _ref.onValue,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return const Center(
-              child: Text("Terjadi kesalahan saat memuat data."),
-            );
-          } else if (snapshot.hasData) {
-            final data = snapshot.data?.snapshot.value;
-            if (data == null) {
-              return const Center(child: Text("Belum ada jadwal."));
-            }
-
-            final schedules = (data as Map<dynamic, dynamic>).entries.toList();
-            if (schedules.isEmpty) {
-              return const Center(child: Text("Belum ada jadwal."));
-            }
-
-            return ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              itemCount: schedules.length,
-              itemBuilder: (context, index) {
-                final entry = schedules[index];
-                final key = entry.key.toString();
-                final schedule = entry.value;
-
-                // Inisialisasi state switch
-                switchStates[key] =
-                    switchStates[key] ?? (schedule['isActive'] ?? false);
-
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Jadwal ${index + 1}",
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.normal,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              schedule['time_start'] ?? '',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "${schedule['type']} : ${schedule['content'] ?? ''}",
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.center,
-                        child: Switch(
-                          value: switchStates[key] ?? false,
-                          onChanged: (value) {
-                            setState(() {
-                              switchStates[key] = value;
-                            });
-                            _ref.child(key).update({'isActive': value});
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          }
-
-          return const Center(child: Text("Belum ada jadwal."));
-        },
-      ),
+      appBar: AppBar(title: const Text("Penjadwalan Musik"), centerTitle: true),
+      body: const Center(child: Text("Jadwal Otomatis dan Manual")),
     );
   }
 }
