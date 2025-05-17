@@ -63,9 +63,12 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
       if (snapshot.exists && snapshot.value != null) {
         final data = snapshot.value as Map<dynamic, dynamic>;
         final titles =
-            data.values
-                .where((e) => e != null && e['title'] != null)
-                .map((e) => e['title'].toString())
+            data.entries
+                .where(
+                  (entry) =>
+                      entry.value != null && entry.value['title'] != null,
+                )
+                .map((entry) => entry.value['title'].toString())
                 .toList();
 
         setState(() {
@@ -83,29 +86,15 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
   }
 
   Future<void> _saveSchedule() async {
-    final time = _timeController.text.trim();
-    final duration = _durationController.text.trim();
+    // Ambil nilai waktu dan durasi dari controller
+    final String time = _timeController.text.trim();
+    final String durationText = _durationController.text.trim();
+    int? duration = int.tryParse(durationText);
 
-    // Validate inputs
-    if (!RegExp(r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$').hasMatch(time)) {
+    // Validasi input
+    if (time.isEmpty || duration == null || selectedSurah == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Format waktu tidak valid. Gunakan HH:MM'),
-        ),
-      );
-      return;
-    }
-
-    if (duration.isEmpty || int.tryParse(duration) == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Durasi harus berupa angka')),
-      );
-      return;
-    }
-
-    if (selectedSurah == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pilih surah terlebih dahulu')),
+        const SnackBar(content: Text('Mohon lengkapi semua data dengan benar')),
       );
       return;
     }
@@ -113,7 +102,6 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
     setState(() => _isLoading = true);
 
     try {
-      // First get the file ID for the selected surah
       final path = categoryPaths[selectedCategory];
       if (path == null) return;
 
@@ -121,31 +109,29 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
       final snapshot = await ref.get();
 
       if (snapshot.exists) {
-        final data = Map<String, dynamic>.from(snapshot.value as Map);
-        final surahData = data.values.firstWhere(
-          (e) => e['title'] == selectedSurah,
-          orElse: () => null,
-        );
+        final data = snapshot.value as Map<dynamic, dynamic>;
+        final surahEntry =
+            data.entries
+                .where((entry) => entry.value['title'] == selectedSurah)
+                .toList();
 
-        if (surahData != null) {
-          final fileId = surahData['fileId']?.toString() ?? '';
+        if (surahEntry.isNotEmpty) {
+          final entry = surahEntry.first;
+          final fileId = entry.value['file1']?.toString() ?? '';
+          final fileKey = entry.key;
 
-          // Now save the schedule with all required data
           await ScheduleService().saveManualSchedule(
             time,
-            duration,
+            duration.toString(),
             selectedCategory,
-            selectedSurah!, // Save the actual surah name
+            selectedSurah!,
             selectedDay,
-            fileId, // Save the file ID for audio access
+            '$selectedCategory/files/$fileKey',
           );
 
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Jadwal murottal berhasil disimpan')),
+            const SnackBar(content: Text('Jadwal berhasil disimpan')),
           );
-
-          _timeController.clear();
-          _durationController.clear();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Data surah tidak ditemukan')),
@@ -155,7 +141,7 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Gagal menyimpan jadwal: $e')));
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -185,8 +171,10 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
                     }).toList(),
                 onChanged: (value) {
                   if (value != null) {
-                    setState(() => selectedCategory = value);
-                    _fetchSurahList();
+                    setState(() {
+                      selectedCategory = value;
+                      _fetchSurahList();
+                    });
                   }
                 },
                 decoration: const InputDecoration(

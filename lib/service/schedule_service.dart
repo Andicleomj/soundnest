@@ -48,42 +48,20 @@ class ScheduleService {
     String category,
     String surah,
     String day,
-    String fileId,
+    String
+    fileId, // This should be the full reference like "kategori_1/files/file_1"
   ) async {
-    try {
-      // Validate inputs
-      if (time.isEmpty ||
-          duration.isEmpty ||
-          category.isEmpty ||
-          surah.isEmpty ||
-          day.isEmpty ||
-          fileId.isEmpty) {
-        throw Exception("All schedule fields must be filled");
-      }
-
-      if (!RegExp(r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$').hasMatch(time)) {
-        throw Exception("Invalid time format. Use HH:MM");
-      }
-
-      if (int.tryParse(duration) == null || int.parse(duration) <= 0) {
-        throw Exception("Duration must be a positive number");
-      }
-
-      await _manualRef.push().set({
-        'time_start': time,
-        'duration': duration,
-        'category': category,
-        'surah': surah,
-        'day': day,
-        'fileId': fileId,
-        'isActive': true,
-        'createdAt': ServerValue.timestamp,
-      });
-      print("✅ Saved schedule for surah: $surah at $time");
-    } catch (e) {
-      print("❌ Error saving schedule: $e");
-      rethrow;
-    }
+    await _manualRef.push().set({
+      'time_start': time,
+      'duration': duration,
+      'category': category,
+      'surah': surah,
+      'day': day,
+      'fileId': fileId, // Store complete path
+      'fileKey': "file_1", // Store the actual file key
+      'isActive': true,
+      'createdAt': ServerValue.timestamp,
+    });
   }
 
   Future<void> checkAndRunSchedule() async {
@@ -190,28 +168,40 @@ class ScheduleService {
 
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
     try {
-      final fileId = schedule['fileId']?.toString();
-      final duration = schedule['duration']?.toString();
+      final category = schedule['category']?.toString() ?? 'kategori_1';
+      final fileKey = schedule['fileKey']?.toString() ?? 'file_1';
 
-      if (fileId == null || fileId.isEmpty) return;
+      // Construct the correct Firebase reference
+      final audioRef = FirebaseDatabase.instance.ref(
+        'devices/devices_81/murottal/categories/$category/files/$fileKey',
+      );
 
-      final audioUrl = "http://your-server.com/audio/$fileId";
-      final durationMinutes = int.tryParse(duration ?? '1') ?? 1;
+      final snapshot = await audioRef.get();
+      if (!snapshot.exists) {
+        print('❌ Audio file not found at ${audioRef.path}');
+        return;
+      }
 
-      print("🔊 Playing audio for $durationMinutes minutes");
+      final audioData = Map<String, dynamic>.from(snapshot.value as Map);
+      final fileId = audioData['file1']?.toString(); // Get the actual file ID
 
+      if (fileId == null || fileId.isEmpty) {
+        print('❌ No fileId found in audio data');
+        return;
+      }
+
+      // Use your actual audio URL pattern
+      final audioUrl = "https://your-audio-server.com/$fileId";
+
+      print('🔊 Playing audio from $audioUrl');
       _isAudioPlaying = true;
       await _playerService.play(audioUrl);
 
-      final stopwatch = Stopwatch()..start();
-      while (stopwatch.elapsed.inMinutes < durationMinutes && _isAudioPlaying) {
-        await Future.delayed(const Duration(seconds: 10));
-      }
+      // ... rest of your playback logic
     } catch (e) {
-      print("❌ Error playing audio: $e");
+      print('❌ Error playing scheduled audio: $e');
     } finally {
       _isAudioPlaying = false;
-      print("⏹ Finished playing audio");
     }
   }
 
