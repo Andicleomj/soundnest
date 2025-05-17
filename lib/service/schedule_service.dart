@@ -146,7 +146,7 @@ class ScheduleService {
         return [];
       }
 
-      return (data).entries.map((entry) {
+      return (data as Map<dynamic, dynamic>).entries.map((entry) {
         final value = entry.value;
         final valueMap =
             value is Map
@@ -207,22 +207,12 @@ class ScheduleService {
 
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
     try {
-      // 1. Get the correct category path (use your actual category mapping)
-      final categoryMap = {
-        "Ayat Kursi": "kategori_1",
-        "Surah Pendek": "kategori_2",
-      };
+      final category =
+          schedule['category']?.toString().replaceAll(' ', '_') ?? 'kategori_1';
+      final fileKey = schedule['fileKey']?.toString() ?? 'file_1';
 
-      final categoryKey = categoryMap[schedule['category']] ?? 'kategori_1';
-
-      // 2. Construct the correct reference path
-      final audioRef = FirebaseDatabase.instance.ref(
-        'devices/devices_01/murottal/categories/$categoryKey/files/file_1',
-      );
-
-      print('🔍 Checking audio at: ${audioRef.path}'); // Debug log
-
-      // 3. Fetch the audio metadata
+      // Get audio metadata from Firebase
+      final audioRef = _murottalRef.child('$category/files/$fileKey');
       final snapshot = await audioRef.get();
 
       if (!snapshot.exists) {
@@ -230,21 +220,33 @@ class ScheduleService {
         return;
       }
 
-      final audioData = snapshot.value as Map<String, dynamic>;
+      final audioData = Map<String, dynamic>.from(snapshot.value as Map);
       final fileId = audioData['file1']?.toString();
 
       if (fileId == null || fileId.isEmpty) {
-        print('❌ file1 field missing in audio data');
+        print('❌ No fileId found in audio metadata');
         return;
       }
 
-      // 4. Construct the final audio URL
+      // Construct final audio URL (replace with your actual URL pattern)
       final audioUrl = "https://your-storage.com/audios/$fileId.mp3";
       print('🔊 Attempting to play: $audioUrl');
 
-      // ... rest of your playback code ...
+      _isAudioPlaying = true;
+      await _playerService.play(audioUrl);
+
+      // Monitor playback duration
+      final durationMinutes = int.tryParse(schedule['duration'] ?? '1') ?? 1;
+      final stopwatch = Stopwatch()..start();
+
+      while (stopwatch.elapsed.inMinutes < durationMinutes && _isAudioPlaying) {
+        await Future.delayed(const Duration(seconds: 10));
+      }
     } catch (e) {
-      print('❌ Error in _runScheduledAudio: $e');
+      print('❌ Error during audio playback: $e');
+    } finally {
+      _isAudioPlaying = false;
+      print("⏹ Finished audio playback");
     }
   }
 
