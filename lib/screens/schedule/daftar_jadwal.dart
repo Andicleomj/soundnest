@@ -85,7 +85,7 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
         final endTime = startTime.add(duration);
 
         if (now.isAfter(startTime) && now.isBefore(endTime)) {
-          final categories = List<String>.from(schedule['content'] ?? []);
+          final categories = List<String>.from(schedule['cotent'] ?? []);
           if (categories.isNotEmpty) {
             final index = now.weekday % categories.length;
             await _playMusic(categories[index]);
