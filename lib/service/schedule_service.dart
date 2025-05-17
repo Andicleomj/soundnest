@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:soundnest/service/music_service.dart';
 import 'package:soundnest/service/music_player_service.dart';
 
 class ScheduleService {
@@ -68,12 +67,10 @@ class ScheduleService {
   }
 
   Future<List<Map<String, dynamic>>> getSchedules() async {
-    List<Map<String, dynamic>> schedules = [];
-
-    schedules.addAll(await _fetchSchedules(_manualRef));
-    schedules.addAll(await _fetchSchedules(_autoRef));
-
-    return schedules;
+    return [
+      ...await _fetchSchedules(_manualRef),
+      ...await _fetchSchedules(_autoRef),
+    ];
   }
 
   Future<List<Map<String, dynamic>>> _fetchSchedules(
@@ -82,8 +79,7 @@ class ScheduleService {
     try {
       final snapshot = await ref.get();
       if (snapshot.exists) {
-        final data = snapshot.value as Map<dynamic, dynamic>;
-        return data.values
+        return (snapshot.value as Map).values
             .whereType<Map>()
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
@@ -95,8 +91,9 @@ class ScheduleService {
   }
 
   bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
-    final timeStart = schedule['time_start']?.toString();
-    final day = schedule['day']?.toString();
+    final timeStart = schedule['time_start'];
+    final day = schedule['day'];
+
     if (timeStart == null || day == null) return false;
 
     final parts = timeStart.split(':');
@@ -127,6 +124,7 @@ class ScheduleService {
 
     final category = schedule['category'];
     final duration = schedule['duration'];
+
     if (category == null) return;
 
     final audioUrl = await _getAudioUrl(category);
@@ -155,10 +153,14 @@ class ScheduleService {
   Future<String?> _fetchAudioUrl(DatabaseReference ref, String category) async {
     final snapshot = await ref.get();
     if (snapshot.exists) {
-      final data = snapshot.value as Map<dynamic, dynamic>;
+      final data = snapshot.value as Map;
       for (var cat in data.values) {
-        if (cat is Map && cat['title'] == category) {
-          return "http://localhost:3000/drive/${cat['fileId']}";
+        if (cat is Map && cat.containsKey('files')) {
+          for (var file in cat['files'].values) {
+            if (file['title'] == category || file['nama'] == category) {
+              return "http://localhost:3000/drive/${file['fileId']}";
+            }
+          }
         }
       }
     }
