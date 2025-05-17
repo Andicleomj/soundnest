@@ -59,17 +59,36 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
     }
   }
 
-  // baru
   void _saveSchedule() async {
     final time = _timeController.text.trim();
     final duration = _durationController.text.trim();
 
     if (time.isNotEmpty && duration.isNotEmpty && selectedSurah != null) {
+      final path = categoryPaths[selectedCategory];
+      final ref = FirebaseDatabase.instance.ref(path);
+      final snapshot = await ref.get();
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+
+      final selectedAudio = data.values.firstWhere(
+        (e) => e['title'] == selectedSurah,
+        orElse: () => null,
+      );
+
+      if (selectedAudio == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Audio tidak ditemukan.')));
+        return;
+      }
+
+      final audioUrl = "http://localhost:3000/drive/${selectedAudio['fileId']}";
+
       await ScheduleService().saveManualSchedule(
         time,
         duration,
         "$selectedCategory - $selectedSurah",
-        selectedDay, // Menyimpan hari yang dipilih
+        selectedDay,
+        audioUrl, // Menyimpan URL audio di jadwal
       );
 
       ScaffoldMessenger.of(context).showSnackBar(

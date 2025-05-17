@@ -12,12 +12,6 @@ class ScheduleService {
   final DatabaseReference _autoRef = FirebaseDatabase.instance.ref(
     'devices/devices_01/schedule/otomatis',
   );
-  final DatabaseReference _musicRef = FirebaseDatabase.instance.ref(
-    'devices/devices_01/music/categories',
-  );
-  final DatabaseReference _murottalRef = FirebaseDatabase.instance.ref(
-    'devices/devices_01/murottal/categories',
-  );
 
   final MusicPlayerService _playerService = MusicPlayerService();
   Timer? _timer;
@@ -31,12 +25,14 @@ class ScheduleService {
       const Duration(seconds: 60),
       (_) => checkAndRunSchedule(),
     );
+
     _ref.onValue.listen((event) => checkAndRunSchedule());
     print("✅ ScheduleService started.");
   }
 
   Future<void> checkAndRunSchedule() async {
     if (_isAudioPlaying) return;
+
     print("⏰ Mengecek jadwal...");
     final now = DateTime.now();
     final schedules = await getSchedules();
@@ -61,9 +57,8 @@ class ScheduleService {
     try {
       final snapshot = await ref.get();
       if (snapshot.exists) {
-        return (snapshot.value as Map).values
-            .whereType<Map>()
-            .map((e) => Map<String, dynamic>.from(e))
+        return (snapshot.value as Map).entries
+            .map((e) => {...Map<String, dynamic>.from(e.value), 'id': e.key})
             .toList();
       }
     } catch (e) {
@@ -90,13 +85,13 @@ class ScheduleService {
   bool _isToday(String day) {
     final today =
         [
-          "Senin",
-          "Selasa",
-          "Rabu",
-          "Kamis",
-          "Jumat",
-          "Sabtu",
-          "Minggu",
+          'Senin',
+          'Selasa',
+          'Rabu',
+          'Kamis',
+          'Jumat',
+          'Sabtu',
+          'Minggu',
         ][DateTime.now().weekday - 1];
     return day == today;
   }
@@ -104,56 +99,38 @@ class ScheduleService {
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
     if (_isAudioPlaying) return;
 
-    final category = schedule['category'];
-    final duration = schedule['duration'];
+    final audioUrl = schedule['audio_url'];
+    if (audioUrl == null) return;
 
-    if (category == null) return;
-
-    final audioUrl = await _getAudioUrl(category);
-
-    if (audioUrl == null) {
-      print("❌ URL audio tidak ditemukan untuk kategori: $category");
-      return;
-    }
-
-    print("🔊 Memutar audio dari URL: $audioUrl selama $duration menit.");
+    print("🔊 Memutar audio dari URL: $audioUrl.");
     _isAudioPlaying = true;
 
     try {
       await _playerService.playMusicFromProxy(audioUrl);
-      await Future.delayed(Duration(minutes: int.tryParse(duration) ?? 1));
+      await Future.delayed(
+        Duration(minutes: int.tryParse(schedule['duration']) ?? 1),
+      );
     } finally {
       _isAudioPlaying = false;
     }
   }
 
-  Future<String?> _getAudioUrl(String category) async {
-    return await _fetchAudioUrlImproved(_musicRef, category) ??
-        await _fetchAudioUrlImproved(_murottalRef, category);
-  }
-
-  Future<String?> _fetchAudioUrlImproved(
-    DatabaseReference ref,
+  Future<void> saveManualSchedule(
+    String time,
+    String duration,
     String category,
+    String day,
+    String audioUrl,
   ) async {
-    final snapshot = await ref.get();
-    if (snapshot.exists) {
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
-
-      for (var cat in data.values) {
-        if (cat is Map &&
-            cat['nama']?.toString().toLowerCase() == category.toLowerCase()) {
-          for (var file in cat['files'].values) {
-            if (file is Map && file.containsKey('fileId')) {
-              return "http://localhost:3000/drive/${file['fileId']}";
-            }
-          }
-        }
-      }
-    }
-
-    print("❌ URL audio tidak ditemukan untuk kategori: $category");
-    return null;
+    await _manualRef.push().set({
+      'time_start': time,
+      'duration': duration,
+      'category': category,
+      'day': day,
+      'audio_url': audioUrl,
+      'isActive': true,
+    });
+    print("✅ Jadwal manual berhasil disimpan.");
   }
 
   void dispose() {
