@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:soundnest/service/music_player_service.dart';
-import 'package:audioplayers/audioplayers.dart';
 
 class ScheduleService {
   final DatabaseReference _manualRef = FirebaseDatabase.instance.ref(
@@ -48,20 +47,48 @@ class ScheduleService {
     String category,
     String surah,
     String day,
-    String
-    fileId, // This should be the full reference like "kategori_1/files/file_1"
+    String fileReference, // Full reference like "kategori_1/files/file_1"
   ) async {
-    await _manualRef.push().set({
-      'time_start': time,
-      'duration': duration,
-      'category': category,
-      'surah': surah,
-      'day': day,
-      'fileId': fileId, // Store complete path
-      'fileKey': "file_1", // Store the actual file key
-      'isActive': true,
-      'createdAt': ServerValue.timestamp,
-    });
+    try {
+      // Validate inputs
+      if (time.isEmpty ||
+          duration.isEmpty ||
+          category.isEmpty ||
+          surah.isEmpty ||
+          day.isEmpty ||
+          fileReference.isEmpty) {
+        throw Exception("All schedule fields must be filled");
+      }
+
+      // Validate time format
+      if (!RegExp(r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$').hasMatch(time)) {
+        throw Exception("Invalid time format. Use HH:MM");
+      }
+
+      // Validate duration
+      if (int.tryParse(duration) == null || int.parse(duration) <= 0) {
+        throw Exception("Duration must be a positive number");
+      }
+
+      // Extract fileKey from reference
+      final fileKey = fileReference.split('/').last;
+
+      await _manualRef.push().set({
+        'time_start': time,
+        'duration': duration,
+        'category': category,
+        'surah': surah,
+        'day': day,
+        'fileReference': fileReference,
+        'fileKey': fileKey,
+        'isActive': true,
+        'createdAt': ServerValue.timestamp,
+      });
+      print("✅ Schedule saved for $surah at $time");
+    } catch (e) {
+      print("❌ Error saving schedule: $e");
+      rethrow;
+    }
   }
 
   Future<void> checkAndRunSchedule() async {
@@ -80,7 +107,7 @@ class ScheduleService {
             _isScheduleValid(schedule, now)) {
           print("🎯 Found matching schedule: ${schedule['surah']}");
           await _runScheduledAudio(schedule);
-          break;
+          break; // Only run one schedule at a time
         }
       } catch (e) {
         print("⚠️ Error processing schedule: $e");
@@ -108,20 +135,32 @@ class ScheduleService {
   ) async {
     try {
       final snapshot = await ref.get();
-      if (snapshot.exists && snapshot.value != null) {
-        final data = snapshot.value as Map<dynamic, dynamic>;
-        return data.entries.map<Map<String, dynamic>>((entry) {
-          return {
-            'key': entry.key,
-            ...(entry.value is Map
-                ? Map<String, dynamic>.from(entry.value as Map)
-                : {}),
-          };
-        }).toList();
+
+      if (!snapshot.exists || snapshot.value == null) {
+        return [];
       }
-      return [];
-    } catch (e) {
-      print("❌ Error fetching schedules: $e");
+
+      final data = snapshot.value;
+      if (data is! Map) {
+        print('Unexpected data type: ${data.runtimeType}');
+        return [];
+      }
+
+      return (data as Map<dynamic, dynamic>).entries.map((entry) {
+        final value = entry.value;
+        final valueMap =
+            value is Map
+                ? Map<String, dynamic>.from(value)
+                : <String, dynamic>{};
+
+        return <String, dynamic>{
+          'key': entry.key?.toString() ?? '',
+          ...valueMap,
+        };
+      }).toList();
+    } catch (e, stackTrace) {
+      print('Error fetching schedules: $e');
+      print('Stack trace: $stackTrace');
       return [];
     }
   }
@@ -168,40 +207,46 @@ class ScheduleService {
 
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
     try {
-      final category = schedule['category']?.toString() ?? 'kategori_1';
+      final category =
+          schedule['category']?.toString().replaceAll(' ', '_') ?? 'kategori_1';
       final fileKey = schedule['fileKey']?.toString() ?? 'file_1';
 
-      // Construct the correct Firebase reference
-      final audioRef = FirebaseDatabase.instance.ref(
-        'devices/devices_01/murottal/categories/$category/files/$fileKey',
-      );
-
+      // Get audio metadata from Firebase
+      final audioRef = _murottalRef.child('$category/files/$fileKey');
       final snapshot = await audioRef.get();
+
       if (!snapshot.exists) {
-        print('❌ Audio file not found at ${audioRef.path}');
+        print('❌ Audio metadata not found at ${audioRef.path}');
         return;
       }
 
       final audioData = Map<String, dynamic>.from(snapshot.value as Map);
-      final fileId = audioData['file1']?.toString(); // Get the actual file ID
+      final fileId = audioData['file1']?.toString();
 
       if (fileId == null || fileId.isEmpty) {
-        print('❌ No fileId found in audio data');
+        print('❌ No fileId found in audio metadata');
         return;
       }
 
-      // Use your actual audio URL pattern
-      final audioUrl = "https://your-audio-server.com/$fileId";
+      // Construct final audio URL (replace with your actual URL pattern)
+      final audioUrl = "https://your-storage.com/audios/$fileId.mp3";
+      print('🔊 Attempting to play: $audioUrl');
 
-      print('🔊 Playing audio from $audioUrl');
       _isAudioPlaying = true;
       await _playerService.play(audioUrl);
 
-      // ... rest of your playback logic
+      // Monitor playback duration
+      final durationMinutes = int.tryParse(schedule['duration'] ?? '1') ?? 1;
+      final stopwatch = Stopwatch()..start();
+
+      while (stopwatch.elapsed.inMinutes < durationMinutes && _isAudioPlaying) {
+        await Future.delayed(const Duration(seconds: 10));
+      }
     } catch (e) {
-      print('❌ Error playing scheduled audio: $e');
+      print('❌ Error during audio playback: $e');
     } finally {
       _isAudioPlaying = false;
+      print("⏹ Finished audio playback");
     }
   }
 
