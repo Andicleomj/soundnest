@@ -171,13 +171,12 @@ class ScheduleService {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
 
       for (var cat in data.values) {
-        for (var file in (cat['files'] as Map).values) {
-          if (file['title'] == category) {
-            return "http://localhost:3000/drive/${file['fileId']}";
-          }
+        if (cat is Map && cat['title'] == category) {
+          return "http://localhost:3000/drive/${cat['fileId']}";
         }
       }
     }
+    print("❌ URL audio tidak ditemukan untuk kategori: $category");
     return null;
   }
 
