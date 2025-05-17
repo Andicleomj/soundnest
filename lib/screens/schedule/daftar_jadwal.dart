@@ -37,10 +37,7 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
   Future<void> _loadSchedules() async {
     try {
       final manualSnapshot = await _manualRef.get();
-      final autoSnapshot =
-          await _autoRef.child(_getDayName(DateTime.now())).get();
-
-      if (!mounted) return;
+      print("Manual Schedules Snapshot: ${manualSnapshot.value}");
 
       setState(() {
         _manualSchedules =
@@ -49,27 +46,31 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
                     .map((e) => Map<String, dynamic>.from(e))
                     .toList()
                 : [];
+      });
 
-        _autoSchedules = [];
-        if (autoSnapshot.exists && autoSnapshot.value is Map) {
-          final autoData = Map<String, dynamic>.from(autoSnapshot.value as Map);
-          if (autoData.containsKey('content')) {
-            _fetchContent(autoData['content'], _musicRef);
-          }
-          if (autoData.containsKey('content_murottal')) {
-            _fetchContent(autoData['content_murottal'], _murottalRef);
-          }
-        }
+      final autoSnapshot =
+          await _autoRef.child(_getDayName(DateTime.now())).get();
+      if (autoSnapshot.exists && autoSnapshot.value is Map) {
+        _loadAutoSchedules(autoSnapshot.value);
+      }
 
+      setState(() {
         _isLoading = false;
       });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
       print("Error loading schedules: $e");
+    }
+  }
+
+  void _loadAutoSchedules(dynamic data) {
+    final autoData = Map<String, dynamic>.from(data);
+    _autoSchedules = [];
+
+    if (autoData.containsKey('content')) {
+      _fetchContent(autoData['content'], _musicRef);
+    }
+    if (autoData.containsKey('content_murottal')) {
+      _fetchContent(autoData['content_murottal'], _murottalRef);
     }
   }
 
@@ -77,12 +78,15 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
     final snapshot = await ref.child(category).get();
     if (snapshot.exists && snapshot.value is Map) {
       final contentList = (snapshot.value as Map).values.toList();
-      final randomContent = contentList[Random().nextInt(contentList.length)];
+      final randomContent =
+          contentList.isNotEmpty
+              ? contentList[Random().nextInt(contentList.length)]
+              : {};
 
       setState(() {
         _autoSchedules.add({
-          'title': randomContent['title'],
-          'file_id': randomContent['file_id'],
+          'title': randomContent['title'] ?? 'Tanpa Judul',
+          'file_id': randomContent['file_id'] ?? 'Tidak ada',
         });
       });
     }
@@ -111,7 +115,7 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
+              : Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,7 +147,6 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
     );
   }
 
-  // sudah
   Widget _buildScheduleList(List<Map<String, dynamic>> schedules) {
     return ListView.builder(
       shrinkWrap: true,

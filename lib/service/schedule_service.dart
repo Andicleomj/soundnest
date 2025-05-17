@@ -7,6 +7,12 @@ class ScheduleService {
   final DatabaseReference _ref = FirebaseDatabase.instance.ref(
     'devices/devices_01/schedule_001',
   );
+  final DatabaseReference _manualRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/schedule/manual',
+  );
+  final DatabaseReference _autoRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/schedule/otomatis',
+  );
   final DatabaseReference _musicRef = FirebaseDatabase.instance.ref(
     'devices/devices_01/music/categories',
   );
@@ -28,18 +34,50 @@ class ScheduleService {
     print("✅ ScheduleService started.");
   }
 
-  Future<List<Map<String, dynamic>>> getSchedules() async {
+  Future<void> saveManualSchedule(
+    String time,
+    String duration,
+    String category,
+  ) async {
     try {
-      final snapshot = await _ref.get();
-      if (snapshot.exists && snapshot.value is Map) {
-        return (snapshot.value as Map).values
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
+      await _manualRef.push().set({
+        'time_start': time,
+        'duration': duration,
+        'category': category,
+        'isActive': true,
+      });
+      print("✅ Jadwal manual berhasil disimpan.");
+    } catch (e) {
+      print("❌ Gagal menyimpan jadwal manual: $e");
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getSchedules() async {
+    List<Map<String, dynamic>> schedules = [];
+
+    try {
+      final manualSnapshot = await _manualRef.get();
+      if (manualSnapshot.exists && manualSnapshot.value is Map) {
+        schedules.addAll(
+          (manualSnapshot.value as Map).values
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList(),
+        );
+      }
+
+      final autoSnapshot = await _autoRef.get();
+      if (autoSnapshot.exists && autoSnapshot.value is Map) {
+        schedules.addAll(
+          (autoSnapshot.value as Map).values
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList(),
+        );
       }
     } catch (e) {
       print("❌ Error fetching schedules: $e");
     }
-    return [];
+
+    return schedules;
   }
 
   Future<void> checkAndRunSchedule() async {
@@ -60,26 +98,17 @@ class ScheduleService {
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
     if (_isAudioPlaying) return;
 
-    final categoryId = schedule['categoryId'];
-    final fileId = schedule['fileId'];
+    final category = schedule['category'];
+    final duration = schedule['duration'];
 
-    if (categoryId == null || fileId == null) return;
+    if (category == null) return;
 
-    final musicSnapshot =
-        await _musicRef.child('$categoryId/files/$fileId').get();
-
-    if (!musicSnapshot.exists) {
-      print("❌ Musik tidak ditemukan dalam kategori.");
-      return;
-    }
-
-    final proxyUrl = "http://localhost:3000/${fileId}";
-    print("🔗 URL: $proxyUrl");
+    print("🔊 Memutar audio kategori: $category selama $duration menit.");
 
     try {
       _isAudioPlaying = true;
-      await _playerService.playMusicFromProxy(fileId);
-      print("🎶 Audio dimainkan sesuai jadwal: ${schedule['time_start']}.");
+      await _playerService.playMusicFromProxy(category);
+      await Future.delayed(Duration(minutes: int.parse(duration)));
     } catch (e) {
       print("❌ Error saat memutar audio: $e");
     } finally {
@@ -88,11 +117,8 @@ class ScheduleService {
   }
 
   bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
-    final day = schedule['day']?.toString().toLowerCase();
     final timeStart = schedule['time_start']?.toString();
-
-    if (day == null || timeStart == null) return false;
-    if (day != _getDayOfWeek(now)) return false;
+    if (timeStart == null) return false;
 
     final parts = timeStart.split(':');
     if (parts.length != 2) return false;
@@ -102,19 +128,6 @@ class ScheduleService {
     if (hour == null || minute == null) return false;
 
     return now.hour == hour && now.minute == minute;
-  }
-
-  String _getDayOfWeek(DateTime now) {
-    const days = [
-      'senin',
-      'selasa',
-      'rabu',
-      'kamis',
-      'jumat',
-      'sabtu',
-      'minggu',
-    ];
-    return days[now.weekday - 1];
   }
 
   void dispose() {
