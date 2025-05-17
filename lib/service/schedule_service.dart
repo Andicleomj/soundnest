@@ -26,6 +26,10 @@ class ScheduleService {
 
   void start() {
     _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      checkAndRunSchedule();
+    });
+
     _ref.onValue.listen((event) {
       if (event.snapshot.exists) {
         checkAndRunSchedule();
@@ -54,34 +58,6 @@ class ScheduleService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getSchedules() async {
-    List<Map<String, dynamic>> schedules = [];
-
-    try {
-      final manualSnapshot = await _manualRef.get();
-      if (manualSnapshot.exists && manualSnapshot.value is Map) {
-        schedules.addAll(
-          (manualSnapshot.value as Map).values
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList(),
-        );
-      }
-
-      final autoSnapshot = await _autoRef.get();
-      if (autoSnapshot.exists && autoSnapshot.value is Map) {
-        schedules.addAll(
-          (autoSnapshot.value as Map).values
-              .map((e) => Map<String, dynamic>.from(e))
-              .toList(),
-        );
-      }
-    } catch (e) {
-      print("❌ Error fetching schedules: $e");
-    }
-
-    return schedules;
-  }
-
   Future<void> checkAndRunSchedule() async {
     if (_isAudioPlaying) return;
 
@@ -95,6 +71,34 @@ class ScheduleService {
 
       await _runScheduledAudio(schedule);
     }
+  }
+
+  Future<List<Map<String, dynamic>>> getSchedules() async {
+    List<Map<String, dynamic>> schedules = [];
+
+    try {
+      final manualSnapshot = await _manualRef.get();
+      if (manualSnapshot.exists) {
+        schedules.addAll(
+          (manualSnapshot.value as Map).values
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList(),
+        );
+      }
+
+      final autoSnapshot = await _autoRef.get();
+      if (autoSnapshot.exists) {
+        schedules.addAll(
+          (autoSnapshot.value as Map).values
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList(),
+        );
+      }
+    } catch (e) {
+      print("❌ Error fetching schedules: $e");
+    }
+
+    return schedules;
   }
 
   bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
@@ -136,19 +140,45 @@ class ScheduleService {
     final category = schedule['category'];
     final duration = schedule['duration'];
 
-    if (category == null) return;
-
-    print("🔊 Memutar audio kategori: $category selama $duration menit.");
+    if (category == null) {
+      print("❌ Kategori audio tidak ditemukan.");
+      return;
+    }
 
     try {
       _isAudioPlaying = true;
-      await _playerService.playMusicFromProxy(category);
-      await Future.delayed(Duration(minutes: int.parse(duration)));
+      final audioUrl = await _getAudioUrl(category);
+
+      if (audioUrl == null) {
+        print("❌ URL audio tidak ditemukan untuk kategori: $category");
+        return;
+      }
+
+      print("🔊 Memutar audio dari URL: $audioUrl selama $duration menit.");
+
+      await _playerService.playMusicFromProxy(audioUrl);
+      await Future.delayed(Duration(minutes: int.tryParse(duration) ?? 1));
     } catch (e) {
       print("❌ Error saat memutar audio: $e");
     } finally {
       _isAudioPlaying = false;
     }
+  }
+
+  Future<String?> _getAudioUrl(String category) async {
+    final snapshot = await _musicRef.get();
+    if (snapshot.exists) {
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+
+      for (var cat in data.values) {
+        for (var file in (cat['files'] as Map).values) {
+          if (file['title'] == category) {
+            return "http://localhost:3000/drive/${file['file_id']}";
+          }
+        }
+      }
+    }
+    return null;
   }
 
   void dispose() {
