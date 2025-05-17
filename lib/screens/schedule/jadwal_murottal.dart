@@ -15,7 +15,8 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
   String selectedCategory = "Surah Pendek";
   String? selectedSurah;
   String selectedDay = "Senin";
-  List<Map<String, String>> surahList = [];
+  List<String> surahList = [];
+  bool _isLoading = false;
 
   final Map<String, String> categoryPaths = {
     "Surah Pendek": 'devices/devices_01/murottal/categories/kategori_2/files',
@@ -38,70 +39,105 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
     _fetchSurahList();
   }
 
-  void _fetchSurahList() async {
+  @override
+  void dispose() {
+    _timeController.dispose();
+    _durationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchSurahList() async {
     setState(() {
+      _isLoading = true;
       surahList = [];
       selectedSurah = null;
     });
 
-    final path = categoryPaths[selectedCategory];
-    if (path == null) return;
+    try {
+      final path = categoryPaths[selectedCategory];
+      if (path == null) return;
 
-    final ref = FirebaseDatabase.instance.ref(path);
-    final snapshot = await ref.get();
+      final ref = FirebaseDatabase.instance.ref(path);
+      final snapshot = await ref.get();
 
-    if (snapshot.exists) {
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
-      setState(() {
-        surahList =
+      if (snapshot.exists && snapshot.value != null) {
+        final data = snapshot.value as Map<dynamic, dynamic>;
+        final titles =
             data.values
-                .where(
-                  (e) =>
-                      e is Map &&
-                      e.containsKey('title') &&
-                      e.containsKey('fileId'),
-                )
-                .map<Map<String, String>>(
-                  (e) => {
-                    'title': e['title'].toString(),
-                    'fileId': e['fileId'].toString(),
-                  },
-                )
+                .where((e) => e != null && e['title'] != null)
+                .map((e) => e['title'].toString())
                 .toList();
-        selectedSurah = surahList.isNotEmpty ? surahList.first['title'] : null;
-      });
+
+        setState(() {
+          surahList = titles;
+          selectedSurah = surahList.isNotEmpty ? surahList.first : null;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal memuat daftar surah: $e')));
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
-  void _saveSchedule() async {
+  Future<void> _saveSchedule() async {
     final time = _timeController.text.trim();
     final duration = _durationController.text.trim();
 
-    if (time.isEmpty || duration.isEmpty || selectedSurah == null) return;
+    // Validate time format (HH:MM)
+    if (!RegExp(r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$').hasMatch(time)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Format waktu tidak valid. Gunakan HH:MM'),
+        ),
+      );
+      return;
+    }
 
-    final selectedAudio = surahList.firstWhere(
-      (surah) => surah['title'] == selectedSurah,
-      orElse: () => {},
-    );
+    // Validate duration is a positive number
+    if (duration.isEmpty ||
+        int.tryParse(duration) == null ||
+        int.parse(duration) <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Durasi harus angka positif')),
+      );
+      return;
+    }
 
-    final audioUrl = "http://localhost:3000/drive/${selectedAudio['fileId']}";
+    if (selectedSurah == null || selectedSurah!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pilih surah terlebih dahulu')),
+      );
+      return;
+    }
 
-    await ScheduleService().saveManualSchedule(
-      time,
-      duration,
-      selectedCategory,
-      selectedSurah!,
-      selectedDay,
-      audioUrl,
-    );
+    setState(() => _isLoading = true);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Jadwal murottal berhasil disimpan.')),
-    );
+    try {
+      await ScheduleService().saveManualSchedule(
+        time,
+        duration,
+        selectedCategory,
+        selectedSurah!,
+        selectedDay,
+        '', // You might want to pass the actual file ID here
+      );
 
-    _timeController.clear();
-    _durationController.clear();
-    setState(() => selectedSurah = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Jadwal murottal berhasil disimpan')),
+      );
+
+      _timeController.clear();
+      _durationController.clear();
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal menyimpan jadwal: $e')));
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -113,12 +149,88 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Dropdowns and Input Fields
-            // Save Button
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              DropdownButtonFormField<String>(
+                value: selectedCategory,
+                items:
+                    categoryPaths.keys.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => selectedCategory = value);
+                    _fetchSurahList();
+                  }
+                },
+                decoration: const InputDecoration(
+                  labelText: 'Kategori Murottal',
+                ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String?>(
+                value: selectedSurah,
+                items:
+                    surahList.map((surah) {
+                      return DropdownMenuItem(value: surah, child: Text(surah));
+                    }).toList(),
+                onChanged: (value) => setState(() => selectedSurah = value),
+                decoration: const InputDecoration(labelText: 'Pilih Surah'),
+                disabledHint:
+                    _isLoading
+                        ? const Text('Memuat...')
+                        : const Text('Tidak ada surah tersedia'),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: selectedDay,
+                items:
+                    daysOfWeek.map((day) {
+                      return DropdownMenuItem(value: day, child: Text(day));
+                    }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => selectedDay = value);
+                  }
+                },
+                decoration: const InputDecoration(labelText: 'Pilih Hari'),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _timeController,
+                decoration: const InputDecoration(
+                  labelText: 'Waktu (HH:MM)',
+                  hintText: 'Contoh: 08:30',
+                ),
+                keyboardType: TextInputType.datetime,
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _durationController,
+                decoration: const InputDecoration(
+                  labelText: 'Durasi (Menit)',
+                  hintText: 'Contoh: 30',
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _saveSchedule,
+                  child:
+                      _isLoading
+                          ? const CircularProgressIndicator()
+                          : const Text('Simpan Jadwal'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
