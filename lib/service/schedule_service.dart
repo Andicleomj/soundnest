@@ -154,16 +154,25 @@ class ScheduleService {
     final snapshot = await ref.get();
     if (snapshot.exists) {
       final data = snapshot.value as Map;
+      print("📂 Data Firebase: ${data}");
       for (var cat in data.values) {
         if (cat is Map && cat.containsKey('files')) {
           for (var file in cat['files'].values) {
-            if (file['title'] == category || file['nama'] == category) {
+            print("🎵 Cek file: ${file['title']} atau ${file['nama']}");
+            final title = file['title']?.toLowerCase() ?? '';
+            final nama = file['nama']?.toLowerCase() ?? '';
+            if (title.contains(category.toLowerCase()) ||
+                nama.contains(category.toLowerCase())) {
+              print(
+                "✅ URL ditemukan: ${"http://localhost:3000/drive/${file['fileId']}"}",
+              );
               return "http://localhost:3000/drive/${file['fileId']}";
             }
           }
         }
       }
     }
+    print("❌ URL audio tidak ditemukan untuk kategori: $category");
     return null;
   }
 
