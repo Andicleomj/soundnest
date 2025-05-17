@@ -27,33 +27,27 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
     _fetchSurahList();
   }
 
-  /// Mengambil daftar surah dari Firebase berdasarkan kategori
   void _fetchSurahList() async {
+    setState(() {
+      surahList = [];
+      selectedSurah = null;
+    });
+
     final path = categoryPaths[selectedCategory];
     if (path == null) return;
 
     final ref = FirebaseDatabase.instance.ref(path);
     final snapshot = await ref.get();
+
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
         surahList = data.values.map((e) => e['title'].toString()).toList();
         selectedSurah = surahList.isNotEmpty ? surahList.first : null;
       });
-    } else {
-      setState(() {
-        surahList = [];
-        selectedSurah = null;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Tidak ada surah di kategori $selectedCategory.'),
-        ),
-      );
     }
   }
 
-  /// Fungsi untuk menyimpan jadwal murottal
   void _saveSchedule() async {
     final time = _timeController.text.trim();
     final duration = _durationController.text.trim();
@@ -64,6 +58,7 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
         duration,
         "$selectedCategory - $selectedSurah",
       );
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Jadwal murottal berhasil disimpan.')),
       );
@@ -71,10 +66,6 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
       _timeController.clear();
       _durationController.clear();
       setState(() => selectedSurah = null);
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Lengkapi semua field.')));
     }
   }
 
@@ -88,7 +79,6 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DropdownButtonFormField<String>(
               value: selectedCategory,
@@ -107,7 +97,6 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
               },
               decoration: const InputDecoration(labelText: 'Kategori Murottal'),
             ),
-            const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: selectedSurah,
               items:
@@ -117,17 +106,13 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
               onChanged: (value) => setState(() => selectedSurah = value),
               decoration: const InputDecoration(labelText: 'Pilih Surah'),
             ),
-            const SizedBox(height: 16),
             TextField(
               controller: _timeController,
               decoration: const InputDecoration(labelText: 'Waktu (HH:MM)'),
-              keyboardType: TextInputType.datetime,
             ),
-            const SizedBox(height: 8),
             TextField(
               controller: _durationController,
               decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
-              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
             SizedBox(
