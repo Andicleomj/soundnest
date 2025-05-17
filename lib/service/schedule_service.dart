@@ -173,7 +173,7 @@ class ScheduleService {
 
       // Construct the correct Firebase reference
       final audioRef = FirebaseDatabase.instance.ref(
-        'devices/devices_81/murottal/categories/$category/files/$fileKey',
+        'devices/devices_01/murottal/categories/$category/files/$fileKey',
       );
 
       final snapshot = await audioRef.get();
