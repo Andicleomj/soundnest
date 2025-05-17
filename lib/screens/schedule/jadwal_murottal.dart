@@ -29,6 +29,7 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
         surahList = data.values.map((e) => e['title'].toString()).toList();
+        selectedSurah = surahList.isNotEmpty ? surahList.first : null;
       });
     }
   }
