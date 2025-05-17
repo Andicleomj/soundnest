@@ -86,10 +86,10 @@ class MusicScreen extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(15.0),
         child: GridView.count(
-          crossAxisCount: 1,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 8,
+          crossAxisCount: 2,
+          crossAxisSpacing: 13,
+          mainAxisSpacing: 13,
+          childAspectRatio: 3,
           children: [
             _buildCategoryCard(context, 'Masa Adaptasi Sekolah'),
             _buildCategoryCard(context, 'Aku Suka Olahraga'),
@@ -218,7 +218,7 @@ class MusicScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
           child: Text(
             category,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             textAlign: TextAlign.center,
           ),
         ),
