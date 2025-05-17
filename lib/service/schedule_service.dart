@@ -25,37 +25,6 @@ class ScheduleService {
 
   bool get isAudioPlaying => _isAudioPlaying;
 
-  // Fungsi untuk mengecek validitas jadwal
-  bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
-    final timeStart = schedule['time_start'];
-    final day = schedule['day'];
-
-    if (timeStart == null || day == null) return false;
-
-    final parts = timeStart.split(':');
-    if (parts.length != 2) return false;
-
-    final hour = int.tryParse(parts[0]);
-    final minute = int.tryParse(parts[1]);
-
-    return hour == now.hour && minute == now.minute && _isToday(day);
-  }
-
-  // Fungsi untuk mengecek apakah hari ini sesuai jadwal
-  bool _isToday(String day) {
-    final today =
-        [
-          'Senin',
-          'Selasa',
-          'Rabu',
-          'Kamis',
-          'Jumat',
-          'Sabtu',
-          'Minggu',
-        ][DateTime.now().weekday - 1];
-    return day == today;
-  }
-
   void start() {
     _timer?.cancel();
     _timer = Timer.periodic(
@@ -65,6 +34,22 @@ class ScheduleService {
 
     _ref.onValue.listen((event) => checkAndRunSchedule());
     print("✅ ScheduleService started.");
+  }
+
+  Future<void> saveManualSchedule(
+    String time,
+    String duration,
+    String category,
+    String day,
+  ) async {
+    await _manualRef.push().set({
+      'time_start': time,
+      'duration': duration,
+      'category': category,
+      'day': day,
+      'isActive': true,
+    });
+    print("✅ Jadwal manual berhasil disimpan.");
   }
 
   Future<void> checkAndRunSchedule() async {
@@ -91,15 +76,47 @@ class ScheduleService {
   Future<List<Map<String, dynamic>>> _fetchSchedules(
     DatabaseReference ref,
   ) async {
-    final snapshot = await ref.get();
-    if (snapshot.exists) {
-      final data = snapshot.value as Map;
-      return data.values
-          .whereType<Map>()
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
+    try {
+      final snapshot = await ref.get();
+      if (snapshot.exists) {
+        return (snapshot.value as Map).values
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      }
+    } catch (e) {
+      print("❌ Error fetching schedules: $e");
     }
     return [];
+  }
+
+  bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
+    final timeStart = schedule['time_start'];
+    final day = schedule['day'];
+
+    if (timeStart == null || day == null) return false;
+
+    final parts = timeStart.split(':');
+    if (parts.length != 2) return false;
+
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+
+    return hour == now.hour && minute == now.minute && _isToday(day);
+  }
+
+  bool _isToday(String day) {
+    final today =
+        [
+          'Senin',
+          'Selasa',
+          'Rabu',
+          'Kamis',
+          'Jumat',
+          'Sabtu',
+          'Minggu',
+        ][DateTime.now().weekday - 1];
+    return day == today;
   }
 
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
@@ -129,14 +146,18 @@ class ScheduleService {
   }
 
   Future<String?> _getAudioUrl(String category) async {
-    return await _fetchAudioUrl(_musicRef, category) ??
-        await _fetchAudioUrl(_murottalRef, category);
+    return await _fetchAudioUrlImproved(_musicRef, category) ??
+        await _fetchAudioUrlImproved(_murottalRef, category);
   }
 
-  Future<String?> _fetchAudioUrl(DatabaseReference ref, String category) async {
+  Future<String?> _fetchAudioUrlImproved(
+    DatabaseReference ref,
+    String category,
+  ) async {
     final snapshot = await ref.get();
     if (snapshot.exists) {
-      final data = snapshot.value as Map;
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+      print("📂 Data Firebase: ${data}");
 
       for (var cat in data.values) {
         if (cat is Map &&
