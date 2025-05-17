@@ -160,7 +160,29 @@ class ScheduleService {
       for (var cat in data.values) {
         if (cat is Map && cat.containsKey('nama')) {
           final categoryName = cat['nama']?.toString().toLowerCase() ?? '';
-          if (categoryName.contains(category.toLowerCase())) {
+          final categoryParts = category.toLowerCase().split(' - ');
+
+          if (categoryParts.length == 2) {
+            final mainCategory = categoryParts[0].trim();
+            final fileTitle = categoryParts[1].trim();
+
+            if (categoryName.contains(mainCategory)) {
+              print("✅ Kategori ditemukan: $categoryName");
+
+              if (cat.containsKey('files')) {
+                for (var file in cat['files'].values) {
+                  if (file is Map && file.containsKey('title')) {
+                    final fileName =
+                        file['title']?.toString().toLowerCase() ?? '';
+                    if (fileName.contains(fileTitle)) {
+                      print("🎵 File ditemukan: ${file['title']}");
+                      return "http://localhost:3000/drive/${file['fileId']}";
+                    }
+                  }
+                }
+              }
+            }
+          } else if (categoryName.contains(category.toLowerCase())) {
             print("✅ Kategori ditemukan: $categoryName");
 
             // Jika kategori ditemukan, cek file di dalamnya
