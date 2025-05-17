@@ -26,36 +26,39 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
   void _fetchCategoryList() async {
     final ref = FirebaseDatabase.instance.ref();
     final snapshot = await ref.get();
+    print('Data Firebase (Kategori): ${snapshot.value}');
 
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-        categoryList =
-            data.entries
-                .where((entry) => entry.value['nama'] != null)
-                .map((entry) => entry.value['nama'].toString())
-                .toList();
+        categoryList = data.keys.toList();
         selectedCategory = categoryList.isNotEmpty ? categoryList.first : null;
-        if (selectedCategory != null) _fetchSurahList();
+        if (selectedCategory != null) {
+          _fetchSurahList(selectedCategory!);
+        }
       });
+    } else {
+      print("Database kosong atau tidak ditemukan.");
     }
   }
 
-  void _fetchSurahList() async {
-    final ref = FirebaseDatabase.instance.ref();
+  void _fetchSurahList(String category) async {
+    final ref = FirebaseDatabase.instance.ref('$category/files');
     final snapshot = await ref.get();
+    print('Data Firebase (Surah - $category): ${snapshot.value}');
 
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-        surahList =
-            data.entries
-                .where((entry) => entry.value['nama'] == selectedCategory)
-                .expand((entry) => (entry.value['files'] ?? {}).keys)
-                .map((e) => e.toString())
-                .toList();
+        surahList = data.keys.toList();
         selectedSurah = surahList.isNotEmpty ? surahList.first : null;
       });
+    } else {
+      setState(() {
+        surahList = [];
+        selectedSurah = null;
+      });
+      print("Tidak ada surah di kategori $category.");
     }
   }
 
@@ -63,7 +66,10 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
     final time = _timeController.text.trim();
     final duration = _durationController.text.trim();
 
-    if (time.isNotEmpty && duration.isNotEmpty && selectedSurah != null) {
+    if (time.isNotEmpty &&
+        duration.isNotEmpty &&
+        selectedSurah != null &&
+        selectedCategory != null) {
       await ScheduleService().saveManualSchedule(
         time,
         duration,
@@ -76,6 +82,10 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
       _timeController.clear();
       _durationController.clear();
       setState(() => selectedSurah = null);
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Lengkapi semua field.')));
     }
   }
 
@@ -100,8 +110,12 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
                     );
                   }).toList(),
               onChanged: (value) {
-                setState(() => selectedCategory = value);
-                _fetchSurahList();
+                setState(() {
+                  selectedCategory = value;
+                  selectedSurah = null;
+                  surahList = [];
+                });
+                if (value != null) _fetchSurahList(value);
               },
               decoration: const InputDecoration(labelText: 'Kategori Murottal'),
             ),
@@ -115,6 +129,7 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
               onChanged: (value) => setState(() => selectedSurah = value),
               decoration: const InputDecoration(labelText: 'Pilih Surah'),
             ),
+            const SizedBox(height: 16),
             TextField(
               controller: _timeController,
               decoration: const InputDecoration(labelText: 'Waktu (HH:MM)'),
