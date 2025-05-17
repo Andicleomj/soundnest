@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:soundnest/service/schedule_service.dart';
 
 class JadwalMurottal extends StatefulWidget {
@@ -12,17 +13,35 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
   final TextEditingController _timeController = TextEditingController();
   final TextEditingController _durationController = TextEditingController();
   String selectedCategory = "Surah Pendek";
-  final List<String> categories = ["Surah Pendek", "Ayat Kursi"];
+  String? selectedSurah;
+  List<String> surahList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSurahList();
+  }
+
+  void _fetchSurahList() async {
+    final ref = FirebaseDatabase.instance.ref('surah_pendek');
+    final snapshot = await ref.get();
+    if (snapshot.exists) {
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+      setState(() {
+        surahList = data.values.map((e) => e['title'].toString()).toList();
+      });
+    }
+  }
 
   void _saveSchedule() async {
     final time = _timeController.text.trim();
     final duration = _durationController.text.trim();
 
-    if (time.isNotEmpty && duration.isNotEmpty) {
+    if (time.isNotEmpty && duration.isNotEmpty && selectedSurah != null) {
       await ScheduleService().saveManualSchedule(
         time,
         duration,
-        selectedCategory,
+        "$selectedCategory - $selectedSurah",
       );
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Jadwal murottal berhasil disimpan.')),
@@ -30,6 +49,7 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
 
       _timeController.clear();
       _durationController.clear();
+      setState(() => selectedSurah = null);
     }
   }
 
@@ -46,15 +66,24 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
           children: [
             DropdownButtonFormField<String>(
               value: selectedCategory,
-              items:
-                  categories.map((category) {
-                    return DropdownMenuItem(
-                      value: category,
-                      child: Text(category),
-                    );
-                  }).toList(),
+              items: [
+                DropdownMenuItem(
+                  value: "Surah Pendek",
+                  child: Text("Surah Pendek"),
+                ),
+              ],
               onChanged: (value) => setState(() => selectedCategory = value!),
               decoration: const InputDecoration(labelText: 'Kategori Murottal'),
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: selectedSurah,
+              items:
+                  surahList.map((surah) {
+                    return DropdownMenuItem(value: surah, child: Text(surah));
+                  }).toList(),
+              onChanged: (value) => setState(() => selectedSurah = value),
+              decoration: const InputDecoration(labelText: 'Pilih Surah'),
             ),
             TextField(
               controller: _timeController,
