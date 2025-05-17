@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:soundnest/utils/app_routes.dart';
-import 'package:soundnest/widgets/custom_button.dart';
 
 class Schedule extends StatelessWidget {
   const Schedule({super.key});
@@ -22,74 +21,136 @@ class Schedule extends StatelessWidget {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           "Penjadwalan",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        child: Column(
-          children: [
-            // Logo di atas
-            Image.asset(
-              'assets/Logo 1.png',
-              width: 180,
-              height: 180,
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
+              child: Column(
+                children: [
+                  // Logo
+                  Image.asset(
+                    'assets/Logo 1.png',
+                    width: 150,
+                    height: 150,
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Judul dan divider
+                  const Text(
+                    "Atur Jadwal Pemutaran",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    "Kelola dan pantau jadwal audio Anda dengan mudah",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 10),
+                  const Divider(thickness: 1, color: Colors.blueAccent),
+                  const SizedBox(height: 30),
+
+                  // Tombol grid
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _ActionCard(
+                        icon: Icons.add_alarm_rounded,
+                        label: "Buat Jadwal",
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.schedulescreen),
+                      ),
+                      _ActionCard(
+                        icon: Icons.event_note_rounded,
+                        label: "Daftar Jadwal",
+                        onTap: () => Navigator.pushNamed(context, AppRoutes.daftarJadwal),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
+          ),
 
-            // Spacer untuk mendorong tombol ke tengah
-            const Spacer(),
+          // Pesan catatan di bawah
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16.0),
+            child: Text(
+              "Pastikan semua jadwal telah disimpan dengan benar.",
+              style: TextStyle(
+                color: Colors.blueGrey,
+                fontStyle: FontStyle.italic,
+                fontSize: 13.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-            // Bagian tombol di tengah
-            Column(
+class _ActionCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ActionCard({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                CustomButton(
-                  text: "Buat Jadwal",
-                  onPressed: () {
-                    Navigator.pushNamed(context, AppRoutes.schedulescreen);
-                  },
-                ),
-                const SizedBox(height: 15),
-                CustomButton(
-                  text: "Daftar Jadwal",
-                  onPressed: () {
-                    Navigator.pushNamed(context, AppRoutes.daftarJadwal);
-                  },
+                Icon(icon, size: 36, color: Colors.blueAccent),
+                const SizedBox(height: 10),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
                 ),
               ],
             ),
-
-            // Spacer agar tombol tetap di tengah
-            const Spacer(),
-
-            // Tombol "Simpan" tetap di bawah
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Fungsi penyimpanan
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade100,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Text(
-                    "Simpan",
-                    style: TextStyle(fontSize: 16, color: Colors.black),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
