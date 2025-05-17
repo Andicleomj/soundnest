@@ -12,31 +12,48 @@ class JadwalMurottal extends StatefulWidget {
 class _JadwalMurottalState extends State<JadwalMurottal> {
   final TextEditingController _timeController = TextEditingController();
   final TextEditingController _durationController = TextEditingController();
-  String selectedCategory = "Surah Pendek";
+  String? selectedCategory;
   String? selectedSurah;
+  List<String> categoryList = [];
   List<String> surahList = [];
-
-  final Map<String, String> categoryPaths = {
-    "Surah Pendek": "surah_pendek",
-    "Ayat Kursi": "ayat_kursi",
-  };
 
   @override
   void initState() {
     super.initState();
-    _fetchSurahList();
+    _fetchCategoryList();
   }
 
-  void _fetchSurahList() async {
-    final path = categoryPaths[selectedCategory];
-    if (path == null) return;
-
-    final ref = FirebaseDatabase.instance.ref(path);
+  void _fetchCategoryList() async {
+    final ref = FirebaseDatabase.instance.ref();
     final snapshot = await ref.get();
+
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-        surahList = data.values.map((e) => e['title'].toString()).toList();
+        categoryList =
+            data.entries
+                .where((entry) => entry.value['nama'] != null)
+                .map((entry) => entry.value['nama'].toString())
+                .toList();
+        selectedCategory = categoryList.isNotEmpty ? categoryList.first : null;
+        if (selectedCategory != null) _fetchSurahList();
+      });
+    }
+  }
+
+  void _fetchSurahList() async {
+    final ref = FirebaseDatabase.instance.ref();
+    final snapshot = await ref.get();
+
+    if (snapshot.exists) {
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+      setState(() {
+        surahList =
+            data.entries
+                .where((entry) => entry.value['nama'] == selectedCategory)
+                .expand((entry) => (entry.value['files'] ?? {}).keys)
+                .map((e) => e.toString())
+                .toList();
         selectedSurah = surahList.isNotEmpty ? surahList.first : null;
       });
     }
@@ -76,14 +93,14 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
             DropdownButtonFormField<String>(
               value: selectedCategory,
               items:
-                  categoryPaths.keys.map((category) {
+                  categoryList.map((category) {
                     return DropdownMenuItem(
                       value: category,
                       child: Text(category),
                     );
                   }).toList(),
               onChanged: (value) {
-                setState(() => selectedCategory = value!);
+                setState(() => selectedCategory = value);
                 _fetchSurahList();
               },
               decoration: const InputDecoration(labelText: 'Kategori Murottal'),
