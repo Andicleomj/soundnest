@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'dart:async';
+import 'dart:math';
 
 class DaftarJadwal extends StatefulWidget {
   const DaftarJadwal({super.key});
@@ -14,6 +16,12 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
   );
   final DatabaseReference _autoRef = FirebaseDatabase.instance.ref(
     'devices/devices_01/schedule/otomatis',
+  );
+  final DatabaseReference _musicRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/musik',
+  );
+  final DatabaseReference _murottalRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/murottal',
   );
 
   List<Map<String, dynamic>> _manualSchedules = [];
@@ -32,20 +40,26 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
       final autoSnapshot =
           await _autoRef.child(_getDayName(DateTime.now())).get();
 
-      if (!mounted) return; // Tambahkan pengecekan mounted sebelum setState
+      if (!mounted) return;
 
       setState(() {
         _manualSchedules =
             manualSnapshot.exists && manualSnapshot.value is Map
-                ? Map<String, dynamic>.from(manualSnapshot.value as Map).entries
-                    .map((entry) => Map<String, dynamic>.from(entry.value))
+                ? (manualSnapshot.value as Map).values
+                    .map((e) => Map<String, dynamic>.from(e))
                     .toList()
                 : [];
 
-        _autoSchedules =
-            autoSnapshot.exists && autoSnapshot.value is Map
-                ? [Map<String, dynamic>.from(autoSnapshot.value as Map)]
-                : [];
+        _autoSchedules = [];
+        if (autoSnapshot.exists && autoSnapshot.value is Map) {
+          final autoData = Map<String, dynamic>.from(autoSnapshot.value as Map);
+          if (autoData.containsKey('content')) {
+            _fetchContent(autoData['content'], _musicRef);
+          }
+          if (autoData.containsKey('content_murottal')) {
+            _fetchContent(autoData['content_murottal'], _murottalRef);
+          }
+        }
 
         _isLoading = false;
       });
@@ -56,6 +70,21 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
         });
       }
       print("Error loading schedules: $e");
+    }
+  }
+
+  Future<void> _fetchContent(String category, DatabaseReference ref) async {
+    final snapshot = await ref.child(category).get();
+    if (snapshot.exists && snapshot.value is Map) {
+      final contentList = (snapshot.value as Map).values.toList();
+      final randomContent = contentList[Random().nextInt(contentList.length)];
+
+      setState(() {
+        _autoSchedules.add({
+          'title': randomContent['title'],
+          'file_id': randomContent['file_id'],
+        });
+      });
     }
   }
 
@@ -75,7 +104,10 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Penjadwalan Musik"), centerTitle: true),
+      appBar: AppBar(
+        title: const Text("Penjadwalan Musik & Murottal"),
+        centerTitle: true,
+      ),
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -93,22 +125,7 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
                     ),
                     _manualSchedules.isEmpty
                         ? const Text("Tidak ada jadwal manual.")
-                        : ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _manualSchedules.length,
-                          itemBuilder: (context, index) {
-                            final schedule = _manualSchedules[index];
-                            return ListTile(
-                              title: Text(
-                                "${schedule['time_start'] ?? 'Waktu tidak tersedia'} - ${schedule['time_end'] ?? 'Waktu tidak tersedia'}",
-                              ),
-                              subtitle: Text(
-                                "Konten: ${schedule['content'] ?? 'Tidak ada konten'}",
-                              ),
-                            );
-                          },
-                        ),
+                        : _buildScheduleList(_manualSchedules),
                     const SizedBox(height: 16),
                     const Text(
                       "Jadwal Otomatis",
@@ -118,31 +135,26 @@ class _DaftarJadwalState extends State<DaftarJadwal> {
                       ),
                     ),
                     _autoSchedules.isEmpty
-                        ? const Text("Tidak ada jadwal otomatis hari ini.")
-                        : ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _autoSchedules.length,
-                          itemBuilder: (context, index) {
-                            final schedule = _autoSchedules[index];
-                            final content =
-                                schedule['content'] is List
-                                    ? (schedule['content'] as List)
-                                        .map((e) => e.toString())
-                                        .join(', ')
-                                    : "Tidak ada konten";
-
-                            return ListTile(
-                              title: Text(
-                                "${schedule['time'] ?? 'Tidak ada waktu'} (Durasi: ${schedule['duration'] ?? 'Tidak ada durasi'})",
-                              ),
-                              subtitle: Text("Konten: $content"),
-                            );
-                          },
-                        ),
+                        ? const Text("Tidak ada jadwal otomatis.")
+                        : _buildScheduleList(_autoSchedules),
                   ],
                 ),
               ),
+    );
+  }
+
+  Widget _buildScheduleList(List<Map<String, dynamic>> schedules) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: schedules.length,
+      itemBuilder: (context, index) {
+        final schedule = schedules[index];
+        return ListTile(
+          title: Text(schedule['title'] ?? 'Tanpa Judul'),
+          subtitle: Text("File ID: ${schedule['file_id'] ?? 'Tidak ada'}"),
+        );
+      },
     );
   }
 }
