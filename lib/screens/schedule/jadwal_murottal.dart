@@ -61,26 +61,45 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
 
   // baru
   void _saveSchedule() async {
+    print("📝 Menyimpan jadwal...");
     final time = _timeController.text.trim();
     final duration = _durationController.text.trim();
 
-    if (time.isNotEmpty && duration.isNotEmpty && selectedSurah != null) {
-      await ScheduleService().saveManualSchedule(
-        time,
-        duration,
-        selectedCategory,
-        selectedSurah!, // Nama surah disimpan
-        selectedDay,
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Jadwal murottal berhasil disimpan.')),
-      );
-
-      _timeController.clear();
-      _durationController.clear();
-      setState(() => selectedSurah = null);
+    if (time.isEmpty || duration.isEmpty || selectedSurah == null) {
+      print("❌ Input tidak lengkap.");
+      return;
     }
+
+    final path = categoryPaths[selectedCategory];
+    final ref = FirebaseDatabase.instance.ref(path);
+    final snapshot = await ref.get();
+    final data = Map<String, dynamic>.from(snapshot.value as Map);
+
+    final selectedAudio = data.values.firstWhere(
+      (e) => e['title'] == selectedSurah,
+      orElse: () => null,
+    );
+
+    if (selectedAudio == null) {
+      print("❌ Audio tidak ditemukan.");
+      return;
+    }
+
+    final audioUrl = "http://localhost:3000/drive/${selectedAudio['fileId']}";
+    print("✅ Audio URL: $audioUrl");
+
+    await ScheduleService().saveManualSchedule(
+      time,
+      duration,
+      "$selectedCategory - $selectedSurah",
+      selectedDay,
+      audioUrl,
+    );
+
+    print("✅ Jadwal murottal berhasil disimpan.");
+    _timeController.clear();
+    _durationController.clear();
+    setState(() => selectedSurah = null);
   }
 
   @override
