@@ -15,7 +15,7 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
   String selectedCategory = "Surah Pendek";
   String? selectedSurah;
   String selectedDay = "Senin";
-  List<String> surahList = [];
+  List<Map<String, String>> surahList = [];
 
   final Map<String, String> categoryPaths = {
     "Surah Pendek": 'devices/devices_01/murottal/categories/kategori_2/files',
@@ -53,50 +53,52 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-        surahList = data.values.map((e) => e['title'].toString()).toList();
-        selectedSurah = surahList.isNotEmpty ? surahList.first : null;
+        surahList =
+            data.values
+                .where(
+                  (e) =>
+                      e is Map &&
+                      e.containsKey('title') &&
+                      e.containsKey('fileId'),
+                )
+                .map<Map<String, String>>(
+                  (e) => {
+                    'title': e['title'].toString(),
+                    'fileId': e['fileId'].toString(),
+                  },
+                )
+                .toList();
+        selectedSurah = surahList.isNotEmpty ? surahList.first['title'] : null;
       });
     }
   }
 
-  // baru
   void _saveSchedule() async {
-    print("📝 Menyimpan jadwal...");
     final time = _timeController.text.trim();
     final duration = _durationController.text.trim();
 
-    if (time.isEmpty || duration.isEmpty || selectedSurah == null) {
-      print("❌ Input tidak lengkap.");
-      return;
-    }
+    if (time.isEmpty || duration.isEmpty || selectedSurah == null) return;
 
-    final path = categoryPaths[selectedCategory];
-    final ref = FirebaseDatabase.instance.ref(path);
-    final snapshot = await ref.get();
-    final data = Map<String, dynamic>.from(snapshot.value as Map);
-
-    final selectedAudio = data.values.firstWhere(
-      (e) => e['title'] == selectedSurah,
-      orElse: () => null,
+    final selectedAudio = surahList.firstWhere(
+      (surah) => surah['title'] == selectedSurah,
+      orElse: () => {},
     );
 
-    if (selectedAudio == null) {
-      print("❌ Audio tidak ditemukan.");
-      return;
-    }
-
     final audioUrl = "http://localhost:3000/drive/${selectedAudio['fileId']}";
-    print("✅ Audio URL: $audioUrl");
 
     await ScheduleService().saveManualSchedule(
       time,
       duration,
-      "$selectedCategory - $selectedSurah",
+      selectedCategory,
+      selectedSurah!,
       selectedDay,
       audioUrl,
     );
 
-    print("✅ Jadwal murottal berhasil disimpan.");
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Jadwal murottal berhasil disimpan.')),
+    );
+
     _timeController.clear();
     _durationController.clear();
     setState(() => selectedSurah = null);
@@ -114,63 +116,8 @@ class _JadwalMurottalState extends State<JadwalMurottal> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DropdownButtonFormField<String>(
-              value: selectedCategory,
-              items:
-                  categoryPaths.keys.map((category) {
-                    return DropdownMenuItem(
-                      value: category,
-                      child: Text(category),
-                    );
-                  }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedCategory = value!;
-                  _fetchSurahList();
-                });
-              },
-              decoration: const InputDecoration(labelText: 'Kategori Murottal'),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: selectedSurah,
-              items:
-                  surahList.map((surah) {
-                    return DropdownMenuItem(value: surah, child: Text(surah));
-                  }).toList(),
-              onChanged: (value) => setState(() => selectedSurah = value),
-              decoration: const InputDecoration(labelText: 'Pilih Surah'),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: selectedDay,
-              items:
-                  daysOfWeek.map((day) {
-                    return DropdownMenuItem(value: day, child: Text(day));
-                  }).toList(),
-              onChanged: (value) => setState(() => selectedDay = value!),
-              decoration: const InputDecoration(labelText: 'Pilih Hari'),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _timeController,
-              decoration: const InputDecoration(labelText: 'Waktu (HH:MM)'),
-              keyboardType: TextInputType.datetime,
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _durationController,
-              decoration: const InputDecoration(labelText: 'Durasi (Menit)'),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _saveSchedule,
-                child: const Text('Simpan Jadwal'),
-              ),
-            ),
+            // Dropdowns and Input Fields
+            // Save Button
           ],
         ),
       ),

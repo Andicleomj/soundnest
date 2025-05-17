@@ -3,9 +3,6 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:soundnest/service/music_player_service.dart';
 
 class ScheduleService {
-  final DatabaseReference _ref = FirebaseDatabase.instance.ref(
-    'devices/devices_01/schedule_001',
-  );
   final DatabaseReference _manualRef = FirebaseDatabase.instance.ref(
     'devices/devices_01/schedule/manual',
   );
@@ -32,7 +29,8 @@ class ScheduleService {
       (_) => checkAndRunSchedule(),
     );
 
-    _ref.onValue.listen((event) => checkAndRunSchedule());
+    _manualRef.onValue.listen((_) => checkAndRunSchedule());
+    _autoRef.onValue.listen((_) => checkAndRunSchedule());
     print("✅ ScheduleService started.");
   }
 
@@ -42,6 +40,7 @@ class ScheduleService {
     String category,
     String surah,
     String day,
+    String fileId,
   ) async {
     await _manualRef.push().set({
       'time_start': time,
@@ -49,6 +48,7 @@ class ScheduleService {
       'category': category,
       'surah': surah,
       'day': day,
+      'fileId': fileId,
       'isActive': true,
     });
     print("✅ Jadwal manual berhasil disimpan.");
@@ -64,6 +64,7 @@ class ScheduleService {
     for (var schedule in schedules) {
       if ((schedule['isActive'] ?? false) && _isScheduleValid(schedule, now)) {
         await _runScheduledAudio(schedule);
+        break;
       }
     }
   }
@@ -116,20 +117,12 @@ class ScheduleService {
   }
 
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
-    final category = schedule['category'];
-    final surah = schedule['surah'];
+    final fileId = schedule['fileId'];
     final duration = schedule['duration'];
 
-    if (category == null || surah == null) return;
+    if (fileId == null) return;
 
-    final audioUrl = await _getAudioUrl(category, surah);
-
-    if (audioUrl == null) {
-      print(
-        "❌ URL audio tidak ditemukan untuk kategori: $category dan surah: $surah",
-      );
-      return;
-    }
+    final audioUrl = "http://localhost:3000/drive/$fileId";
 
     print("🔊 Memutar audio dari URL: $audioUrl selama $duration menit.");
     _isAudioPlaying = true;
@@ -140,28 +133,6 @@ class ScheduleService {
     } finally {
       _isAudioPlaying = false;
     }
-  }
-
-  Future<String?> _getAudioUrl(String category, String surah) async {
-    final ref =
-        category.toLowerCase().contains('murottal') ? _murottalRef : _musicRef;
-    final snapshot = await ref.get();
-
-    if (snapshot.exists) {
-      final data = snapshot.value as Map;
-
-      for (var cat in data.values) {
-        if (cat is Map && cat.containsKey('files')) {
-          for (var file in cat['files'].values) {
-            if (file['title'].toString().toLowerCase() == surah.toLowerCase()) {
-              return "http://localhost:3000/drive/${file['fileId']}";
-            }
-          }
-        }
-      }
-    }
-
-    return null;
   }
 
   void dispose() {
