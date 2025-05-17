@@ -146,7 +146,7 @@ class ScheduleService {
         return [];
       }
 
-      return (data as Map<dynamic, dynamic>).entries.map((entry) {
+      return (data).entries.map((entry) {
         final value = entry.value;
         final valueMap =
             value is Map
