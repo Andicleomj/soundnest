@@ -218,7 +218,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: InkWell(
         onTap: () {
-          navigateToCategoryScreen(context, category, this);
+          navigateToCategoryScreen(context, category, this, false);
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -280,10 +280,12 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
     BuildContext context,
     String category,
     dynamic widget,
+    bool selectMode,
   ) {
     String categoryPath;
     Widget screen;
-    final bool selectMode = widget.selectMode; // baru di tambah !!
+
+    // baru di tambah !!
 
     switch (category) {
       case 'Hewan':
