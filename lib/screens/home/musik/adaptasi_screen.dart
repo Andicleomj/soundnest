@@ -5,11 +5,13 @@ import 'package:audioplayers/audioplayers.dart';
 class AdaptasiScreen extends StatefulWidget {
   final String categoryPath; // Path lengkap di Firebase Realtime Database
   final String categoryName; // Nama kategori untuk judul AppBar
+  final bool selectMode;
 
   const AdaptasiScreen({
     Key? key,
     required this.categoryPath,
     required this.categoryName,
+    this.selectMode = false,
   }) : super(key: key);
 
   @override
@@ -38,13 +40,14 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-        adaptasiList = data.entries.map((e) {
-          final value = e.value as Map<dynamic, dynamic>;
-          return {
-            'title': value['title'] ?? 'Tidak ada judul',
-            'file_id': value['file_id'] ?? '',
-          };
-        }).toList();
+        adaptasiList =
+            data.entries.map((e) {
+              final value = e.value as Map<dynamic, dynamic>;
+              return {
+                'title': value['title'] ?? 'Tidak ada judul',
+                'file_id': value['file_id'] ?? '',
+              };
+            }).toList();
         isLoading = false;
       });
     } else {
@@ -102,26 +105,26 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
           ),
         ),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : adaptasiList.isEmpty
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : adaptasiList.isEmpty
               ? const Center(child: Text('Data musik tidak tersedia.'))
               : ListView.builder(
-                  itemCount: adaptasiList.length,
-                  itemBuilder: (context, index) {
-                    final music = adaptasiList[index];
-                    final isCurrent = currentIndex == index && isPlaying;
+                itemCount: adaptasiList.length,
+                itemBuilder: (context, index) {
+                  final music = adaptasiList[index];
+                  final isCurrent = currentIndex == index && isPlaying;
 
-                    return ListTile(
-                      title: Text(music['title']),
-                      trailing: IconButton(
-                        icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
-                        onPressed: () => togglePlay(index),
-                      ),
-                    );
-                  },
-                ),
+                  return ListTile(
+                    title: Text(music['title']),
+                    trailing: IconButton(
+                      icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
+                      onPressed: () => togglePlay(index),
+                    ),
+                  );
+                },
+              ),
     );
   }
 }
-

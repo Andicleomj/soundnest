@@ -4,7 +4,9 @@ import 'package:soundnest/screens/home/murottal/ayat_kursi.dart';
 import 'package:soundnest/screens/home/murottal/surah_screen.dart';
 
 class MurottalScreen extends StatefulWidget {
-  const MurottalScreen({super.key});
+  final bool selectMode;
+
+  const MurottalScreen({Key? key, this.selectMode = false}) : super(key: key);
 
   @override
   State<MurottalScreen> createState() => _MurottalScreenState();
@@ -46,7 +48,7 @@ class _MurottalScreenState extends State<MurottalScreen> {
   }
 
   void _showAddCategoryDialog() {
-    final TextEditingController _controller = TextEditingController();
+    final TextEditingController controller = TextEditingController();
 
     showDialog(
       context: context,
@@ -54,7 +56,7 @@ class _MurottalScreenState extends State<MurottalScreen> {
           (context) => AlertDialog(
             title: const Text('Tambah Kategori Baru'),
             content: TextField(
-              controller: _controller,
+              controller: controller,
               decoration: const InputDecoration(hintText: 'Nama kategori'),
             ),
             actions: [
@@ -64,7 +66,7 @@ class _MurottalScreenState extends State<MurottalScreen> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  final name = _controller.text.trim();
+                  final name = controller.text.trim();
                   if (name.isNotEmpty) {
                     final newRef = categoriesRef.push();
                     await newRef.set({'name': name, 'files': {}});

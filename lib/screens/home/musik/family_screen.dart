@@ -5,11 +5,13 @@ import 'package:audioplayers/audioplayers.dart';
 class FamilyScreen extends StatefulWidget {
   final String categoryPath; // Path lengkap di Firebase Realtime Database
   final String categoryName; // Nama kategori untuk judul AppBar
+  final bool selectMode;
 
   const FamilyScreen({
     Key? key,
     required this.categoryPath,
     required this.categoryName,
+    this.selectMode = false,
   }) : super(key: key);
 
   @override
@@ -103,23 +105,24 @@ class _FamilyScreenState extends State<FamilyScreen> {
           ),
         ),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: familyList.length,
-              itemBuilder: (context, index) {
-                final music = familyList[index];
-                final isCurrent = currentIndex == index && isPlaying;
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.builder(
+                itemCount: familyList.length,
+                itemBuilder: (context, index) {
+                  final music = familyList[index];
+                  final isCurrent = currentIndex == index && isPlaying;
 
-                return ListTile(
-                  title: Text(music['title']),
-                  trailing: IconButton(
-                    icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
-                    onPressed: () => togglePlay(index),
-                  ),
-                );
-              },
-            ),
+                  return ListTile(
+                    title: Text(music['title']),
+                    trailing: IconButton(
+                      icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
+                      onPressed: () => togglePlay(index),
+                    ),
+                  );
+                },
+              ),
     );
   }
 }

@@ -299,6 +299,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = KendaraanScreen(
           categoryPath: categoryPath,
           categoryName: category,
+          selectMode: selectMode,
         );
         break;
       case 'Aku Suka Olahraga':
@@ -306,6 +307,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = OlahragaScreen(
           categoryPath: categoryPath,
           categoryName: category,
+          selectMode: selectMode,
         );
         break;
       case 'Profesi':
@@ -313,6 +315,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = ProfesiScreen(
           categoryPath: categoryPath,
           categoryName: category,
+          selectMode: selectMode,
         );
         break;
       case 'Masa Adaptasi Sekolah':
@@ -320,6 +323,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = AdaptasiScreen(
           categoryPath: categoryPath,
           categoryName: category,
+          selectMode: selectMode,
         );
         break;
       case 'My Family':
@@ -327,32 +331,47 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = FamilyScreen(
           categoryPath: categoryPath,
           categoryName: category,
+          selectMode: selectMode,
         );
         break;
       case 'Bumi Planet':
         categoryPath = 'devices/devices_01/music/categories/kategori_006/files';
-        screen = BumiScreen(categoryPath: categoryPath, categoryName: category);
+        screen = BumiScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+          selectMode: selectMode,
+        );
         break;
       case 'Hari Kemerdekaan':
         categoryPath = 'devices/devices_01/music/categories/kategori_007/files';
-        screen = HariScreen(categoryPath: categoryPath, categoryName: category);
+        screen = HariScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+          selectMode: selectMode,
+        );
         break;
       case 'Ramadhan':
         categoryPath = 'devices/devices_01/music/categories/kategori_008/files';
         screen = RamadhanScreen(
           categoryPath: categoryPath,
           categoryName: category,
+          selectMode: selectMode,
         );
         break;
       case 'Manasik Haji':
         categoryPath = 'devices/devices_01/music/categories/kategori_009/files';
-        screen = HajiScreen(categoryPath: categoryPath, categoryName: category);
+        screen = HajiScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+          selectMode: selectMode,
+        );
         break;
       case 'Budaya Sunda':
         categoryPath = 'devices/devices_01/music/categories/kategori_010/files';
         screen = SundaScreen(
           categoryPath: categoryPath,
           categoryName: category,
+          selectMode: selectMode,
         );
         break;
       case 'Batik':
@@ -360,15 +379,24 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = SundaScreen(
           categoryPath: categoryPath,
           categoryName: category,
+          selectMode: selectMode,
         );
         break;
       case 'Mother Day':
         categoryPath = 'devices/devices_01/music/categories/kategori_012/files';
-        screen = MamaScreen(categoryPath: categoryPath, categoryName: category);
+        screen = MamaScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+          selectMode: selectMode,
+        );
         break;
       case 'Guruku Tersayang':
         categoryPath = 'devices/devices_01/music/categories/kategori_014/files';
-        screen = GuruScreen(categoryPath: categoryPath, categoryName: category);
+        screen = GuruScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+          selectMode: selectMode,
+        );
         break;
       default:
         // Default jika kategori tidak dikenal

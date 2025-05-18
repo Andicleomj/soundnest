@@ -5,11 +5,13 @@ import 'package:audioplayers/audioplayers.dart';
 class MamaScreen extends StatefulWidget {
   final String categoryPath; // Path lengkap di Firebase Realtime Database
   final String categoryName; // Nama kategori untuk judul AppBar
+  final bool selectMode;
 
   const MamaScreen({
     Key? key,
     required this.categoryPath,
     required this.categoryName,
+    this.selectMode = false,
   }) : super(key: key);
 
   @override

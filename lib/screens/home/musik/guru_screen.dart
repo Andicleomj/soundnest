@@ -5,11 +5,13 @@ import 'package:audioplayers/audioplayers.dart';
 class GuruScreen extends StatefulWidget {
   final String categoryPath; // Path lengkap di Firebase Realtime Database
   final String categoryName; // Nama kategori untuk judul AppBar
+  final bool selectMode;
 
   const GuruScreen({
     Key? key,
     required this.categoryPath,
     required this.categoryName,
+    this.selectMode = false,
   }) : super(key: key);
 
   @override

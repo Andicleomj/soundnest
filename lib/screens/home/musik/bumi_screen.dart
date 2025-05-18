@@ -5,11 +5,13 @@ import 'package:audioplayers/audioplayers.dart';
 class BumiScreen extends StatefulWidget {
   final String categoryPath; // Path lengkap di Firebase Realtime Database
   final String categoryName; // Nama kategori untuk judul AppBar
+  final bool selectMode;
 
   const BumiScreen({
     Key? key,
     required this.categoryPath,
     required this.categoryName,
+    this.selectMode = false,
   }) : super(key: key);
 
   @override
@@ -38,13 +40,14 @@ class _BumiScreenState extends State<BumiScreen> {
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-        musicList = data.entries.map((e) {
-          final value = e.value as Map<dynamic, dynamic>;
-          return {
-            'title': value['title'] ?? 'Tidak ada judul',
-            'file_id': value['file_id'] ?? '',
-          };
-        }).toList();
+        musicList =
+            data.entries.map((e) {
+              final value = e.value as Map<dynamic, dynamic>;
+              return {
+                'title': value['title'] ?? 'Tidak ada judul',
+                'file_id': value['file_id'] ?? '',
+              };
+            }).toList();
         isLoading = false;
       });
     } else {
@@ -102,23 +105,24 @@ class _BumiScreenState extends State<BumiScreen> {
           ),
         ),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: musicList.length,
-              itemBuilder: (context, index) {
-                final music = musicList[index];
-                final isCurrent = currentIndex == index && isPlaying;
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.builder(
+                itemCount: musicList.length,
+                itemBuilder: (context, index) {
+                  final music = musicList[index];
+                  final isCurrent = currentIndex == index && isPlaying;
 
-                return ListTile(
-                  title: Text(music['title']),
-                  trailing: IconButton(
-                    icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
-                    onPressed: () => togglePlay(index),
-                  ),
-                );
-              },
-            ),
+                  return ListTile(
+                    title: Text(music['title']),
+                    trailing: IconButton(
+                      icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
+                      onPressed: () => togglePlay(index),
+                    ),
+                  );
+                },
+              ),
     );
   }
 }

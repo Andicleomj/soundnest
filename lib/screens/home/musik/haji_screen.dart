@@ -5,11 +5,13 @@ import 'package:audioplayers/audioplayers.dart';
 class HajiScreen extends StatefulWidget {
   final String categoryPath; // Path lengkap di Firebase Realtime Database
   final String categoryName; // Nama kategori untuk judul AppBar
+  final bool selectMode;
 
   const HajiScreen({
     Key? key,
     required this.categoryPath,
     required this.categoryName,
+    this.selectMode = false,
   }) : super(key: key);
 
   @override
@@ -103,23 +105,24 @@ class _HajiScreenState extends State<HajiScreen> {
           ),
         ),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: musicList.length,
-              itemBuilder: (context, index) {
-                final music = musicList[index];
-                final isCurrent = currentIndex == index && isPlaying;
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.builder(
+                itemCount: musicList.length,
+                itemBuilder: (context, index) {
+                  final music = musicList[index];
+                  final isCurrent = currentIndex == index && isPlaying;
 
-                return ListTile(
-                  title: Text(music['title']),
-                  trailing: IconButton(
-                    icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
-                    onPressed: () => togglePlay(index),
-                  ),
-                );
-              },
-            ),
+                  return ListTile(
+                    title: Text(music['title']),
+                    trailing: IconButton(
+                      icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
+                      onPressed: () => togglePlay(index),
+                    ),
+                  );
+                },
+              ),
     );
   }
 }
