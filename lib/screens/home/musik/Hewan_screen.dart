@@ -3,8 +3,8 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:audioplayers/audioplayers.dart';
 
 class HewanScreen extends StatefulWidget {
-  final String categoryPath; // Path lengkap di Firebase Realtime Database
-  final String categoryName; // Nama kategori untuk judul AppBar
+  final String categoryPath;
+  final String categoryName;
   final bool selectMode;
 
   const HewanScreen({
@@ -29,7 +29,9 @@ class _HewanScreenState extends State<HewanScreen> {
   @override
   void initState() {
     super.initState();
-    databaseRef = FirebaseDatabase.instance.ref(widget.categoryPath);
+    databaseRef = FirebaseDatabase.instance.ref(
+      'devices/devices_01/music/categories/kategori_001/files',
+    );
     fetchMusicData();
   }
 

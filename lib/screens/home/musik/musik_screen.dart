@@ -218,7 +218,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: InkWell(
         onTap: () {
-          navigateToCategoryScreen(context, category);
+          navigateToCategoryScreen(context, category, this);
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -276,9 +276,14 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
     );
   }
 
-  void navigateToCategoryScreen(BuildContext context, String category) {
+  void navigateToCategoryScreen(
+    BuildContext context,
+    String category,
+    dynamic widget,
+  ) {
     String categoryPath;
     Widget screen;
+    final bool selectMode = widget.selectMode; // baru di tambah !!
 
     switch (category) {
       case 'Hewan':
@@ -286,6 +291,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = HewanScreen(
           categoryPath: categoryPath,
           categoryName: category,
+          selectMode: selectMode,
         );
         break;
       case 'Kendaraan':
@@ -373,7 +379,9 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         );
     }
 
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    if (screen != null) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    }
   }
 
   void showAddCategoryDialog(BuildContext context) {
