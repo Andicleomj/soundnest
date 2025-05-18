@@ -5,11 +5,13 @@ import 'package:audioplayers/audioplayers.dart';
 class HewanScreen extends StatefulWidget {
   final String categoryPath; // Path lengkap di Firebase Realtime Database
   final String categoryName; // Nama kategori untuk judul AppBar
+  final bool selectMode;
 
   const HewanScreen({
     Key? key,
     required this.categoryPath,
     required this.categoryName,
+    this.selectMode = false,
   }) : super(key: key);
 
   @override
@@ -27,9 +29,7 @@ class _HewanScreenState extends State<HewanScreen> {
   @override
   void initState() {
     super.initState();
-    databaseRef = FirebaseDatabase.instance.ref(
-      'devices/devices_01/music/categories/kategori_001/files',
-    );
+    databaseRef = FirebaseDatabase.instance.ref(widget.categoryPath);
     fetchMusicData();
   }
 
@@ -38,20 +38,20 @@ class _HewanScreenState extends State<HewanScreen> {
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-        musicList = data.entries.map((e) {
-          final value = e.value as Map<dynamic, dynamic>;
-          return {
-            'title': value['title'] ?? 'Tidak ada judul',
-            'file_id': value['file_id'] ?? '',
-          };
-        }).toList();
+        musicList =
+            data.entries.map((e) {
+              final value = e.value as Map<dynamic, dynamic>;
+              return {
+                'title': value['title'] ?? 'Tidak ada judul',
+                'file_id': value['file_id'] ?? '',
+              };
+            }).toList();
         isLoading = false;
       });
     } else {
       setState(() {
         isLoading = false;
       });
-      print('Data di path ${widget.categoryPath} tidak ditemukan di database.');
     }
   }
 
@@ -87,44 +87,26 @@ class _HewanScreenState extends State<HewanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          'Hewan',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.white],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : musicList.isEmpty
-              ? const Center(child: Text('Data musik tidak tersedia.'))
+      appBar: AppBar(title: Text(widget.categoryName)),
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
               : ListView.builder(
-                  itemCount: musicList.length,
-                  itemBuilder: (context, index) {
-                    final music = musicList[index];
-                    final isCurrent = currentIndex == index && isPlaying;
-
-                    return ListTile(
-                      title: Text(music['title']),
-                      trailing: IconButton(
-                        icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
-                        onPressed: () => togglePlayPause(index),
-                      ),
-                    );
-                  },
-                ),
+                itemCount: musicList.length,
+                itemBuilder: (context, index) {
+                  final music = musicList[index];
+                  return ListTile(
+                    title: Text(music['title']),
+                    onTap:
+                        widget.selectMode
+                            ? () => Navigator.pop(context, {
+                              "category": widget.categoryName,
+                              "music": music['title'],
+                            })
+                            : () => togglePlayPause(index),
+                  );
+                },
+              ),
     );
   }
 }
