@@ -14,14 +14,28 @@ import 'package:soundnest/screens/home/musik/mama_screen.dart';
 import 'package:soundnest/screens/home/musik/sunda_screen.dart';
 import 'package:soundnest/screens/home/musik/guru_screen.dart';
 
-class MusicScreen extends StatefulWidget {
-  const MusicScreen({super.key});
+class MusicScreen extends StatelessWidget {
+  final bool selectMode;
+
+  const MusicScreen({Key? key, this.selectMode = false}) : super(key: key);
 
   @override
-  State<MusicScreen> createState() => _MusicScreenState();
+  Widget build(BuildContext context) {
+    return _MusicScreenStateful(selectMode: selectMode);
+  }
 }
 
-class _MusicScreenState extends State<MusicScreen> {
+class _MusicScreenStateful extends StatefulWidget {
+  final bool selectMode;
+
+  const _MusicScreenStateful({Key? key, this.selectMode = false})
+    : super(key: key);
+
+  @override
+  State<_MusicScreenStateful> createState() => _MusicScreenState();
+}
+
+class _MusicScreenState extends State<_MusicScreenStateful> {
   List<Map<String, dynamic>> dynamicCategories = [];
 
   @override
@@ -31,7 +45,9 @@ class _MusicScreenState extends State<MusicScreen> {
   }
 
   void fetchDynamicCategories() {
-    final dbRef = FirebaseDatabase.instance.ref('devices/devices_01/music/categories');
+    final dbRef = FirebaseDatabase.instance.ref(
+      'devices/devices_01/music/categories',
+    );
     dbRef.onValue.listen((event) {
       final data = event.snapshot.value;
       if (data != null && data is Map) {
@@ -53,7 +69,9 @@ class _MusicScreenState extends State<MusicScreen> {
   }
 
   void deleteCategory(String key) async {
-    final dbRef = FirebaseDatabase.instance.ref('devices/devices_01/music/categories/$key');
+    final dbRef = FirebaseDatabase.instance.ref(
+      'devices/devices_01/music/categories/$key',
+    );
     await dbRef.remove();
   }
 
@@ -81,17 +99,17 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
     return Stack(
       children: [
         Positioned.fill(
-          child: Image.asset(
-            'assets/musik.jpg',
-            fit: BoxFit.cover,
-          ),
+          child: Image.asset('assets/musik.jpg', fit: BoxFit.cover),
         ),
         Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: const Text(
               'Kategori Musik',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
             centerTitle: true,
             backgroundColor: Colors.transparent,
@@ -151,7 +169,11 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryGrid(BuildContext context, List<String> categories, {bool isDeletable = false}) {
+  Widget _buildCategoryGrid(
+    BuildContext context,
+    List<String> categories, {
+    bool isDeletable = false,
+  }) {
     return GridView.count(
       crossAxisCount: 2,
       crossAxisSpacing: 13,
@@ -159,10 +181,15 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
       childAspectRatio: 3,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      children: categories.map((category) {
-        // Untuk kategori statis, keyOrName kita isi dengan nama kategori agar tombol hapus muncul
-        return _buildCategoryCard(context, category, isDeletable ? category : null);
-      }).toList(),
+      children:
+          categories.map((category) {
+            // Untuk kategori statis, keyOrName kita isi dengan nama kategori agar tombol hapus muncul
+            return _buildCategoryCard(
+              context,
+              category,
+              isDeletable ? category : null,
+            );
+          }).toList(),
     );
   }
 
@@ -174,61 +201,80 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
       childAspectRatio: 3,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      children: dynamicCategories.map((cat) {
-        return _buildCategoryCard(context, cat['name'], cat['key']);
-      }).toList(),
+      children:
+          dynamicCategories.map((cat) {
+            return _buildCategoryCard(context, cat['name'], cat['key']);
+          }).toList(),
     );
   }
 
-  Widget _buildCategoryCard(BuildContext context, String category, String? keyOrName) {
-  return Card(
-    color: Colors.blue.shade100,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    child: InkWell(
-      onTap: () {
-        navigateToCategoryScreen(context, category);
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
-          children: [
-            // Tulisan kategori rata kiri dan ambil space sebanyak mungkin
-            Expanded(
-              child: Text(
-                category,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                textAlign: TextAlign.left,
+  Widget _buildCategoryCard(
+    BuildContext context,
+    String category,
+    String? keyOrName,
+  ) {
+    return Card(
+      color: Colors.blue.shade100,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: InkWell(
+        onTap: () {
+          navigateToCategoryScreen(context, category);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              // Tulisan kategori rata kiri dan ambil space sebanyak mungkin
+              Expanded(
+                child: Text(
+                  category,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
               ),
-            ),
 
-            // Jika ada keyOrName (kategori yang bisa dihapus), tampilkan icon delete
-            if (keyOrName != null)
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                onPressed: () async {
-                  if (keyOrName.startsWith('kategori_') || keyOrName.length <= 20) {
-                    onDelete(keyOrName);
-                  } else {
-                    final dbRef = FirebaseDatabase.instance.ref('devices/devices_01/music/categories');
-                    final snapshot = await dbRef.orderByChild('name').equalTo(keyOrName).get();
-                    if (snapshot.exists) {
-                      final data = snapshot.value as Map;
-                      final deleteKey = data.keys.first;
-                      onDelete(deleteKey);
+              // Jika ada keyOrName (kategori yang bisa dihapus), tampilkan icon delete
+              if (keyOrName != null)
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                  onPressed: () async {
+                    if (keyOrName.startsWith('kategori_') ||
+                        keyOrName.length <= 20) {
+                      onDelete(keyOrName);
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Kategori "$keyOrName" tidak ditemukan di database')),
+                      final dbRef = FirebaseDatabase.instance.ref(
+                        'devices/devices_01/music/categories',
                       );
+                      final snapshot =
+                          await dbRef
+                              .orderByChild('name')
+                              .equalTo(keyOrName)
+                              .get();
+                      if (snapshot.exists) {
+                        final data = snapshot.value as Map;
+                        final deleteKey = data.keys.first;
+                        onDelete(deleteKey);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Kategori "$keyOrName" tidak ditemukan di database',
+                            ),
+                          ),
+                        );
+                      }
                     }
-                  }
-                },
-              ),
-          ],
+                  },
+                ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   void navigateToCategoryScreen(BuildContext context, String category) {
     String categoryPath;
@@ -237,27 +283,45 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
     switch (category) {
       case 'Hewan':
         categoryPath = 'devices/devices_01/music/categories/kategori_001/files';
-        screen = HewanScreen(categoryPath: categoryPath, categoryName: category);
+        screen = HewanScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+        );
         break;
       case 'Kendaraan':
         categoryPath = 'devices/devices_01/music/categories/kategori_002/files';
-        screen = KendaraanScreen(categoryPath: categoryPath, categoryName: category);
+        screen = KendaraanScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+        );
         break;
       case 'Aku Suka Olahraga':
         categoryPath = 'devices/devices_01/music/categories/kategori_003/files';
-        screen = OlahragaScreen(categoryPath: categoryPath, categoryName: category);
+        screen = OlahragaScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+        );
         break;
       case 'Profesi':
         categoryPath = 'devices/devices_01/music/categories/kategori_013/files';
-        screen = ProfesiScreen(categoryPath: categoryPath, categoryName: category);
+        screen = ProfesiScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+        );
         break;
       case 'Masa Adaptasi Sekolah':
         categoryPath = 'devices/devices_01/music/categories/kategori_004/files';
-        screen = AdaptasiScreen(categoryPath: categoryPath, categoryName: category);
+        screen = AdaptasiScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+        );
         break;
       case 'My Family':
         categoryPath = 'devices/devices_01/music/categories/kategori_005/files';
-        screen = FamilyScreen(categoryPath: categoryPath, categoryName: category);
+        screen = FamilyScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+        );
         break;
       case 'Bumi Planet':
         categoryPath = 'devices/devices_01/music/categories/kategori_006/files';
@@ -269,7 +333,10 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         break;
       case 'Ramadhan':
         categoryPath = 'devices/devices_01/music/categories/kategori_008/files';
-        screen = RamadhanScreen(categoryPath: categoryPath, categoryName: category);
+        screen = RamadhanScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+        );
         break;
       case 'Manasik Haji':
         categoryPath = 'devices/devices_01/music/categories/kategori_009/files';
@@ -277,11 +344,17 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         break;
       case 'Budaya Sunda':
         categoryPath = 'devices/devices_01/music/categories/kategori_010/files';
-        screen = SundaScreen(categoryPath: categoryPath, categoryName: category);
+        screen = SundaScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+        );
         break;
       case 'Batik':
         categoryPath = 'devices/devices_01/music/categories/kategori_011/files';
-        screen = SundaScreen(categoryPath: categoryPath, categoryName: category);
+        screen = SundaScreen(
+          categoryPath: categoryPath,
+          categoryName: category,
+        );
         break;
       case 'Mother Day':
         categoryPath = 'devices/devices_01/music/categories/kategori_012/files';
@@ -304,15 +377,17 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
   }
 
   void showAddCategoryDialog(BuildContext context) {
-    final TextEditingController _nameController = TextEditingController();
+    final TextEditingController nameController = TextEditingController();
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Tambah Kategori Baru'),
           content: TextField(
-            controller: _nameController,
-            decoration: const InputDecoration(hintText: 'Masukkan nama kategori'),
+            controller: nameController,
+            decoration: const InputDecoration(
+              hintText: 'Masukkan nama kategori',
+            ),
           ),
           actions: <Widget>[
             TextButton(
@@ -323,7 +398,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                final name = _nameController.text.trim();
+                final name = nameController.text.trim();
                 if (name.isNotEmpty) {
                   addCategoryToFirebase(name);
                   Navigator.of(context).pop();
@@ -338,7 +413,9 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
   }
 
   void addCategoryToFirebase(String name) {
-    final dbRef = FirebaseDatabase.instance.ref('devices/devices_01/music/categories');
+    final dbRef = FirebaseDatabase.instance.ref(
+      'devices/devices_01/music/categories',
+    );
     final newKey = dbRef.push().key;
     if (newKey != null) {
       dbRef.child(newKey).set({'name': name});

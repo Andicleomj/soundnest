@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soundnest/screens/home/musik/musik_screen.dart';
 
 class MusikScheduleForm extends StatefulWidget {
   const MusikScheduleForm({Key? key}) : super(key: key);
@@ -11,77 +12,67 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
   String? selectedCategory;
   String? selectedMusic;
   String? selectedDay;
+
   final TextEditingController _timeController = TextEditingController();
   final TextEditingController _durationController = TextEditingController();
 
-  final List<String> categories = [
-    "Masa Adaptasi Sekolah",
-    "Aku Suka Olahraga",
-    "My Family",
-    "Bumi Planet",
-    "Hari Kemerdekaan",
-  ];
+  void _pickMusic() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MusicScreen(selectMode: true),
+      ),
+    );
 
-  final List<String> days = [
-    "Senin",
-    "Selasa",
-    "Rabu",
-    "Kamis",
-    "Jumat",
-    "Sabtu",
-    "Minggu",
-  ];
+    if (result != null) {
+      setState(() {
+        selectedCategory = result['category'];
+        selectedMusic = result['music'];
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Jadwalkan Musik")),
+      appBar: AppBar(
+        title: const Text("Jadwalkan Musik"),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DropdownButtonFormField<String>(
-              value: selectedCategory,
-              decoration: const InputDecoration(labelText: "Pilih Kategori"),
-              items:
-                  categories
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-              onChanged: (value) => setState(() => selectedCategory = value),
+            TextButton(
+              onPressed: _pickMusic,
+              child: Text(
+                selectedMusic == null ? "Pilih Musik" : selectedMusic!,
+              ),
             ),
-            const SizedBox(height: 16),
             TextField(
               controller: _timeController,
               decoration: const InputDecoration(labelText: "Waktu (HH:MM)"),
             ),
-            const SizedBox(height: 16),
             TextField(
               controller: _durationController,
               decoration: const InputDecoration(labelText: "Durasi (menit)"),
             ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: selectedDay,
+            TextField(
               decoration: const InputDecoration(labelText: "Pilih Hari"),
-              items:
-                  days
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-              onChanged: (value) => setState(() => selectedDay = value),
+              onChanged: (value) => selectedDay = value,
             ),
-            const Spacer(),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                if (selectedCategory != null &&
-                    selectedDay != null &&
-                    _timeController.text.isNotEmpty &&
-                    _durationController.text.isNotEmpty) {
-                  // Save schedule logic here
-                  print(
-                    "Jadwal Disimpan: $selectedCategory - ${_timeController.text} - ${_durationController.text} - $selectedDay",
-                  );
-                }
+                print("Kategori: $selectedCategory");
+                print("Musik: $selectedMusic");
+                print("Waktu: ${_timeController.text}");
+                print("Durasi: ${_durationController.text}");
+                print("Hari: $selectedDay");
               },
               child: const Text("Simpan Jadwal"),
             ),
@@ -89,12 +80,5 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _timeController.dispose();
-    _durationController.dispose();
-    super.dispose();
   }
 }
