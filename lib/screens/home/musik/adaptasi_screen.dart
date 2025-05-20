@@ -8,11 +8,11 @@ class AdaptasiScreen extends StatefulWidget {
   final bool selectMode;
 
   const AdaptasiScreen({
-    Key? key,
+    super.key,
     required this.categoryPath,
     required this.categoryName,
     this.selectMode = false,
-  }) : super(key: key);
+  });
 
   @override
   _AdaptasiScreenState createState() => _AdaptasiScreenState();
@@ -118,6 +118,21 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
 
                   return ListTile(
                     title: Text(music['title']),
+                    onTap: () {
+                      if (widget.selectMode) {
+                        Navigator.pushNamed(
+                          context,
+                          '/buat-jadwal',
+                          arguments: {
+                            'title': music['title'],
+                            'file_id': music['file_id'],
+                            'category': widget.categoryName,
+                          },
+                        );
+                      } else {
+                        togglePlay(index);
+                      }
+                    },
                     trailing: IconButton(
                       icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
                       onPressed: () => togglePlay(index),
