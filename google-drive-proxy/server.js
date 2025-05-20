@@ -13,7 +13,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   next();
 });
-
+//baru
 // Endpoint untuk streaming file dari Google Drive
 app.get('/stream/:fileId', async (req, res) => {
   const fileId = req.params.fileId;
