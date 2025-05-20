@@ -1,20 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:soundnest/screens/home/musik/musik_screen.dart';
 
 class MusikScheduleForm extends StatefulWidget {
-  const MusikScheduleForm({Key? key}) : super(key: key);
+  final String? title;
+  final String? fileId;
+  final String? category;
+
+  const MusikScheduleForm({super.key, this.title, this.fileId, this.category});
 
   @override
-  _MusikScheduleFormState createState() => _MusikScheduleFormState();
+  State<MusikScheduleForm> createState() => _MusikScheduleFormState();
 }
 
 class _MusikScheduleFormState extends State<MusikScheduleForm> {
   String? selectedCategory;
   String? selectedMusic;
+  String? selectedFileId;
   String? selectedDay;
 
   final TextEditingController _timeController = TextEditingController();
   final TextEditingController _durationController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    selectedCategory = widget.category;
+    selectedMusic = widget.title;
+    selectedFileId = widget.fileId;
+  }
 
   void _pickMusic() async {
     final result = await Navigator.push(
@@ -27,9 +41,38 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
     if (result != null) {
       setState(() {
         selectedCategory = result['category'];
-        selectedMusic = result['music'];
+        selectedMusic = result['title'];
+        selectedFileId = result['file_id'];
       });
     }
+  }
+
+  void _saveSchedule() async {
+    if (selectedMusic == null ||
+        selectedFileId == null ||
+        selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pilih musik terlebih dahulu')),
+      );
+      return;
+    }
+
+    // Simpan ke Firebase Realtime Database
+    await FirebaseDatabase.instance.ref('jadwal_musik').push().set({
+      'title': selectedMusic,
+      'file_id': selectedFileId,
+      'category': selectedCategory,
+      'waktu': _timeController.text,
+      'durasi': _durationController.text,
+      'hari': selectedDay,
+      'enabled': true,
+    });
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Jadwal berhasil disimpan')));
+
+    Navigator.pop(context);
   }
 
   @override
@@ -50,7 +93,9 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
             TextButton(
               onPressed: _pickMusic,
               child: Text(
-                selectedMusic == null ? "Pilih Musik" : selectedMusic!,
+                selectedMusic == null
+                    ? "Pilih Musik"
+                    : "$selectedMusic (${selectedCategory ?? '-'})",
               ),
             ),
             TextField(
@@ -67,13 +112,7 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {
-                print("Kategori: $selectedCategory");
-                print("Musik: $selectedMusic");
-                print("Waktu: ${_timeController.text}");
-                print("Durasi: ${_durationController.text}");
-                print("Hari: $selectedDay");
-              },
+              onPressed: _saveSchedule,
               child: const Text("Simpan Jadwal"),
             ),
           ],

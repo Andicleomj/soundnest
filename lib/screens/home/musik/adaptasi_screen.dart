@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:soundnest/screens/schedule/musik.dart';
 
 class AdaptasiScreen extends StatefulWidget {
   final String categoryPath; // Path lengkap di Firebase Realtime Database
@@ -120,14 +121,16 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
                     title: Text(music['title']),
                     onTap: () {
                       if (widget.selectMode) {
-                        Navigator.pushNamed(
+                        Navigator.push(
                           context,
-                          '/buat-jadwal',
-                          arguments: {
-                            'title': music['title'],
-                            'file_id': music['file_id'],
-                            'category': widget.categoryName,
-                          },
+                          MaterialPageRoute(
+                            builder:
+                                (context) => MusikScheduleForm(
+                                  title: music['title'],
+                                  fileId: music['file_id'],
+                                  category: widget.categoryName,
+                                ),
+                          ),
                         );
                       } else {
                         togglePlay(index);
