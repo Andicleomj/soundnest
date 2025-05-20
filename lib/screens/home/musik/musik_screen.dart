@@ -17,7 +17,7 @@ import 'package:soundnest/screens/home/musik/guru_screen.dart';
 class MusicScreen extends StatelessWidget {
   final bool selectMode;
 
-  const MusicScreen({Key? key, this.selectMode = false}) : super(key: key);
+  const MusicScreen({super.key, this.selectMode = false});
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +28,7 @@ class MusicScreen extends StatelessWidget {
 class _MusicScreenStateful extends StatefulWidget {
   final bool selectMode;
 
-  const _MusicScreenStateful({Key? key, this.selectMode = false})
-    : super(key: key);
+  const _MusicScreenStateful({this.selectMode = false});
 
   @override
   State<_MusicScreenStateful> createState() => _MusicScreenState();
@@ -409,9 +408,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         );
     }
 
-    if (screen != null) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
-    }
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 
   void showAddCategoryDialog(BuildContext context) {
