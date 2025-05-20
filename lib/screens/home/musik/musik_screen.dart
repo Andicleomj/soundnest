@@ -325,7 +325,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = AdaptasiScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
+          selectMode: true,
         );
         break;
       case 'My Family':
