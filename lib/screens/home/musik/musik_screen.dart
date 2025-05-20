@@ -218,7 +218,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: InkWell(
         onTap: () {
-          navigateToCategoryScreen(context, category, this, false);
+          navigateToCategoryScreen(context, category, this, true);
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -413,18 +413,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
       selectedMusic,
     ) {
       if (selectedMusic != null && widget.selectMode) {
-        // Contoh: langsung buka form penjadwalan dengan data musik terpilih
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (_) => MusikScheduleForm(
-                  title: selectedMusic['title'],
-                  fileId: selectedMusic['file_id'],
-                  category: selectedMusic['category'],
-                ),
-          ),
-        );
+        Navigator.pop(context, selectedMusic);
       }
     });
   }
