@@ -25,6 +25,7 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
   @override
   void initState() {
     super.initState();
+    // Isi default dari parameter jika ada
     selectedCategory = widget.category;
     selectedMusic = widget.title;
     selectedFileId = widget.fileId;
@@ -38,7 +39,7 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
       ),
     );
 
-    if (result != null) {
+    if (result != null && mounted) {
       setState(() {
         selectedCategory = result['category'];
         selectedMusic = result['title'];
@@ -50,14 +51,16 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
   void _saveSchedule() async {
     if (selectedMusic == null ||
         selectedFileId == null ||
-        selectedCategory == null) {
+        selectedCategory == null ||
+        _timeController.text.isEmpty ||
+        _durationController.text.isEmpty ||
+        selectedDay == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pilih musik terlebih dahulu')),
+        const SnackBar(content: Text('Lengkapi semua isian terlebih dahulu')),
       );
       return;
     }
 
-    // Simpan ke Firebase Realtime Database
     await FirebaseDatabase.instance.ref('jadwal_musik').push().set({
       'title': selectedMusic,
       'file_id': selectedFileId,
@@ -96,8 +99,10 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
                 selectedMusic == null
                     ? "Pilih Musik"
                     : "$selectedMusic (${selectedCategory ?? '-'})",
+                style: const TextStyle(fontSize: 16),
               ),
             ),
+            const SizedBox(height: 12),
             TextField(
               controller: _timeController,
               decoration: const InputDecoration(labelText: "Waktu (HH:MM)"),
@@ -105,6 +110,7 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
             TextField(
               controller: _durationController,
               decoration: const InputDecoration(labelText: "Durasi (menit)"),
+              keyboardType: TextInputType.number,
             ),
             TextField(
               decoration: const InputDecoration(labelText: "Pilih Hari"),
