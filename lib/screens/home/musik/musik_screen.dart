@@ -13,6 +13,7 @@ import 'package:soundnest/screens/home/musik/haji_screen.dart';
 import 'package:soundnest/screens/home/musik/mama_screen.dart';
 import 'package:soundnest/screens/home/musik/sunda_screen.dart';
 import 'package:soundnest/screens/home/musik/guru_screen.dart';
+import 'package:soundnest/screens/schedule/musik.dart';
 
 class MusicScreen extends StatelessWidget {
   final bool selectMode;
@@ -408,7 +409,34 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         );
     }
 
-    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen)).then((
+      selectedMusic,
+    ) {
+      if (selectedMusic != null && widget.selectMode) {
+        // Contoh: langsung buka form penjadwalan dengan data musik terpilih
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => MusikScheduleForm(
+                  title: selectedMusic['title'],
+                  fileId: selectedMusic['file_id'],
+                  category: selectedMusic['category'],
+                ),
+          ),
+        );
+      }
+    });
+  }
+
+  void addCategoryToFirebase(String name) {
+    final dbRef = FirebaseDatabase.instance.ref(
+      'devices/devices_01/music/categories',
+    );
+    final newKey = dbRef.push().key;
+    if (newKey != null) {
+      dbRef.child(newKey).set({'name': name});
+    }
   }
 
   void showAddCategoryDialog(BuildContext context) {
@@ -445,15 +473,5 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         );
       },
     );
-  }
-
-  void addCategoryToFirebase(String name) {
-    final dbRef = FirebaseDatabase.instance.ref(
-      'devices/devices_01/music/categories',
-    );
-    final newKey = dbRef.push().key;
-    if (newKey != null) {
-      dbRef.child(newKey).set({'name': name});
-    }
   }
 }

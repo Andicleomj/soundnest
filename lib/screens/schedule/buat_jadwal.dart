@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:soundnest/screens/home/murottal/murottal_screen.dart';
-import 'package:soundnest/screens/home/musik/musik_screen.dart';
+import 'package:soundnest/screens/schedule/murotal.dart';
 import 'package:soundnest/screens/schedule/musik.dart';
 
 class ScheduleScreen extends StatelessWidget {
   const ScheduleScreen({super.key});
+
+  void _navigateToMusik(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MusikScheduleForm()),
+    );
+  }
+
+  void _navigateToMurottal(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MurottalScheduleForm()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,9 +28,7 @@ class ScheduleScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -38,15 +49,8 @@ class ScheduleScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MusikScheduleForm(),
-                  ),
-                );
-              },
+            InkWell(
+              onTap: () => _navigateToMusik(context),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -58,15 +62,8 @@ class ScheduleScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MurottalScreen(),
-                  ),
-                );
-              },
+            InkWell(
+              onTap: () => _navigateToMurottal(context),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),

@@ -30,9 +30,7 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
   @override
   void initState() {
     super.initState();
-    databaseRef = FirebaseDatabase.instance.ref(
-      'devices/devices_01/music/categories/kategori_004/files',
-    );
+    databaseRef = FirebaseDatabase.instance.ref(widget.categoryPath);
     fetchMusicData();
   }
 
@@ -121,17 +119,11 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
                     title: Text(music['title']),
                     onTap: () {
                       if (widget.selectMode) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => MusikScheduleForm(
-                                  title: music['title'],
-                                  fileId: music['file_id'],
-                                  category: widget.categoryName,
-                                ),
-                          ),
-                        );
+                        Navigator.pop(context, {
+                          'title': music['title'],
+                          'file_id': music['file_id'],
+                          'category': widget.categoryName,
+                        });
                       } else {
                         togglePlay(index);
                       }
