@@ -9,9 +9,12 @@ class MusicPickerScreen extends StatefulWidget {
 }
 
 class _MusicPickerScreenState extends State<MusicPickerScreen> {
-  final DatabaseReference rootRef = FirebaseDatabase.instance.ref('musik');
+  final DatabaseReference categoryRef = FirebaseDatabase.instance.ref(
+    'music/categories',
+  );
   bool isLoading = true;
-  Map<String, dynamic> allMusicData = {}; // key: kategori, value: Map musik
+  Map<String, dynamic> allMusicData =
+      {}; // key: nama kategori, value: list of music
 
   @override
   void initState() {
@@ -20,11 +23,33 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
   }
 
   Future<void> fetchAllMusic() async {
-    final snapshot = await rootRef.get();
+    final snapshot = await categoryRef.get();
     if (snapshot.exists) {
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
+      final rawData = Map<String, dynamic>.from(snapshot.value as Map);
+      Map<String, List<Map<String, dynamic>>> parsedData = {};
+
+      for (final entry in rawData.entries) {
+        final categoryData = Map<String, dynamic>.from(entry.value);
+        final categoryName = categoryData['nama'] ?? 'Tanpa Nama';
+        final files =
+            categoryData['files'] != null
+                ? Map<String, dynamic>.from(categoryData['files'])
+                : {};
+
+        final musicList =
+            files.entries.map((e) {
+              final fileData = Map<String, dynamic>.from(e.value);
+              return {
+                'title': fileData['title'] ?? 'Judul tidak tersedia',
+                'file_id': fileData['file_id'] ?? '',
+              };
+            }).toList();
+
+        parsedData[categoryName] = musicList;
+      }
+
       setState(() {
-        allMusicData = data;
+        allMusicData = parsedData;
         isLoading = false;
       });
     } else {
@@ -47,28 +72,23 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
               ? const Center(child: Text('Tidak ada musik tersedia'))
               : ListView(
                 children:
-                    allMusicData.entries.map((categoryEntry) {
-                      final category = categoryEntry.key;
-                      final musicMap = Map<String, dynamic>.from(
-                        categoryEntry.value,
-                      );
+                    allMusicData.entries.map((entry) {
+                      final categoryName = entry.key;
+                      final musicList =
+                          entry.value as List<Map<String, dynamic>>;
 
                       return ExpansionTile(
-                        title: Text(category),
+                        title: Text(categoryName),
                         children:
-                            musicMap.entries.map((musicEntry) {
-                              final music = Map<String, dynamic>.from(
-                                musicEntry.value,
-                              );
-                              final title =
-                                  music['title'] ?? 'Judul tidak tersedia';
-                              final fileId = music['file_id'] ?? '';
+                            musicList.map((music) {
+                              final title = music['title'];
+                              final fileId = music['file_id'];
 
                               return ListTile(
                                 title: Text(title),
                                 onTap: () {
                                   Navigator.pop(context, {
-                                    'category': category,
+                                    'category': categoryName,
                                     'title': title,
                                     'file_id': fileId,
                                   });
