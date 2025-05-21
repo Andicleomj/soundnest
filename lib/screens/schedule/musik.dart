@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:soundnest/screens/home/musik/adaptasi_screen.dart'; // Ganti sesuai lokasi file
 import 'package:soundnest/screens/home/musik/pickmusik.dart';
 
 class MusikScheduleForm extends StatefulWidget {
@@ -68,8 +67,8 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
         selectedFileId == null ||
         selectedCategory == null ||
         selectedTime == null ||
-        _durationController.text.isEmpty ||
-        int.tryParse(_durationController.text) == null ||
+        _durationController.text.trim().isEmpty ||
+        int.tryParse(_durationController.text.trim()) == null ||
         (!repeatEveryday && selectedDays.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Lengkapi semua isian dengan benar')),
@@ -78,18 +77,28 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
     }
 
     final waktuFormatted = selectedTime!.format(context);
+    final durasi = _durationController.text.trim();
 
     final data = {
       'title': selectedMusic,
       'file_id': selectedFileId,
       'category': selectedCategory,
       'waktu': waktuFormatted,
-      'durasi': _durationController.text,
+      'durasi': durasi,
       'hari': repeatEveryday ? 'Setiap Hari' : selectedDays,
       'enabled': true,
     };
 
-    await FirebaseDatabase.instance.ref('jadwal_musik').push().set(data);
+    final databaseRef = FirebaseDatabase.instance.ref();
+
+    // Simpan ke path: /devices/devices_01/schedule/manual_music/
+    await databaseRef
+        .child('devices')
+        .child('devices_01')
+        .child('schedule')
+        .child('manual')
+        .push()
+        .set(data);
 
     ScaffoldMessenger.of(
       context,

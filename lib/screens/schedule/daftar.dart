@@ -12,9 +12,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   final DatabaseReference _manualRef = FirebaseDatabase.instance.ref(
     'devices/devices_01/schedule/manual',
   );
-  final DatabaseReference _autoRef = FirebaseDatabase.instance.ref(
-    'devices/devices_01/schedule/otomatis',
-  );
   List<Map<String, dynamic>> schedules = [];
 
   @override
@@ -25,43 +22,42 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
 
   Future<void> _loadSchedules() async {
     final manualSnapshot = await _manualRef.get();
-    final autoSnapshot = await _autoRef.get();
-
-    List<Map<String, dynamic>> allSchedules = [];
+    List<Map<String, dynamic>> loadedSchedules = [];
 
     if (manualSnapshot.exists) {
-      allSchedules.addAll(_parseSchedules(manualSnapshot));
-    }
-
-    if (autoSnapshot.exists) {
-      allSchedules.addAll(_parseSchedules(autoSnapshot));
+      final data = manualSnapshot.value as Map<dynamic, dynamic>;
+      loadedSchedules =
+          data.entries.map((entry) {
+            final schedule = Map<String, dynamic>.from(entry.value);
+            return {
+              'key': entry.key,
+              'title': schedule['title'] ?? 'No Title',
+              'category': schedule['category'] ?? '-',
+              'hari': schedule['hari'] ?? '-',
+              'waktu': schedule['waktu'] ?? '-',
+              'durasi': schedule['durasi'] ?? '-',
+              'enabled': schedule['enabled'] ?? false,
+            };
+          }).toList();
     }
 
     setState(() {
-      schedules = allSchedules;
+      schedules = loadedSchedules;
     });
   }
 
-  List<Map<String, dynamic>> _parseSchedules(DataSnapshot snapshot) {
-    final data = snapshot.value as Map<dynamic, dynamic>;
-    return data.entries.map((entry) {
-      return {
-        "key": entry.key,
-        ...(entry.value as Map<dynamic, dynamic>).cast<String, dynamic>(),
-      };
-    }).toList();
-  }
-
   void _toggleSchedule(String key, bool isActive) async {
-    await _manualRef.child(key).update({"isActive": isActive});
-    await _autoRef.child(key).update({"isActive": isActive});
+    await _manualRef.child(key).update({"enabled": isActive});
     _loadSchedules();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Daftar Jadwal"), centerTitle: true),
+      appBar: AppBar(
+        title: const Text("Daftar Jadwal Musik"),
+        centerTitle: true,
+      ),
       body:
           schedules.isEmpty
               ? const Center(child: CircularProgressIndicator())
@@ -74,18 +70,18 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                     margin: const EdgeInsets.only(bottom: 12),
                     child: ListTile(
                       title: Text(
-                        "${schedule['category']} - ${schedule['surah'] ?? 'No Title'}",
+                        "${schedule['title']} (${schedule['category']})",
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Hari: ${schedule['day'] ?? '-'}"),
-                          Text("Waktu: ${schedule['time_start'] ?? '-'}"),
-                          Text("Durasi: ${schedule['duration'] ?? '-'} menit"),
+                          Text("Hari: ${schedule['hari']}"),
+                          Text("Waktu: ${schedule['waktu']}"),
+                          Text("Durasi: ${schedule['durasi']} menit"),
                         ],
                       ),
                       trailing: Switch(
-                        value: schedule['isActive'] ?? false,
+                        value: schedule['enabled'],
                         onChanged: (bool value) {
                           _toggleSchedule(schedule['key'], value);
                         },
