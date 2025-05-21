@@ -8,44 +8,41 @@ class ScheduleService {
     'devices/devices_01/schedule/manual',
   );
 
+  final MusicPlayerService _playerService = MusicPlayerService();
+
+  Timer? _timer;
+
   /// Ambil daftar jadwal manual dari Firebase Realtime Database.
   Future<List<Map<String, dynamic>>> getManualSchedules() async {
     final snapshot = await _manualRef.get();
 
     if (!snapshot.exists) {
-      // Jika data tidak ada, kembalikan list kosong
       return [];
     }
 
     final value = snapshot.value;
-
     Map<dynamic, dynamic> dataMap;
 
-    // Cek tipe data dari Firebase
     if (value is Map<dynamic, dynamic>) {
       dataMap = value;
     } else if (value is List) {
-      // Jika data berupa List, konversi jadi Map dengan index sebagai key
       dataMap = {
         for (int i = 0; i < value.length; i++)
           if (value[i] != null) i: value[i],
       };
     } else {
-      // Jika tipe data lain (null atau bukan Map/List), kembalikan kosong
       return [];
     }
 
     List<Map<String, dynamic>> schedules = [];
 
-    // Proses setiap entry dalam dataMap
     for (var entry in dataMap.entries) {
       try {
         final scheduleRaw = entry.value;
-        if (scheduleRaw is! Map) continue; // Skip kalau bukan Map
+        if (scheduleRaw is! Map) continue;
 
         final schedule = Map<String, dynamic>.from(scheduleRaw);
 
-        // Parsing field hari yang bisa berupa String, List, atau Map
         String hari;
         final hariData = schedule['hari'];
 
@@ -67,9 +64,9 @@ class ScheduleService {
           'waktu': schedule['waktu'] ?? 'Tidak ada waktu',
           'durasi': schedule['durasi']?.toString() ?? '0',
           'enabled': schedule['enabled'] ?? false,
+          'file_id': schedule['file_id'] ?? '', // jika ada file_id untuk play
         });
       } catch (e) {
-        // Kalau parsing error, masukkan jadwal default supaya tidak error
         schedules.add({
           'key': entry.key,
           'title': 'Format Tidak Valid',
@@ -78,6 +75,7 @@ class ScheduleService {
           'waktu': '-',
           'durasi': '0',
           'enabled': false,
+          'file_id': '',
         });
       }
     }
@@ -88,5 +86,62 @@ class ScheduleService {
   /// Update status enabled pada jadwal manual.
   Future<void> toggleScheduleEnabled(String key, bool enabled) async {
     await _manualRef.child(key).update({'enabled': enabled});
+  }
+
+  /// Mulai service pengecekan jadwal yang dijalankan secara periodik (setiap menit).
+  void start() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(minutes: 1), (_) async {
+      await _checkAndPlaySchedules();
+    });
+
+    print('ScheduleService started...');
+    // Bisa langsung cek juga saat start
+    _checkAndPlaySchedules();
+  }
+
+  /// Hentikan service pengecekan jadwal.
+  void stop() {
+    _timer?.cancel();
+    _timer = null;
+    print('ScheduleService stopped.');
+  }
+
+  /// Cek jadwal yang aktif dan mainkan jika waktu cocok.
+  Future<void> _checkAndPlaySchedules() async {
+    final schedules = await getManualSchedules();
+
+    final now = DateTime.now();
+    final currentTimeStr = DateFormat('HH:mm').format(now);
+    final currentDay = DateFormat(
+      'EEEE',
+    ).format(now); // Nama hari, misal "Monday"
+
+    print('⏰ Checking schedules at $currentTimeStr on $currentDay');
+
+    for (final schedule in schedules) {
+      if (schedule['enabled'] != true) continue;
+
+      final hariStr = schedule['hari'] as String;
+
+      // Cek apakah jadwal berlaku hari ini
+      if (hariStr == 'Setiap Hari' ||
+          hariStr.split(', ').contains(currentDay)) {
+        final jadwalWaktu = schedule['waktu'] as String;
+
+        if (jadwalWaktu == currentTimeStr) {
+          final fileId = schedule['file_id'] ?? '';
+          final durasi = int.tryParse(schedule['durasi'] ?? '0') ?? 0;
+
+          if (fileId.isNotEmpty) {
+            print(
+              '▶️ Memutar musik: ${schedule['title']} selama $durasi menit',
+            );
+            await _playerService.play(fileId, duration: durasi);
+            // Catatan: pastikan MusicPlayerService.play mendukung parameter duration
+          }
+        }
+      }
+    }
   }
 }
