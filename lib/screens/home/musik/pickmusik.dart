@@ -10,7 +10,7 @@ class MusicPickerScreen extends StatefulWidget {
 
 class _MusicPickerScreenState extends State<MusicPickerScreen> {
   final DatabaseReference categoryRef = FirebaseDatabase.instance.ref(
-    'music/categories',
+    'devices/devices_01/music/categories',
   );
   bool isLoading = true;
   Map<String, dynamic> allMusicData =
@@ -25,6 +25,7 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
   Future<void> fetchAllMusic() async {
     final snapshot = await categoryRef.get();
     if (snapshot.exists) {
+      print("Snapshot value: ${snapshot.value}"); // Debug
       final rawData = Map<String, dynamic>.from(snapshot.value as Map);
       Map<String, List<Map<String, dynamic>>> parsedData = {};
 
@@ -53,11 +54,11 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
         isLoading = false;
       });
     } else {
+      print('Snapshot tidak ditemukan');
       setState(() {
         allMusicData = {};
         isLoading = false;
       });
-      print('Data musik tidak ditemukan');
     }
   }
 
