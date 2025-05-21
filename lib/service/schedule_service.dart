@@ -62,6 +62,7 @@ class ScheduleService {
         'isActive': schedule['enabled'] == true,
         'time_start': schedule['waktu'],
         'day': firstDay,
+        'title': schedule['title'] ?? 'Tanpa Konten',
       };
     }).toList();
   }
