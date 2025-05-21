@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/material.dart';
 import 'package:soundnest/service/music_player_service.dart';
+import 'package:intl/intl.dart';
 
 class ScheduleService {
   final DatabaseReference _manualRef = FirebaseDatabase.instance.ref(
@@ -37,14 +37,16 @@ class ScheduleService {
     final schedules = await getSchedules();
 
     for (var schedule in schedules) {
-      if ((schedule['isActive'] ?? false) && _isScheduleValid(schedule, now)) {
+      print(
+        "🔎 ${schedule['title']} | ${schedule['hari']} | ${schedule['waktu']}",
+      );
+      if ((schedule['enabled'] ?? false) && _isScheduleValid(schedule, now)) {
         await _runScheduledAudio(schedule);
         break;
       }
     }
   }
 
-  /// ✅ Perbaikan: Mapping field agar sesuai dengan Firebase
   Future<List<Map<String, dynamic>>> getSchedules() async {
     final snapshot = await _manualRef.get();
     if (!snapshot.exists) return [];
@@ -52,55 +54,49 @@ class ScheduleService {
     final data = (snapshot.value as Map).entries.toList();
     return data.map((entry) {
       final schedule = Map<String, dynamic>.from(entry.value);
-
-      final dayList = schedule['hari'];
-      final firstDay = dayList is Map ? dayList.values.first : null;
+      final hariMap = schedule['hari'] as Map?;
+      final hariList =
+          hariMap != null
+              ? hariMap.values.map((e) => e.toString()).toList()
+              : [];
 
       return {
+        'key': entry.key,
+        'title': schedule['title'] ?? 'No Title',
+        'category': schedule['category'] ?? '-',
+        'hari': hariList,
+        'waktu': schedule['waktu'],
+        'durasi': schedule['durasi']?.toString(),
+        'enabled': schedule['enabled'] == true,
         'fileId': schedule['file_id'],
-        'duration': schedule['durasi']?.toString(),
-        'isActive': schedule['enabled'] == true,
-        'time_start': schedule['waktu'],
-        'day': firstDay,
-        'title': schedule['title'] ?? 'Tanpa Konten',
       };
     }).toList();
   }
 
-  /// ✅ Parsing waktu dari string format 12 jam seperti "9:38 PM"
   bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
-    final timeStart = schedule['time_start'];
-    final day = schedule['day'];
+    final waktu = schedule['waktu'];
+    final hariList = schedule['hari'];
 
-    if (timeStart == null || day == null) return false;
+    if (waktu == null || hariList == null || hariList is! List) return false;
 
-    final scheduleTime = _parseTimeOfDay(timeStart);
-    final nowTime = TimeOfDay(hour: now.hour, minute: now.minute);
+    try {
+      final inputFormat = DateFormat.jm(); // '9:38 PM'
+      final jadwalTime = inputFormat.parse(waktu);
+      final nowTime = DateTime(0, 0, 0, now.hour, now.minute);
 
-    return scheduleTime.hour == nowTime.hour &&
-        scheduleTime.minute == nowTime.minute &&
-        _isToday(day);
+      final today = _getHariNow();
+
+      return hariList.contains(today) &&
+          jadwalTime.hour == nowTime.hour &&
+          jadwalTime.minute == nowTime.minute;
+    } catch (e) {
+      print("❌ Format waktu salah: $waktu");
+      return false;
+    }
   }
 
-  /// ✅ Fungsi bantu untuk parsing jam AM/PM
-  TimeOfDay _parseTimeOfDay(String time) {
-    final regex = RegExp(r'^(\d+):(\d+)\s*(AM|PM)$', caseSensitive: false);
-    final match = regex.firstMatch(time.trim());
-
-    if (match == null) return const TimeOfDay(hour: 0, minute: 0);
-
-    int hour = int.parse(match.group(1)!);
-    int minute = int.parse(match.group(2)!);
-    final period = match.group(3)!.toUpperCase();
-
-    if (period == 'PM' && hour < 12) hour += 12;
-    if (period == 'AM' && hour == 12) hour = 0;
-
-    return TimeOfDay(hour: hour, minute: minute);
-  }
-
-  bool _isToday(String day) {
-    final days = [
+  String _getHariNow() {
+    const hari = [
       "Senin",
       "Selasa",
       "Rabu",
@@ -109,8 +105,7 @@ class ScheduleService {
       "Sabtu",
       "Minggu",
     ];
-    final today = days[DateTime.now().weekday - 1];
-    return day == today;
+    return hari[DateTime.now().weekday - 1];
   }
 
   Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
@@ -119,7 +114,7 @@ class ScheduleService {
     _isAudioPlaying = true;
     await _playerService.play(audioUrl);
 
-    final duration = int.tryParse(schedule['duration'] ?? '1') ?? 1;
+    final duration = int.tryParse(schedule['durasi'] ?? '1') ?? 1;
     await Future.delayed(Duration(minutes: duration));
 
     _playerService.stopMusic();
