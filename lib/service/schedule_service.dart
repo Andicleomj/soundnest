@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
 import 'package:soundnest/service/music_player_service.dart';
-import 'package:http/http.dart' as http;
 
 class ScheduleService {
   final DatabaseReference _manualRef = FirebaseDatabase.instance.ref(
@@ -44,25 +44,58 @@ class ScheduleService {
     }
   }
 
+  /// ✅ Perbaikan: Mapping field agar sesuai dengan Firebase
   Future<List<Map<String, dynamic>>> getSchedules() async {
     final snapshot = await _manualRef.get();
     if (!snapshot.exists) return [];
 
-    final data = (snapshot.value as Map).values.toList();
-    return data.cast<Map<String, dynamic>>();
+    final data = (snapshot.value as Map).entries.toList();
+    return data.map((entry) {
+      final schedule = Map<String, dynamic>.from(entry.value);
+
+      final dayList = schedule['hari'];
+      final firstDay = dayList is Map ? dayList.values.first : null;
+
+      return {
+        'fileId': schedule['file_id'],
+        'duration': schedule['durasi']?.toString(),
+        'isActive': schedule['enabled'] == true,
+        'time_start': schedule['waktu'],
+        'day': firstDay,
+      };
+    }).toList();
   }
 
+  /// ✅ Parsing waktu dari string format 12 jam seperti "9:38 PM"
   bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
     final timeStart = schedule['time_start'];
     final day = schedule['day'];
 
     if (timeStart == null || day == null) return false;
 
-    final parts = timeStart.split(':');
-    final hour = int.tryParse(parts[0]);
-    final minute = int.tryParse(parts[1]);
+    final scheduleTime = _parseTimeOfDay(timeStart);
+    final nowTime = TimeOfDay(hour: now.hour, minute: now.minute);
 
-    return hour == now.hour && minute == now.minute && _isToday(day);
+    return scheduleTime.hour == nowTime.hour &&
+        scheduleTime.minute == nowTime.minute &&
+        _isToday(day);
+  }
+
+  /// ✅ Fungsi bantu untuk parsing jam AM/PM
+  TimeOfDay _parseTimeOfDay(String time) {
+    final regex = RegExp(r'^(\d+):(\d+)\s*(AM|PM)$', caseSensitive: false);
+    final match = regex.firstMatch(time.trim());
+
+    if (match == null) return const TimeOfDay(hour: 0, minute: 0);
+
+    int hour = int.parse(match.group(1)!);
+    int minute = int.parse(match.group(2)!);
+    final period = match.group(3)!.toUpperCase();
+
+    if (period == 'PM' && hour < 12) hour += 12;
+    if (period == 'AM' && hour == 12) hour = 0;
+
+    return TimeOfDay(hour: hour, minute: minute);
   }
 
   bool _isToday(String day) {
@@ -85,7 +118,7 @@ class ScheduleService {
     _isAudioPlaying = true;
     await _playerService.play(audioUrl);
 
-    final duration = int.tryParse(schedule['duration']) ?? 1;
+    final duration = int.tryParse(schedule['duration'] ?? '1') ?? 1;
     await Future.delayed(Duration(minutes: duration));
 
     _playerService.stopMusic();
