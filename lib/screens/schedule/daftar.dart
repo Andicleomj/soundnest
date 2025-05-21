@@ -237,69 +237,72 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                           ],
                         ),
                       ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Switch.adaptive(
-                            value: schedule['enabled'],
-                            onChanged: (bool value) {
-                              _toggleSchedule(schedule['key'], value);
-                            },
-                          ),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: Icon(
-                              isPlaying
-                                  ? Icons.pause_circle
-                                  : Icons.play_circle,
+                      trailing: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Switch.adaptive(
+                              value: schedule['enabled'],
+                              onChanged: (bool value) {
+                                _toggleSchedule(schedule['key'], value);
+                              },
                             ),
-                            color: isPlaying ? Colors.green : null,
-                            onPressed: () {
-                              _togglePlayPause(schedule['key']);
-                            },
-                            tooltip: isPlaying ? 'Pause Musik' : 'Play Musik',
-                          ),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () {
-                              _editSchedule(schedule);
-                            },
-                            tooltip: 'Edit Jadwal',
-                          ),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            color: Colors.red,
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder:
-                                    (context) => AlertDialog(
-                                      title: const Text('Konfirmasi Hapus'),
-                                      content: Text(
-                                        'Yakin ingin menghapus "${schedule['title']}"?',
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: Icon(
+                                isPlaying
+                                    ? Icons.pause_circle
+                                    : Icons.play_circle,
+                              ),
+                              color: isPlaying ? Colors.green : null,
+                              onPressed: () {
+                                _togglePlayPause(schedule['key']);
+                              },
+                              tooltip: isPlaying ? 'Pause Musik' : 'Play Musik',
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.edit),
+                              onPressed: () {
+                                _editSchedule(schedule);
+                              },
+                              tooltip: 'Edit Jadwal',
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.delete),
+                              color: Colors.red,
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder:
+                                      (context) => AlertDialog(
+                                        title: const Text('Konfirmasi Hapus'),
+                                        content: Text(
+                                          'Yakin ingin menghapus "${schedule['title']}"?',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed:
+                                                () => Navigator.pop(context),
+                                            child: const Text('Batal'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                              _deleteSchedule(schedule['key']);
+                                            },
+                                            child: const Text('Hapus'),
+                                          ),
+                                        ],
                                       ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed:
-                                              () => Navigator.pop(context),
-                                          child: const Text('Batal'),
-                                        ),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                            _deleteSchedule(schedule['key']);
-                                          },
-                                          child: const Text('Hapus'),
-                                        ),
-                                      ],
-                                    ),
-                              );
-                            },
-                            tooltip: 'Hapus Jadwal',
-                          ),
-                        ],
+                                );
+                              },
+                              tooltip: 'Hapus Jadwal',
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
