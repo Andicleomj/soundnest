@@ -138,7 +138,13 @@ class ScheduleService {
               '▶️ Memutar musik: ${schedule['title']} selama $durasi menit',
             );
             // Panggil play dengan durasi sebagai positional argument, sesuaikan MusicPlayerService.play
-            await _playerService.play(fileId, duration: durasi);
+            await _playerService.playFromUrl(fileId, duration: durasi);
+          } else {
+            print(
+              '▶️ Memutar musik: ${schedule['title']} selama $durasi menit',
+            );
+            // Jika tidak ada file_id, bisa panggil play dengan URL atau cara lain
+            await _playerService.playFromFileId(fileId, duration: durasi);
           }
         }
       }
