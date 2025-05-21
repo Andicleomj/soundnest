@@ -26,18 +26,42 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
 
     if (manualSnapshot.exists) {
       final data = manualSnapshot.value as Map<dynamic, dynamic>;
+      print("📦 Jadwal dari Firebase: $data");
+
       loadedSchedules =
           data.entries.map((entry) {
-            final schedule = Map<String, dynamic>.from(entry.value);
-            return {
-              'key': entry.key,
-              'title': schedule['title'] ?? 'No Title',
-              'category': schedule['category'] ?? '-',
-              'hari': (schedule['hari'] as Map?)?.values.join(', ') ?? '-',
-              'waktu': schedule['waktu'] ?? '-',
-              'durasi': schedule['durasi'] ?? '-',
-              'enabled': schedule['enabled'] ?? false,
-            };
+            try {
+              final schedule = Map<String, dynamic>.from(entry.value);
+              final hariData = schedule['hari'];
+              final hari =
+                  (hariData is Map)
+                      ? hariData.values.join(', ')
+                      : (hariData is List)
+                      ? hariData.join(', ')
+                      : '-';
+
+              return {
+                'key': entry.key,
+                'title': schedule['title'] ?? 'Tanpa Judul',
+                'category': schedule['category'] ?? '-',
+                'hari': hari,
+                'waktu': schedule['waktu'] ?? 'Tidak ada waktu',
+                'durasi':
+                    (schedule['durasi']?.toString().padLeft(2, '0')) ?? '00',
+                'enabled': schedule['enabled'] ?? false,
+              };
+            } catch (e) {
+              print("⚠️ Error parsing entry ${entry.key}: $e");
+              return {
+                'key': entry.key,
+                'title': 'Format Tidak Valid',
+                'category': '-',
+                'hari': '-',
+                'waktu': '-',
+                'durasi': '00',
+                'enabled': false,
+              };
+            }
           }).toList();
     }
 
@@ -76,7 +100,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text("Hari: ${schedule['hari']}"),
-                          Text("Waktu: ${schedule['waktu']}"),
+                          Text("Mulai: ${schedule['waktu']}"),
                           Text("Durasi: ${schedule['durasi']} menit"),
                         ],
                       ),
