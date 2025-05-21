@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-// TODO: Update the import path below to the correct location of musik_screen.dart or create the file if it does not exist.
-import 'package:soundnest/screens/home/musik/musik_screen.dart';
+import 'package:soundnest/screens/home/musik/adaptasi_screen.dart'; // Ganti sesuai lokasi file
 
 class MusikScheduleForm extends StatefulWidget {
   const MusikScheduleForm({super.key});
@@ -40,7 +39,13 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const MusicScreen(selectMode: true),
+        builder:
+            (_) => const AdaptasiScreen(
+              categoryPath:
+                  'musik/Adaptasi Sekolah', // Ganti sesuai path kategori
+              categoryName: 'Adaptasi Sekolah',
+              fromScheduleTab: true,
+            ),
       ),
     );
 
