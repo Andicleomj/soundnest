@@ -416,14 +416,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         // Setelah pilih musik di layar kategori, langsung lanjut ke form jadwal
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder:
-                (context) => MusikScheduleForm(
-                  title: selectedMusic['title'],
-                  fileId: selectedMusic['file_id'],
-                  category: selectedMusic['category'],
-                ),
-          ),
+          MaterialPageRoute(builder: (context) => const MusikScheduleForm()),
         );
       }
     });
