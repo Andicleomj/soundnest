@@ -293,7 +293,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = HewanScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
+          selectMode: true,
         );
         break;
       case 'Kendaraan':
@@ -301,7 +301,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = KendaraanScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
+          selectMode: true,
         );
         break;
       case 'Aku Suka Olahraga':
@@ -309,7 +309,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = OlahragaScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
+          selectMode: true,
         );
         break;
       case 'Profesi':
@@ -317,7 +317,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = ProfesiScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
+          selectMode: true,
         );
         break;
       case 'Masa Adaptasi Sekolah':
@@ -333,7 +333,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = FamilyScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
+          selectMode: true,
         );
         break;
       case 'Bumi Planet':
@@ -341,7 +341,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = BumiScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
+          selectMode: true,
         );
         break;
       case 'Hari Kemerdekaan':
@@ -349,7 +349,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = HariScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
+          selectMode: true,
         );
         break;
       case 'Ramadhan':
@@ -357,7 +357,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = RamadhanScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
+          selectMode: true,
         );
         break;
       case 'Manasik Haji':
@@ -365,7 +365,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = HajiScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
+          selectMode: true,
         );
         break;
       case 'Budaya Sunda':
@@ -373,7 +373,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = SundaScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
+          selectMode: true,
         );
         break;
       case 'Batik':
@@ -381,7 +381,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = SundaScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
+          selectMode: true,
         );
         break;
       case 'Mother Day':
@@ -389,7 +389,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = MamaScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
+          selectMode: true,
         );
         break;
       case 'Guruku Tersayang':
@@ -397,7 +397,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = GuruScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
+          selectMode: true,
         );
         break;
       default:
@@ -413,10 +413,21 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
       selectedMusic,
     ) {
       if (selectedMusic != null && widget.selectMode) {
-        Navigator.pop(context, selectedMusic);
+        // Setelah pilih musik di layar kategori, langsung lanjut ke form jadwal
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => MusikScheduleForm(
+                  selectedMusic: selectedMusic,
+                  category: category,
+                ),
+          ),
+        );
       }
     });
   }
+  // Fungsi untuk menambahkan kategori baru ke Firebase Realtime Database
 
   void addCategoryToFirebase(String name) {
     final dbRef = FirebaseDatabase.instance.ref(
