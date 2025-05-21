@@ -21,7 +21,10 @@ class Schedule extends StatelessWidget {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),  // Warna hitam di sini
+          icon: const Icon(
+            Icons.arrow_back,
+            color: Colors.black,
+          ), // Warna hitam di sini
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -42,11 +45,7 @@ class Schedule extends StatelessWidget {
               child: Column(
                 children: [
                   // Logo
-                  Image.asset(
-                    'assets/Logo 1.png',
-                    width: 150,
-                    height: 150,
-                  ),
+                  Image.asset('assets/Logo 1.png', width: 150, height: 150),
 
                   const SizedBox(height: 20),
 
@@ -62,10 +61,7 @@ class Schedule extends StatelessWidget {
                   const SizedBox(height: 5),
                   const Text(
                     "Kelola dan pantau jadwal audio Anda dengan mudah",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 10),
@@ -79,12 +75,18 @@ class Schedule extends StatelessWidget {
                       _ActionCard(
                         icon: Icons.add_alarm_rounded,
                         label: "Buat Jadwal",
-                        onTap: () => Navigator.pushNamed(context, AppRoutes.schedulescreen),
+                        onTap:
+                            () => Navigator.pushNamed(
+                              context,
+                              AppRoutes.schedulescreen,
+                            ),
                       ),
                       _ActionCard(
                         icon: Icons.event_note_rounded,
                         label: "Daftar Jadwal",
-                        onTap: () => Navigator.pushNamed(context, AppRoutes.daftarJadwal),
+                        onTap:
+                            () =>
+                                Navigator.pushNamed(context, AppRoutes.daftar),
                       ),
                     ],
                   ),
