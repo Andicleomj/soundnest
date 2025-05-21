@@ -70,9 +70,10 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
         selectedCategory == null ||
         selectedTime == null ||
         _durationController.text.isEmpty ||
+        int.tryParse(_durationController.text) == null ||
         (!repeatEveryday && selectedDays.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lengkapi semua isian terlebih dahulu')),
+        const SnackBar(content: Text('Lengkapi semua isian dengan benar')),
       );
       return;
     }
@@ -106,74 +107,67 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            ElevatedButton(
-              onPressed: _pickMusic,
-              child: Text(
+            ListTile(
+              title: Text(
                 selectedMusic == null
                     ? "Pilih Musik"
                     : "$selectedMusic (${selectedCategory ?? '-'})",
               ),
+              trailing: const Icon(Icons.library_music),
+              onTap: _pickMusic,
             ),
-            const SizedBox(height: 16),
-            if (selectedMusic != null)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ListTile(
-                    title: Text(
-                      selectedTime == null
-                          ? "Pilih Waktu"
-                          : "Waktu: ${selectedTime!.format(context)}",
-                    ),
-                    trailing: const Icon(Icons.access_time),
-                    onTap: _pickTime,
-                  ),
-                  TextField(
-                    controller: _durationController,
-                    decoration: const InputDecoration(
-                      labelText: "Durasi (menit)",
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 12),
-                  SwitchListTile(
-                    title: const Text("Ulangi Setiap Hari"),
-                    value: repeatEveryday,
-                    onChanged: (val) {
-                      setState(() {
-                        repeatEveryday = val;
-                        if (val) selectedDays.clear();
-                      });
-                    },
-                  ),
-                  if (!repeatEveryday)
-                    Wrap(
-                      spacing: 8,
-                      children:
-                          daysOfWeek.map((day) {
-                            final isSelected = selectedDays.contains(day);
-                            return FilterChip(
-                              label: Text(day),
-                              selected: isSelected,
-                              onSelected: (val) {
-                                setState(() {
-                                  if (val) {
-                                    selectedDays.add(day);
-                                  } else {
-                                    selectedDays.remove(day);
-                                  }
-                                });
-                              },
-                            );
-                          }).toList(),
-                    ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _saveSchedule,
-                    child: const Text("Simpan Jadwal"),
-                  ),
-                ],
+            const Divider(),
+            ListTile(
+              title: Text(
+                selectedTime == null
+                    ? "Pilih Waktu"
+                    : "Waktu: ${selectedTime!.format(context)}",
               ),
+              trailing: const Icon(Icons.access_time),
+              onTap: _pickTime,
+            ),
+            TextField(
+              controller: _durationController,
+              decoration: const InputDecoration(labelText: "Durasi (menit)"),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 12),
+            SwitchListTile(
+              title: const Text("Ulangi Setiap Hari"),
+              value: repeatEveryday,
+              onChanged: (val) {
+                setState(() {
+                  repeatEveryday = val;
+                  if (val) selectedDays.clear();
+                });
+              },
+            ),
+            if (!repeatEveryday)
+              Wrap(
+                spacing: 8,
+                children:
+                    daysOfWeek.map((day) {
+                      final isSelected = selectedDays.contains(day);
+                      return FilterChip(
+                        label: Text(day),
+                        selected: isSelected,
+                        onSelected: (val) {
+                          setState(() {
+                            if (val) {
+                              selectedDays.add(day);
+                            } else {
+                              selectedDays.remove(day);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+              ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _saveSchedule,
+              child: const Text("Simpan Jadwal"),
+            ),
           ],
         ),
       ),
