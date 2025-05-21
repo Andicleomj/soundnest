@@ -11,6 +11,7 @@ import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/screens/home/musik/musik_kategori.dart';
 import 'package:soundnest/screens/home/musik/add_musik.dart';
 import 'package:soundnest/screens/schedule/daftar_jadwal.dart';
+import 'package:soundnest/screens/schedule/musik.dart';
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -25,6 +26,7 @@ class AppRoutes {
   static const String musikKategori = '/kategori';
   static const String daftarMusik = '/daftar';
   static const String addMusik = '/add';
+  static const String musik = '/jadwal-musik';
 
   static Map<String, WidgetBuilder> getRoutes() {
     return {
@@ -38,6 +40,7 @@ class AppRoutes {
       schedule: (context) => const Schedule(),
       daftarJadwal: (context) => const DaftarJadwal(),
       musikKategori: (context) => const MusikKategoriScreen(),
+      musik: (context) => const MusikScheduleForm(),
 
       daftarMusik: (context) {
         final args = ModalRoute.of(context)?.settings.arguments as Map?;

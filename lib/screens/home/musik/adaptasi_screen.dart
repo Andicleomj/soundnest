@@ -119,11 +119,15 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
                     title: Text(music['title']),
                     onTap: () {
                       if (widget.selectMode) {
-                        Navigator.pop(context, {
-                          'title': music['title'],
-                          'file_id': music['file_id'],
-                          'category': widget.categoryName,
-                        });
+                        Navigator.pushNamed(
+                          context,
+                          '/jadwal-musik',
+                          arguments: {
+                            'title': music['title'],
+                            'file_id': music['file_id'],
+                            'category': widget.categoryName,
+                          },
+                        );
                       } else {
                         togglePlay(index);
                       }
