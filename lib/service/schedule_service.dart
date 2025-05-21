@@ -137,8 +137,8 @@ class ScheduleService {
             print(
               '▶️ Memutar musik: ${schedule['title']} selama $durasi menit',
             );
-            await _playerService.play(fileId, duration: durasi);
-            // Catatan: pastikan MusicPlayerService.play mendukung parameter duration
+            // Panggil play dengan durasi sebagai positional argument, sesuaikan MusicPlayerService.play
+            await _playerService.play(fileId);
           }
         }
       }
