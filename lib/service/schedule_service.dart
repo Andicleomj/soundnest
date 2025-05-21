@@ -116,9 +116,12 @@ class ScheduleService {
         print('🎵 Jadwal cocok → ${schedule['title']} (durasi: $durasi menit)');
 
         if (fileId.isNotEmpty) {
+          print(
+            '▶️ Memutar musik: ${schedule['title']} dengan file_id $fileId selama $durasi menit',
+          );
           await _playerService.playFromFileId(fileId, duration: durasi);
         } else {
-          print('⚠️ Jadwal "${schedule['title']}" tidak memiliki file_id.');
+          print('⚠️ File ID kosong untuk jadwal: ${schedule['title']}');
         }
       }
     }
