@@ -11,7 +11,7 @@ class AdaptasiScreen extends StatefulWidget {
     super.key,
     required this.categoryPath,
     required this.categoryName,
-    this.selectMode = true,
+    this.selectMode = false,
   });
 
   @override
