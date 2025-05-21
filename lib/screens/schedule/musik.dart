@@ -22,7 +22,6 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
   TimeOfDay? selectedTime;
   bool repeatEveryday = false;
 
-  // Hari-hari dalam seminggu
   final List<String> daysOfWeek = [
     'Senin',
     'Selasa',
@@ -150,7 +149,7 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
               onChanged: (val) {
                 setState(() {
                   repeatEveryday = val;
-                  if (val) selectedDays.clear(); // reset hari kalau setiap hari
+                  if (val) selectedDays.clear();
                 });
               },
             ),
