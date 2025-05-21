@@ -3,11 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:soundnest/screens/home/musik/musik_screen.dart';
 
 class MusikScheduleForm extends StatefulWidget {
-  final String? title;
-  final String? fileId;
-  final String? category;
-
-  const MusikScheduleForm({super.key, this.title, this.fileId, this.category});
+  const MusikScheduleForm({super.key});
 
   @override
   State<MusikScheduleForm> createState() => _MusikScheduleFormState();
@@ -21,6 +17,7 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
   final TextEditingController _durationController = TextEditingController();
   TimeOfDay? selectedTime;
   bool repeatEveryday = false;
+  List<String> selectedDays = [];
 
   final List<String> daysOfWeek = [
     'Senin',
@@ -31,24 +28,14 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
     'Sabtu',
     'Minggu',
   ];
-  List<String> selectedDays = [];
-
-  @override
-  void initState() {
-    super.initState();
-    selectedCategory = widget.category;
-    selectedMusic = widget.title;
-    selectedFileId = widget.fileId;
-  }
 
   @override
   void dispose() {
-    _durationController
-        .dispose(); // dispose controller untuk mencegah memory leak
+    _durationController.dispose();
     super.dispose();
   }
 
-  void _pickMusic() async {
+  Future<void> _pickMusic() async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -56,7 +43,7 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
       ),
     );
 
-    if (result != null && mounted) {
+    if (result != null) {
       setState(() {
         selectedCategory = result['category'];
         selectedMusic = result['title'];
@@ -108,90 +95,85 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
       context,
     ).showSnackBar(const SnackBar(content: Text('Jadwal berhasil disimpan')));
 
-    Navigator.pop(context);
+    Navigator.pop(context); // Kembali ke layar sebelumnya
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Jadwalkan Musik"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      appBar: AppBar(title: const Text("Buat Jadwal Musik")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            TextButton(
+            ElevatedButton(
               onPressed: _pickMusic,
               child: Text(
                 selectedMusic == null
                     ? "Pilih Musik"
                     : "$selectedMusic (${selectedCategory ?? '-'})",
-                style: const TextStyle(fontSize: 16),
               ),
             ),
-            const SizedBox(height: 12),
-            ListTile(
-              title: Text(
-                selectedTime == null
-                    ? "Pilih Waktu"
-                    : "Waktu: ${selectedTime!.format(context)}",
-              ),
-              trailing: const Icon(Icons.access_time),
-              onTap: _pickTime,
-            ),
-            TextField(
-              controller: _durationController,
-              decoration: const InputDecoration(labelText: "Durasi (menit)"),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 12),
-            SwitchListTile(
-              title: const Text("Ulangi Setiap Hari"),
-              value: repeatEveryday,
-              onChanged: (val) {
-                setState(() {
-                  repeatEveryday = val;
-                  if (val) selectedDays.clear();
-                });
-              },
-            ),
-            if (!repeatEveryday)
+            const SizedBox(height: 16),
+            if (selectedMusic != null)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Pilih Hari:"),
-                  Wrap(
-                    spacing: 8,
-                    children:
-                        daysOfWeek.map((day) {
-                          final isSelected = selectedDays.contains(day);
-                          return FilterChip(
-                            label: Text(day),
-                            selected: isSelected,
-                            onSelected: (val) {
-                              setState(() {
-                                if (val) {
-                                  selectedDays.add(day);
-                                } else {
-                                  selectedDays.remove(day);
-                                }
-                              });
-                            },
-                          );
-                        }).toList(),
+                  ListTile(
+                    title: Text(
+                      selectedTime == null
+                          ? "Pilih Waktu"
+                          : "Waktu: ${selectedTime!.format(context)}",
+                    ),
+                    trailing: const Icon(Icons.access_time),
+                    onTap: _pickTime,
+                  ),
+                  TextField(
+                    controller: _durationController,
+                    decoration: const InputDecoration(
+                      labelText: "Durasi (menit)",
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 12),
+                  SwitchListTile(
+                    title: const Text("Ulangi Setiap Hari"),
+                    value: repeatEveryday,
+                    onChanged: (val) {
+                      setState(() {
+                        repeatEveryday = val;
+                        if (val) selectedDays.clear();
+                      });
+                    },
+                  ),
+                  if (!repeatEveryday)
+                    Wrap(
+                      spacing: 8,
+                      children:
+                          daysOfWeek.map((day) {
+                            final isSelected = selectedDays.contains(day);
+                            return FilterChip(
+                              label: Text(day),
+                              selected: isSelected,
+                              onSelected: (val) {
+                                setState(() {
+                                  if (val) {
+                                    selectedDays.add(day);
+                                  } else {
+                                    selectedDays.remove(day);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
+                    ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _saveSchedule,
+                    child: const Text("Simpan Jadwal"),
                   ),
                 ],
               ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _saveSchedule,
-              child: const Text("Simpan Jadwal"),
-            ),
           ],
         ),
       ),
