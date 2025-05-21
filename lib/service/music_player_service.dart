@@ -9,9 +9,12 @@ class MusicPlayerService {
     print("🎶 Playing music from: $proxyUrl");
   }
 
-  Future<void> play(String url) async {
-    await _audioPlayer.play(UrlSource(url));
-    print("🎶 Playing music from: $url");
+  Future<void> play(String fileId, {int? duration}) async {
+    final proxyUrl = "http://localhost:3000/stream/$fileId";
+    await _audioPlayer.play(UrlSource(proxyUrl));
+    print(
+      "🎶 Playing music from: $proxyUrl (durasi: ${duration ?? '-'} menit)",
+    );
   }
 
   Future<void> stopMusic() async {
