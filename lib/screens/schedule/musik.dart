@@ -41,6 +41,13 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
     selectedFileId = widget.fileId;
   }
 
+  @override
+  void dispose() {
+    _durationController
+        .dispose(); // dispose controller untuk mencegah memory leak
+    super.dispose();
+  }
+
   void _pickMusic() async {
     final result = await Navigator.push(
       context,

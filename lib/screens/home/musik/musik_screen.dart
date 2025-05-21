@@ -418,8 +418,11 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder:
-                (_) =>
-                    MusikScheduleForm(musik: selectedMusic, category: category),
+                (context) => MusikScheduleForm(
+                  title: selectedMusic['title'],
+                  fileId: selectedMusic['file_id'],
+                  category: selectedMusic['category'],
+                ),
           ),
         );
       }
