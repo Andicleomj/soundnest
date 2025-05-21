@@ -18,7 +18,7 @@ import 'package:soundnest/screens/schedule/musik.dart';
 class MusicScreen extends StatelessWidget {
   final bool selectMode;
 
-  const MusicScreen({super.key, this.selectMode = false});
+  const MusicScreen({super.key, this.selectMode = true});
 
   @override
   Widget build(BuildContext context) {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:soundnest/screens/schedule/musik.dart';
 
 class AdaptasiScreen extends StatefulWidget {
   final String categoryPath; // Path lengkap di Firebase Realtime Database
@@ -12,7 +11,7 @@ class AdaptasiScreen extends StatefulWidget {
     super.key,
     required this.categoryPath,
     required this.categoryName,
-    this.selectMode = false,
+    this.selectMode = true,
   });
 
   @override
