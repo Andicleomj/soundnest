@@ -13,7 +13,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
     'devices/devices_01/schedule/manual',
   );
   List<Map<String, dynamic>> schedules = [];
-
   bool isLoading = true;
 
   @override
@@ -39,14 +38,17 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
             try {
               final schedule = Map<String, dynamic>.from(entry.value);
               final hariData = schedule['hari'];
-              final hari =
-                  (hariData is Map)
-                      ? hariData.values.join(', ')
-                      : (hariData is List)
-                      ? hariData.join(', ')
-                      : (hariData != null)
-                      ? hariData.toString()
-                      : '-';
+              String hari;
+
+              if (hariData is String) {
+                hari = hariData;
+              } else if (hariData is List) {
+                hari = hariData.join(', ');
+              } else if (hariData is Map) {
+                hari = hariData.values.join(', ');
+              } else {
+                hari = '-';
+              }
 
               return {
                 'key': entry.key,
@@ -54,8 +56,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                 'category': schedule['category'] ?? '-',
                 'hari': hari,
                 'waktu': schedule['waktu'] ?? 'Tidak ada waktu',
-                'durasi':
-                    (schedule['durasi']?.toString().padLeft(2, '0')) ?? '00',
+                'durasi': schedule['durasi']?.toString() ?? '0',
                 'enabled': schedule['enabled'] ?? false,
               };
             } catch (e) {
@@ -66,11 +67,13 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                 'category': '-',
                 'hari': '-',
                 'waktu': '-',
-                'durasi': '00',
+                'durasi': '0',
                 'enabled': false,
               };
             }
           }).toList();
+
+      print("✅ Loaded ${loadedSchedules.length} jadwal.");
     } else {
       print("❌ Data jadwal tidak ditemukan di Firebase");
     }
@@ -103,9 +106,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                 itemCount: schedules.length,
                 itemBuilder: (context, index) {
                   final schedule = schedules[index];
-                  print(
-                    "Rendering schedule: ${schedule['title']}",
-                  ); // debug print
+                  print("🎵 Rendering schedule: ${schedule['title']}");
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
                     child: ListTile(
