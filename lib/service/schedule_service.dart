@@ -9,21 +9,17 @@ class ScheduleService {
   );
 
   final MusicPlayerService _playerService = MusicPlayerService();
-
   Timer? _timer;
 
-  /// Ambil daftar jadwal manual dari Firebase Realtime Database.
+  /// Ambil daftar jadwal manual dari Firebase
   Future<List<Map<String, dynamic>>> getManualSchedules() async {
     final snapshot = await _manualRef.get();
-
-    if (!snapshot.exists) {
-      return [];
-    }
+    if (!snapshot.exists) return [];
 
     final value = snapshot.value;
     Map<dynamic, dynamic> dataMap;
 
-    if (value is Map<dynamic, dynamic>) {
+    if (value is Map) {
       dataMap = value;
     } else if (value is List) {
       dataMap = {
@@ -38,13 +34,12 @@ class ScheduleService {
 
     for (var entry in dataMap.entries) {
       try {
-        final scheduleRaw = entry.value;
-        if (scheduleRaw is! Map) continue;
+        final raw = entry.value;
+        if (raw is! Map) continue;
 
-        final schedule = Map<String, dynamic>.from(scheduleRaw);
-
+        final data = Map<String, dynamic>.from(raw);
+        final hariData = data['hari'];
         String hari;
-        final hariData = schedule['hari'];
 
         if (hariData is String) {
           hari = hariData;
@@ -58,94 +53,72 @@ class ScheduleService {
 
         schedules.add({
           'key': entry.key,
-          'title': schedule['title'] ?? 'Tanpa Judul',
-          'category': schedule['category'] ?? '-',
+          'title': data['title'] ?? 'Tanpa Judul',
+          'category': data['category'] ?? '-',
           'hari': hari,
-          'waktu': schedule['waktu'] ?? 'Tidak ada waktu',
-          'durasi': schedule['durasi']?.toString() ?? '0',
-          'enabled': schedule['enabled'] ?? false,
-          'file_id': schedule['file_id'] ?? '', // jika ada file_id untuk play
+          'waktu': data['waktu'] ?? '-',
+          'durasi': data['durasi']?.toString() ?? '0',
+          'enabled': data['enabled'] ?? false,
+          'file_id': data['file_id'] ?? '',
         });
       } catch (e) {
-        schedules.add({
-          'key': entry.key,
-          'title': 'Format Tidak Valid',
-          'category': '-',
-          'hari': '-',
-          'waktu': '-',
-          'durasi': '0',
-          'enabled': false,
-          'file_id': '',
-        });
+        print('❌ Error parsing schedule: $e');
       }
     }
 
     return schedules;
   }
 
-  /// Update status enabled pada jadwal manual.
+  /// Update status enabled
   Future<void> toggleScheduleEnabled(String key, bool enabled) async {
     await _manualRef.child(key).update({'enabled': enabled});
   }
 
-  /// Mulai service pengecekan jadwal yang dijalankan secara periodik (setiap menit).
+  /// Start checker tiap menit
   void start() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(minutes: 1), (_) async {
       await _checkAndPlaySchedules();
     });
-
-    print('ScheduleService started...');
-    // Bisa langsung cek juga saat start
-    _checkAndPlaySchedules();
+    print('✅ ScheduleService started.');
+    _checkAndPlaySchedules(); // Jalankan langsung saat start
   }
 
-  /// Hentikan service pengecekan jadwal.
+  /// Stop checker
   void stop() {
     _timer?.cancel();
     _timer = null;
-    print('ScheduleService stopped.');
+    print('🛑 ScheduleService stopped.');
   }
 
-  /// Cek jadwal yang aktif dan mainkan jika waktu cocok.
+  /// Cek dan mainkan jadwal sesuai waktu & hari
   Future<void> _checkAndPlaySchedules() async {
     final schedules = await getManualSchedules();
-
     final now = DateTime.now();
-    final currentTimeStr = DateFormat('HH:mm').format(now);
-    final currentDay = DateFormat(
-      'EEEE',
-    ).format(now); // Nama hari, misal "Monday"
+    final currentTime = DateFormat('HH:mm').format(now);
+    final currentDay = DateFormat('EEEE').format(now); // "Monday", dll
 
-    print('⏰ Checking schedules at $currentTimeStr on $currentDay');
+    print('⏰ Checking schedules at $currentTime on $currentDay');
 
     for (final schedule in schedules) {
       if (schedule['enabled'] != true) continue;
 
-      final hariStr = schedule['hari'] as String;
+      final hariStr = schedule['hari'] ?? '-';
+      final jadwalWaktu = schedule['waktu'] ?? '-';
 
-      // Cek apakah jadwal berlaku hari ini
-      if (hariStr == 'Setiap Hari' ||
-          hariStr.split(', ').contains(currentDay)) {
-        final jadwalWaktu = schedule['waktu'] as String;
+      final isToday =
+          hariStr == 'Setiap Hari' || hariStr.split(', ').contains(currentDay);
 
-        if (jadwalWaktu == currentTimeStr) {
-          final fileId = schedule['file_id'] ?? '';
-          final durasi = int.tryParse(schedule['durasi'] ?? '0') ?? 0;
+      if (isToday && jadwalWaktu == currentTime) {
+        final fileId = schedule['file_id'] ?? '';
+        final durasi = int.tryParse(schedule['durasi'] ?? '0') ?? 0;
 
-          if (fileId.isNotEmpty) {
-            print(
-              '▶️ Memutar musik: ${schedule['title']} selama $durasi menit',
-            );
-            // Panggil play dengan durasi sebagai positional argument, sesuaikan MusicPlayerService.play
-            await _playerService.playFromUrl(fileId, duration: durasi);
-          } else {
-            print(
-              '▶️ Memutar musik: ${schedule['title']} selama $durasi menit',
-            );
-            // Jika tidak ada file_id, bisa panggil play dengan URL atau cara lain
-            await _playerService.playFromFileId(fileId, duration: durasi);
-          }
+        print('🎵 Jadwal cocok → ${schedule['title']} (durasi: $durasi menit)');
+
+        if (fileId.isNotEmpty) {
+          await _playerService.playFromFileId(fileId, duration: durasi);
+        } else {
+          print('⚠️ Jadwal "${schedule['title']}" tidak memiliki file_id.');
         }
       }
     }
