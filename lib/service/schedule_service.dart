@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:soundnest/service/music_player_service.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 class ScheduleService {
   final DatabaseReference _manualRef = FirebaseDatabase.instance.ref(
@@ -10,6 +11,17 @@ class ScheduleService {
 
   final MusicPlayerService _playerService = MusicPlayerService();
   Timer? _timer;
+
+  bool _initialized = false;
+
+  /// Inisialisasi locale date formatting
+  Future<void> initialize() async {
+    if (!_initialized) {
+      await initializeDateFormatting('id_ID', null);
+      _initialized = true;
+      print('✅ Locale id_ID initialized.');
+    }
+  }
 
   /// Ambil daftar jadwal manual dari Firebase
   Future<List<Map<String, dynamic>>> getManualSchedules() async {
@@ -69,36 +81,33 @@ class ScheduleService {
     return schedules;
   }
 
-  /// Update status enabled
   Future<void> toggleScheduleEnabled(String key, bool enabled) async {
     await _manualRef.child(key).update({'enabled': enabled});
   }
 
-  /// Start checker tiap menit
-  void start() {
+  void start() async {
+    if (!_initialized) {
+      await initialize();
+    }
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(minutes: 1), (_) async {
       await _checkAndPlaySchedules();
     });
     print('✅ ScheduleService started.');
-    _checkAndPlaySchedules(); // Jalankan langsung saat start
+    _checkAndPlaySchedules(); // langsung jalan saat start
   }
 
-  /// Stop checker
   void stop() {
     _timer?.cancel();
     _timer = null;
     print('🛑 ScheduleService stopped.');
   }
 
-  /// Cek dan mainkan jadwal sesuai waktu & hari
   Future<void> _checkAndPlaySchedules() async {
     final schedules = await getManualSchedules();
     final now = DateTime.now();
 
-    // Nama hari sekarang, contoh: "Senin", "Selasa", ...
     final currentDay = DateFormat('EEEE', 'id_ID').format(now);
-    // Format waktu dalam 12 jam (contoh: 10:17 PM)
     final currentTime12h = DateFormat('hh:mm a').format(now);
 
     for (final schedule in schedules) {
