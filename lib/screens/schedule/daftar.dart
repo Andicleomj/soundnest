@@ -30,13 +30,31 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
     List<Map<String, dynamic>> loadedSchedules = [];
 
     if (manualSnapshot.exists) {
-      final data = manualSnapshot.value as Map<dynamic, dynamic>;
-      print("📦 Jadwal dari Firebase: $data");
+      final data = manualSnapshot.value;
+
+      // Amanin tipe data agar gak error runtime
+      Map<dynamic, dynamic> dataMap;
+      if (data is Map<dynamic, dynamic>) {
+        dataMap = data;
+      } else if (data is List) {
+        dataMap = {
+          for (int i = 0; i < data.length; i++)
+            if (data[i] != null) i: data[i],
+        };
+      } else {
+        dataMap = {};
+      }
+
+      print("📦 Jadwal dari Firebase: $dataMap");
 
       loadedSchedules =
-          data.entries.map((entry) {
+          dataMap.entries.map((entry) {
             try {
-              final schedule = Map<String, dynamic>.from(entry.value);
+              final scheduleRaw = entry.value;
+              if (scheduleRaw is! Map) throw Exception("Format jadwal salah");
+
+              final schedule = Map<String, dynamic>.from(scheduleRaw);
+
               final hariData = schedule['hari'];
               String hari;
 
@@ -84,9 +102,16 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
     });
   }
 
-  void _toggleSchedule(String key, bool isActive) async {
-    await _manualRef.child(key).update({"enabled": isActive});
-    _loadSchedules();
+  Future<void> _toggleSchedule(String key, bool isActive) async {
+    try {
+      await _manualRef.child(key).update({"enabled": isActive});
+      _loadSchedules();
+    } catch (e) {
+      print("⚠️ Gagal update jadwal $key: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Gagal mengubah status jadwal")));
+    }
   }
 
   @override
@@ -106,7 +131,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                 itemCount: schedules.length,
                 itemBuilder: (context, index) {
                   final schedule = schedules[index];
-                  print("🎵 Rendering schedule: ${schedule['title']}");
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
                     child: ListTile(

@@ -7,163 +7,86 @@ class ScheduleService {
   final DatabaseReference _manualRef = FirebaseDatabase.instance.ref(
     'devices/devices_01/schedule/manual',
   );
-  final DatabaseReference _autoRef = FirebaseDatabase.instance.ref(
-    'devices/devices_01/schedule/otomatis',
-  );
 
-  final MusicPlayerService _playerService = MusicPlayerService();
-  Timer? _timer;
-  bool _isAudioPlaying = false;
-
-  bool get isAudioPlaying => _isAudioPlaying;
-
-  void start() {
-    _timer?.cancel();
-    _timer = Timer.periodic(
-      const Duration(seconds: 60),
-      (_) => checkAndRunSchedule(),
-    );
-
-    _manualRef.onValue.listen((_) => checkAndRunSchedule());
-    _autoRef.onValue.listen((_) => checkAndRunSchedule());
-    print("✅ ScheduleService started.");
-  }
-
-  Future<void> checkAndRunSchedule() async {
-    if (_isAudioPlaying) return;
-
-    print("⏰ Checking schedules...");
-    final now = DateTime.now();
-    final schedules = await getSchedules();
-
-    for (var schedule in schedules) {
-      print(
-        "🔎 ${schedule['title']} | ${schedule['hari']} | ${schedule['waktu']}",
-      );
-      if ((schedule['enabled'] ?? false) && _isScheduleValid(schedule, now)) {
-        await _runScheduledAudio(schedule);
-        break;
-      }
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> getSchedules() async {
+  /// Ambil daftar jadwal manual dari Firebase Realtime Database.
+  Future<List<Map<String, dynamic>>> getManualSchedules() async {
     final snapshot = await _manualRef.get();
-    if (!snapshot.exists) return [];
 
-    final List<Map<String, dynamic>> schedules = [];
+    if (!snapshot.exists) {
+      // Jika data tidak ada, kembalikan list kosong
+      return [];
+    }
+
     final value = snapshot.value;
 
-    if (value is Map) {
-      value.forEach((key, raw) {
-        if (raw is! Map) return;
-        final schedule = Map<String, dynamic>.from(raw);
+    Map<dynamic, dynamic> dataMap;
 
-        final hariData = schedule['hari'];
-        final hariList =
-            (hariData is Map)
-                ? hariData.values.map((e) => e.toString()).toList()
-                : (hariData is List)
-                ? hariData.map((e) => e.toString()).toList()
-                : (hariData is String)
-                ? [hariData]
-                : [];
-
-        schedules.add({
-          'key': key,
-          'title': schedule['title'] ?? 'No Title',
-          'category': schedule['category'] ?? '-',
-          'hari': hariList,
-          'waktu': schedule['waktu'],
-          'durasi': schedule['durasi']?.toString(),
-          'enabled': schedule['enabled'] == true,
-          'fileId': schedule['file_id'],
-        });
-      });
+    // Cek tipe data dari Firebase
+    if (value is Map<dynamic, dynamic>) {
+      dataMap = value;
     } else if (value is List) {
-      for (int i = 0; i < value.length; i++) {
-        final raw = value[i];
-        if (raw is! Map) continue;
-        final schedule = Map<String, dynamic>.from(raw);
+      // Jika data berupa List, konversi jadi Map dengan index sebagai key
+      dataMap = {
+        for (int i = 0; i < value.length; i++)
+          if (value[i] != null) i: value[i],
+      };
+    } else {
+      // Jika tipe data lain (null atau bukan Map/List), kembalikan kosong
+      return [];
+    }
 
+    List<Map<String, dynamic>> schedules = [];
+
+    // Proses setiap entry dalam dataMap
+    for (var entry in dataMap.entries) {
+      try {
+        final scheduleRaw = entry.value;
+        if (scheduleRaw is! Map) continue; // Skip kalau bukan Map
+
+        final schedule = Map<String, dynamic>.from(scheduleRaw);
+
+        // Parsing field hari yang bisa berupa String, List, atau Map
+        String hari;
         final hariData = schedule['hari'];
-        final hariList =
-            (hariData is Map)
-                ? hariData.values.map((e) => e.toString()).toList()
-                : (hariData is List)
-                ? hariData.map((e) => e.toString()).toList()
-                : (hariData is String)
-                ? [hariData]
-                : [];
+
+        if (hariData is String) {
+          hari = hariData;
+        } else if (hariData is List) {
+          hari = hariData.join(', ');
+        } else if (hariData is Map) {
+          hari = hariData.values.join(', ');
+        } else {
+          hari = '-';
+        }
 
         schedules.add({
-          'key': i.toString(),
-          'title': schedule['title'] ?? 'No Title',
+          'key': entry.key,
+          'title': schedule['title'] ?? 'Tanpa Judul',
           'category': schedule['category'] ?? '-',
-          'hari': hariList,
-          'waktu': schedule['waktu'],
-          'durasi': schedule['durasi']?.toString(),
-          'enabled': schedule['enabled'] == true,
-          'fileId': schedule['file_id'],
+          'hari': hari,
+          'waktu': schedule['waktu'] ?? 'Tidak ada waktu',
+          'durasi': schedule['durasi']?.toString() ?? '0',
+          'enabled': schedule['enabled'] ?? false,
+        });
+      } catch (e) {
+        // Kalau parsing error, masukkan jadwal default supaya tidak error
+        schedules.add({
+          'key': entry.key,
+          'title': 'Format Tidak Valid',
+          'category': '-',
+          'hari': '-',
+          'waktu': '-',
+          'durasi': '0',
+          'enabled': false,
         });
       }
-    } else {
-      print("⚠️ Format data tidak dikenali: ${value.runtimeType}");
     }
 
     return schedules;
   }
 
-  Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
-    final fileId = schedule['fileId'];
-    final durasiStr = schedule['durasi'];
-    final duration = durasiStr != null ? int.tryParse(durasiStr) : null;
-
-    if (fileId == null) {
-      print("⚠️ Jadwal tidak memiliki fileId.");
-      return;
-    }
-
-    _isAudioPlaying = true;
-    try {
-      await _playerService.play(fileId, duration: duration);
-      print("▶️ Memutar audio untuk jadwal: ${schedule['title']}");
-    } catch (e) {
-      print("❌ Gagal memutar audio: $e");
-    } finally {
-      _isAudioPlaying = false;
-    }
-  }
-
-  bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
-    final hariList = schedule['hari'] as List;
-    final waktu = schedule['waktu'] as String?;
-    if (hariList.isEmpty || waktu == null || waktu.isEmpty) return false;
-
-    final today = DateFormat('EEEE', 'id_ID').format(now);
-    if (!hariList.contains(today)) return false;
-
-    try {
-      final parts = waktu.split(":");
-      final jam = int.parse(parts[0]);
-      final menit = int.parse(parts[1]);
-
-      final jadwalTime = DateTime(now.year, now.month, now.day, jam, menit);
-      return now.hour == jadwalTime.hour && now.minute == jadwalTime.minute;
-    } catch (e) {
-      print("❌ Format waktu salah: $waktu");
-      return false;
-    }
-  }
-
-  void stop() {
-    _timer?.cancel();
-    _timer = null;
-    print("⏹️ ScheduleService stopped.");
-  }
-
-  void dispose() {
-    stop();
-    _playerService.dispose();
+  /// Update status enabled pada jadwal manual.
+  Future<void> toggleScheduleEnabled(String key, bool enabled) async {
+    await _manualRef.child(key).update({'enabled': enabled});
   }
 }
