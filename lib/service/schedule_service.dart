@@ -51,79 +51,119 @@ class ScheduleService {
     final snapshot = await _manualRef.get();
     if (!snapshot.exists) return [];
 
-    final data = (snapshot.value as Map).entries.toList();
-    return data.map((entry) {
-      final schedule = Map<String, dynamic>.from(entry.value);
-      final hariMap = schedule['hari'] as Map?;
-      final hariList =
-          hariMap != null
-              ? hariMap.values.map((e) => e.toString()).toList()
-              : [];
+    final List<Map<String, dynamic>> schedules = [];
+    final value = snapshot.value;
 
-      return {
-        'key': entry.key,
-        'title': schedule['title'] ?? 'No Title',
-        'category': schedule['category'] ?? '-',
-        'hari': hariList,
-        'waktu': schedule['waktu'],
-        'durasi': schedule['durasi']?.toString(),
-        'enabled': schedule['enabled'] == true,
-        'fileId': schedule['file_id'],
-      };
-    }).toList();
+    if (value is Map) {
+      value.forEach((key, raw) {
+        if (raw is! Map) return;
+        final schedule = Map<String, dynamic>.from(raw);
+
+        final hariData = schedule['hari'];
+        final hariList =
+            (hariData is Map)
+                ? hariData.values.map((e) => e.toString()).toList()
+                : (hariData is List)
+                ? hariData.map((e) => e.toString()).toList()
+                : (hariData is String)
+                ? [hariData]
+                : [];
+
+        schedules.add({
+          'key': key,
+          'title': schedule['title'] ?? 'No Title',
+          'category': schedule['category'] ?? '-',
+          'hari': hariList,
+          'waktu': schedule['waktu'],
+          'durasi': schedule['durasi']?.toString(),
+          'enabled': schedule['enabled'] == true,
+          'fileId': schedule['file_id'],
+        });
+      });
+    } else if (value is List) {
+      for (int i = 0; i < value.length; i++) {
+        final raw = value[i];
+        if (raw is! Map) continue;
+        final schedule = Map<String, dynamic>.from(raw);
+
+        final hariData = schedule['hari'];
+        final hariList =
+            (hariData is Map)
+                ? hariData.values.map((e) => e.toString()).toList()
+                : (hariData is List)
+                ? hariData.map((e) => e.toString()).toList()
+                : (hariData is String)
+                ? [hariData]
+                : [];
+
+        schedules.add({
+          'key': i.toString(),
+          'title': schedule['title'] ?? 'No Title',
+          'category': schedule['category'] ?? '-',
+          'hari': hariList,
+          'waktu': schedule['waktu'],
+          'durasi': schedule['durasi']?.toString(),
+          'enabled': schedule['enabled'] == true,
+          'fileId': schedule['file_id'],
+        });
+      }
+    } else {
+      print("⚠️ Format data tidak dikenali: ${value.runtimeType}");
+    }
+
+    return schedules;
+  }
+
+  Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
+    final fileId = schedule['fileId'];
+    final durasiStr = schedule['durasi'];
+    final duration = durasiStr != null ? int.tryParse(durasiStr) : null;
+
+    if (fileId == null) {
+      print("⚠️ Jadwal tidak memiliki fileId.");
+      return;
+    }
+
+    _isAudioPlaying = true;
+    try {
+      await _playerService.play(fileId, duration: duration);
+      print("▶️ Memutar audio untuk jadwal: ${schedule['title']}");
+    } catch (e) {
+      print("❌ Gagal memutar audio: $e");
+    } finally {
+      _isAudioPlaying = false;
+    }
   }
 
   bool _isScheduleValid(Map<String, dynamic> schedule, DateTime now) {
-    final waktu = schedule['waktu'];
-    final hariList = schedule['hari'];
+    final hariList = schedule['hari'] as List;
+    final waktu = schedule['waktu'] as String?;
+    if (hariList.isEmpty || waktu == null || waktu.isEmpty) return false;
 
-    if (waktu == null || hariList == null || hariList is! List) return false;
+    final today = DateFormat('EEEE', 'id_ID').format(now);
+    if (!hariList.contains(today)) return false;
 
     try {
-      final inputFormat = DateFormat.jm(); // '9:38 PM'
-      final jadwalTime = inputFormat.parse(waktu);
-      final nowTime = DateTime(0, 0, 0, now.hour, now.minute);
+      final parts = waktu.split(":");
+      final jam = int.parse(parts[0]);
+      final menit = int.parse(parts[1]);
 
-      final today = _getHariNow();
-
-      return hariList.contains(today) &&
-          jadwalTime.hour == nowTime.hour &&
-          jadwalTime.minute == nowTime.minute;
+      final jadwalTime = DateTime(now.year, now.month, now.day, jam, menit);
+      return now.hour == jadwalTime.hour && now.minute == jadwalTime.minute;
     } catch (e) {
       print("❌ Format waktu salah: $waktu");
       return false;
     }
   }
 
-  String _getHariNow() {
-    const hari = [
-      "Senin",
-      "Selasa",
-      "Rabu",
-      "Kamis",
-      "Jumat",
-      "Sabtu",
-      "Minggu",
-    ];
-    return hari[DateTime.now().weekday - 1];
-  }
-
-  Future<void> _runScheduledAudio(Map<String, dynamic> schedule) async {
-    final audioUrl = "http://localhost:3000/drive/${schedule['fileId']}";
-
-    _isAudioPlaying = true;
-    await _playerService.play(audioUrl);
-
-    final duration = int.tryParse(schedule['durasi'] ?? '1') ?? 1;
-    await Future.delayed(Duration(minutes: duration));
-
-    _playerService.stopMusic();
-    _isAudioPlaying = false;
+  void stop() {
+    _timer?.cancel();
+    _timer = null;
+    print("⏹️ ScheduleService stopped.");
   }
 
   void dispose() {
-    _timer?.cancel();
-    _playerService.stopMusic();
-    print("🛑 ScheduleService stopped.");
+    stop();
+    _playerService.dispose();
   }
 }

@@ -10,17 +10,25 @@ import 'package:soundnest/utils/app_routes.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  print("🔧 Menginisialisasi Firebase...");
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  print("✅ Firebase berhasil diinisialisasi.");
+  try {
+    print("🔧 Menginisialisasi Firebase...");
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print("✅ Firebase berhasil diinisialisasi.");
 
-  // Inisialisasi dan mulai jalankan schedule service
-  final scheduleService = ScheduleService();
-  scheduleService.start();
-  scheduleService.checkAndRunSchedule();
-  print("✅ ScheduleService berhasil dijalankan.");
+    // Inisialisasi dan jalankan ScheduleService
+    final scheduleService = ScheduleService();
+    scheduleService.start();
+    print("✅ ScheduleService berhasil dijalankan.");
 
-  runApp(MyApp(scheduleService: scheduleService));
+    runApp(
+      MyApp(scheduleService: scheduleService),
+    ); // <- INI HARUS DI DALAM TRY
+  } catch (e, stack) {
+    print("❌ Gagal menginisialisasi Firebase: $e");
+    print(stack);
+  }
 }
 
 class MyApp extends StatelessWidget {
