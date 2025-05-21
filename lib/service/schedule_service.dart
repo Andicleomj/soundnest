@@ -95,21 +95,22 @@ class ScheduleService {
   Future<void> _checkAndPlaySchedules() async {
     final schedules = await getManualSchedules();
     final now = DateTime.now();
-    final currentTime = DateFormat('HH:mm').format(now);
-    final currentDay = DateFormat('EEEE').format(now); // "Monday", dll
 
-    print('⏰ Checking schedules at $currentTime on $currentDay');
+    // Nama hari sekarang, contoh: "Senin", "Selasa", ...
+    final currentDay = DateFormat('EEEE', 'id_ID').format(now);
+    // Format waktu dalam 12 jam (contoh: 10:17 PM)
+    final currentTime12h = DateFormat('hh:mm a').format(now);
 
     for (final schedule in schedules) {
       if (schedule['enabled'] != true) continue;
 
-      final hariStr = schedule['hari'] ?? '-';
-      final jadwalWaktu = schedule['waktu'] ?? '-';
+      final hariStr = schedule['hari'] as String;
+      final jadwalWaktu = schedule['waktu'] as String;
 
       final isToday =
           hariStr == 'Setiap Hari' || hariStr.split(', ').contains(currentDay);
 
-      if (isToday && jadwalWaktu == currentTime) {
+      if (isToday && jadwalWaktu == currentTime12h) {
         final fileId = schedule['file_id'] ?? '';
         final durasi = int.tryParse(schedule['durasi'] ?? '0') ?? 0;
 
