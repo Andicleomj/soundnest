@@ -33,7 +33,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
               'key': entry.key,
               'title': schedule['title'] ?? 'No Title',
               'category': schedule['category'] ?? '-',
-              'hari': schedule['hari'] ?? '-',
+              'hari': (schedule['hari'] as Map?)?.values.join(', ') ?? '-',
               'waktu': schedule['waktu'] ?? '-',
               'durasi': schedule['durasi'] ?? '-',
               'enabled': schedule['enabled'] ?? false,
