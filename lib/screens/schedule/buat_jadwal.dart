@@ -8,9 +8,7 @@ class ScheduleScreen extends StatelessWidget {
   void _navigateToMusik(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => MusikScheduleForm(selectedMusic: null),
-      ),
+      MaterialPageRoute(builder: (context) => MusikScheduleForm(musik: null)),
     );
   }
 
