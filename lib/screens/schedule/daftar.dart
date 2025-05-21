@@ -14,6 +14,8 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   );
   List<Map<String, dynamic>> schedules = [];
 
+  bool isLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -21,6 +23,10 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   }
 
   Future<void> _loadSchedules() async {
+    setState(() {
+      isLoading = true;
+    });
+
     final manualSnapshot = await _manualRef.get();
     List<Map<String, dynamic>> loadedSchedules = [];
 
@@ -38,6 +44,8 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                       ? hariData.values.join(', ')
                       : (hariData is List)
                       ? hariData.join(', ')
+                      : (hariData != null)
+                      ? hariData.toString()
                       : '-';
 
               return {
@@ -63,10 +71,13 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
               };
             }
           }).toList();
+    } else {
+      print("❌ Data jadwal tidak ditemukan di Firebase");
     }
 
     setState(() {
       schedules = loadedSchedules;
+      isLoading = false;
     });
   }
 
@@ -83,13 +94,18 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
         centerTitle: true,
       ),
       body:
-          schedules.isEmpty
+          isLoading
               ? const Center(child: CircularProgressIndicator())
+              : schedules.isEmpty
+              ? const Center(child: Text("Belum ada jadwal"))
               : ListView.builder(
                 padding: const EdgeInsets.all(16.0),
                 itemCount: schedules.length,
                 itemBuilder: (context, index) {
                   final schedule = schedules[index];
+                  print(
+                    "Rendering schedule: ${schedule['title']}",
+                  ); // debug print
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
                     child: ListTile(

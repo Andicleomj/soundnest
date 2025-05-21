@@ -3,30 +3,22 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:soundnest/firebase_options.dart';
 import 'package:soundnest/screens/auth/auth_check.dart';
 import 'package:soundnest/service/schedule_service.dart';
-import 'package:soundnest/screens/home/murottal/jadwal_surah_service.dart';
 import 'package:soundnest/screens/home/musik/musik_screen.dart';
 import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/utils/app_routes.dart';
 
-late final JadwalSurahService jadwalSurahService;
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  print("🔧 Menginisialisasi Firebase...");
 
+  print("🔧 Menginisialisasi Firebase...");
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   print("✅ Firebase berhasil diinisialisasi.");
 
-  // Jadwal musik
+  // Inisialisasi dan mulai jalankan schedule service
   final scheduleService = ScheduleService();
   scheduleService.start();
   scheduleService.checkAndRunSchedule();
   print("✅ ScheduleService berhasil dijalankan.");
-
-  // Jadwal surah otomatis
-  jadwalSurahService = JadwalSurahService();
-  jadwalSurahService.startChecking();
-  print("✅ JadwalSurahService berhasil dijalankan.");
 
   runApp(MyApp(scheduleService: scheduleService));
 }
@@ -34,7 +26,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   final ScheduleService scheduleService;
 
-  const MyApp({Key? key, required this.scheduleService}) : super(key: key);
+  const MyApp({super.key, required this.scheduleService});
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +41,10 @@ class MyApp extends StatelessWidget {
         '/music/list':
             (context) => DaftarMusikScreen(categoryId: '', categoryName: ''),
       },
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
     );
   }
 }
