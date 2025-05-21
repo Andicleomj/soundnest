@@ -18,7 +18,7 @@ import 'package:soundnest/screens/schedule/musik.dart';
 class MusicScreen extends StatelessWidget {
   final bool selectMode;
 
-  const MusicScreen({super.key, this.selectMode = false});
+  const MusicScreen({Key? key, this.selectMode = false}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -293,7 +293,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = HewanScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: true,
+          selectMode: selectMode,
         );
         break;
       case 'Kendaraan':
@@ -301,7 +301,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = KendaraanScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: true,
+          selectMode: selectMode,
         );
         break;
       case 'Aku Suka Olahraga':
@@ -309,7 +309,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = OlahragaScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: true,
+          selectMode: selectMode,
         );
         break;
       case 'Profesi':
@@ -317,7 +317,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = ProfesiScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: true,
+          selectMode: selectMode,
         );
         break;
       case 'Masa Adaptasi Sekolah':
@@ -325,7 +325,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = AdaptasiScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: true,
+          selectMode: selectMode,
         );
         break;
       case 'My Family':
@@ -333,7 +333,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = FamilyScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: true,
+          selectMode: selectMode,
         );
         break;
       case 'Bumi Planet':
@@ -341,7 +341,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = BumiScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: true,
+          selectMode: selectMode,
         );
         break;
       case 'Hari Kemerdekaan':
@@ -349,7 +349,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = HariScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: true,
+          selectMode: selectMode,
         );
         break;
       case 'Ramadhan':
@@ -357,7 +357,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = RamadhanScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: true,
+          selectMode: selectMode,
         );
         break;
       case 'Manasik Haji':
@@ -365,7 +365,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = HajiScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: true,
+          selectMode: selectMode,
         );
         break;
       case 'Budaya Sunda':
@@ -373,7 +373,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = SundaScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: true,
+          selectMode: selectMode,
         );
         break;
       case 'Batik':
@@ -381,7 +381,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = SundaScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: true,
+          selectMode: selectMode,
         );
         break;
       case 'Mother Day':
@@ -389,7 +389,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = MamaScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: true,
+          selectMode: selectMode,
         );
         break;
       case 'Guruku Tersayang':
@@ -397,7 +397,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = GuruScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: true,
+          selectMode: selectMode,
         );
         break;
       default:
@@ -413,11 +413,8 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
       selectedMusic,
     ) {
       if (selectedMusic != null && widget.selectMode) {
-        // Setelah pilih musik di layar kategori, langsung lanjut ke form jadwal
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const MusikScheduleForm()),
-        );
+        // Kembalikan data musik terpilih ke layar sebelumnya (misalnya ke penjadwalan)
+        Navigator.pop(context, selectedMusic);
       }
     });
   }

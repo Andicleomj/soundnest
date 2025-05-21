@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+// TODO: Update the import path below to the correct location of musik_screen.dart or create the file if it does not exist.
 import 'package:soundnest/screens/home/musik/musik_screen.dart';
 
 class MusikScheduleForm extends StatefulWidget {
@@ -43,11 +44,11 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
       ),
     );
 
-    if (result != null) {
+    if (result != null && result is Map<String, dynamic>) {
       setState(() {
-        selectedCategory = result['category'];
-        selectedMusic = result['title'];
-        selectedFileId = result['file_id'];
+        selectedCategory = result['category'] as String?;
+        selectedMusic = result['title'] as String?;
+        selectedFileId = result['file_id'] as String?;
       });
     }
   }
@@ -96,7 +97,7 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
       context,
     ).showSnackBar(const SnackBar(content: Text('Jadwal berhasil disimpan')));
 
-    Navigator.pop(context); // Kembali ke layar sebelumnya
+    Navigator.pop(context);
   }
 
   @override
