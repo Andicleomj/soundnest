@@ -15,7 +15,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   List<Map<String, dynamic>> schedules = [];
   bool isLoading = true;
 
-  // Map untuk simpan status play/pause lokal tiap jadwal (dummy play state)
   Map<String, bool> playingStatus = {};
 
   @override
@@ -25,9 +24,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   }
 
   Future<void> _loadSchedules() async {
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
     final manualSnapshot = await _manualRef.get();
     List<Map<String, dynamic>> loadedSchedules = [];
@@ -54,7 +51,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
               if (scheduleRaw is! Map) throw Exception("Format jadwal salah");
 
               final schedule = Map<String, dynamic>.from(scheduleRaw);
-
               final hariData = schedule['hari'];
               String hari;
 
@@ -68,7 +64,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                 hari = '-';
               }
 
-              // Init playingStatus default false
               playingStatus[entry.key] ??= false;
 
               return {
@@ -93,8 +88,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
               };
             }
           }).toList();
-    } else {
-      print("❌ Data jadwal tidak ditemukan di Firebase");
     }
 
     setState(() {
@@ -111,7 +104,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
       });
 
       await _manualRef.child(key).update({"enabled": isActive});
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -150,7 +142,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   }
 
   void _editSchedule(Map<String, dynamic> schedule) {
-    // Contoh popup dialog sederhana
     showDialog(
       context: context,
       builder: (context) {
@@ -246,76 +237,69 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                           ],
                         ),
                       ),
-                      trailing: SizedBox(
-                        width: 130,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Toggle aktif/nonaktif jadwal (play/pause schedule)
-                            Switch.adaptive(
-                              value: schedule['enabled'],
-                              onChanged: (bool value) {
-                                _toggleSchedule(schedule['key'], value);
-                              },
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Switch.adaptive(
+                            value: schedule['enabled'],
+                            onChanged: (bool value) {
+                              _toggleSchedule(schedule['key'], value);
+                            },
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: Icon(
+                              isPlaying
+                                  ? Icons.pause_circle
+                                  : Icons.play_circle,
                             ),
-
-                            // Tombol play/pause musik manual (dummy)
-                            IconButton(
-                              icon: Icon(
-                                isPlaying
-                                    ? Icons.pause_circle
-                                    : Icons.play_circle,
-                              ),
-                              color: isPlaying ? Colors.green : null,
-                              onPressed: () {
-                                _togglePlayPause(schedule['key']);
-                              },
-                              tooltip: isPlaying ? 'Pause Musik' : 'Play Musik',
-                            ),
-
-                            // Tombol Edit
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () {
-                                _editSchedule(schedule);
-                              },
-                              tooltip: 'Edit Jadwal',
-                            ),
-
-                            // Tombol Hapus
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              color: Colors.red,
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder:
-                                      (context) => AlertDialog(
-                                        title: const Text('Konfirmasi Hapus'),
-                                        content: Text(
-                                          'Yakin ingin menghapus "${schedule['title']}"?',
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed:
-                                                () => Navigator.pop(context),
-                                            child: const Text('Batal'),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                              _deleteSchedule(schedule['key']);
-                                            },
-                                            child: const Text('Hapus'),
-                                          ),
-                                        ],
+                            color: isPlaying ? Colors.green : null,
+                            onPressed: () {
+                              _togglePlayPause(schedule['key']);
+                            },
+                            tooltip: isPlaying ? 'Pause Musik' : 'Play Musik',
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () {
+                              _editSchedule(schedule);
+                            },
+                            tooltip: 'Edit Jadwal',
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            color: Colors.red,
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder:
+                                    (context) => AlertDialog(
+                                      title: const Text('Konfirmasi Hapus'),
+                                      content: Text(
+                                        'Yakin ingin menghapus "${schedule['title']}"?',
                                       ),
-                                );
-                              },
-                              tooltip: 'Hapus Jadwal',
-                            ),
-                          ],
-                        ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.pop(context),
+                                          child: const Text('Batal'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                            _deleteSchedule(schedule['key']);
+                                          },
+                                          child: const Text('Hapus'),
+                                        ),
+                                      ],
+                                    ),
+                              );
+                            },
+                            tooltip: 'Hapus Jadwal',
+                          ),
+                        ],
                       ),
                     ),
                   );
