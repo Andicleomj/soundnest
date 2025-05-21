@@ -6,12 +6,14 @@ class AdaptasiScreen extends StatefulWidget {
   final String categoryPath; // Path lengkap di Firebase Realtime Database
   final String categoryName; // Nama kategori untuk judul AppBar
   final bool selectMode;
+  final bool fromScheduleTab;
 
   const AdaptasiScreen({
     super.key,
     required this.categoryPath,
     required this.categoryName,
     this.selectMode = false,
+    this.fromScheduleTab = false, // default false
   });
 
   @override
@@ -118,13 +120,15 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
                   return ListTile(
                     title: Text(music['title']),
                     onTap: () {
-                      if (widget.selectMode) {
+                      if (widget.fromScheduleTab) {
+                        // Jika dari tab penjadwalan, kembali dengan data ke form jadwal
                         Navigator.pop(context, {
                           'title': music['title'],
                           'file_id': music['file_id'],
                           'category': widget.categoryName,
                         });
                       } else {
+                        // Jika bukan, langsung play musik
                         togglePlay(index);
                       }
                     },
