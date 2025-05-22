@@ -8,11 +8,11 @@ class OlahragaScreen extends StatefulWidget {
   final bool selectMode;
 
   const OlahragaScreen({
-    Key? key,
+    super.key,
     required this.categoryPath,
     required this.categoryName,
     this.selectMode = false,
-  }) : super(key: key);
+  });
 
   @override
   _OlahragaScreenState createState() => _OlahragaScreenState();

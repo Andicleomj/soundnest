@@ -13,12 +13,11 @@ import 'package:soundnest/screens/home/musik/haji_screen.dart';
 import 'package:soundnest/screens/home/musik/mama_screen.dart';
 import 'package:soundnest/screens/home/musik/sunda_screen.dart';
 import 'package:soundnest/screens/home/musik/guru_screen.dart';
-import 'package:soundnest/screens/schedule/musik.dart';
 
 class MusicScreen extends StatelessWidget {
   final bool selectMode;
 
-  const MusicScreen({Key? key, this.selectMode = false}) : super(key: key);
+  const MusicScreen({super.key, this.selectMode = false});
 
   @override
   Widget build(BuildContext context) {
@@ -373,7 +372,6 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = SundaScreen(
           categoryPath: categoryPath,
           categoryName: category,
-          selectMode: selectMode,
         );
         break;
       case 'Batik':

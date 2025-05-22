@@ -8,11 +8,11 @@ class HariScreen extends StatefulWidget {
   final bool selectMode;
 
   const HariScreen({
-    Key? key,
+    super.key,
     required this.categoryPath,
     required this.categoryName,
     this.selectMode = false,
-  }) : super(key: key);
+  });
 
   @override
   _HariScreenState createState() => _HariScreenState();

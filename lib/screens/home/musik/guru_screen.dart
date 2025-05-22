@@ -8,11 +8,11 @@ class GuruScreen extends StatefulWidget {
   final bool selectMode;
 
   const GuruScreen({
-    Key? key,
+    super.key,
     required this.categoryPath,
     required this.categoryName,
-    this.selectMode = false,
-  }) : super(key: key);
+    this.selectMode = false, // default false
+  });
 
   @override
   _GuruScreenState createState() => _GuruScreenState();

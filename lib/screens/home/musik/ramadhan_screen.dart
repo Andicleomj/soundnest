@@ -8,11 +8,11 @@ class RamadhanScreen extends StatefulWidget {
   final bool selectMode;
 
   const RamadhanScreen({
-    Key? key,
+    super.key,
     required this.categoryPath,
     required this.categoryName,
     this.selectMode = false,
-  }) : super(key: key);
+  });
 
   @override
   _RamadhanScreenState createState() => _RamadhanScreenState();

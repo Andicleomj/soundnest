@@ -19,9 +19,7 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
   void _pickMurottal() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const MurottalScreen(selectMode: true),
-      ),
+      MaterialPageRoute(builder: (context) => const MurottalScreen()),
     );
 
     if (result != null) {

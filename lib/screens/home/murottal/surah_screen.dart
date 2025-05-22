@@ -9,7 +9,8 @@ class SurahScreen extends StatefulWidget {
   const SurahScreen({
     Key? key,
     required this.categoryPath,
-    required this.categoryName, required String categoryId,
+    required this.categoryName,
+    required String categoryId,
   }) : super(key: key);
 
   @override
@@ -43,13 +44,14 @@ class _SurahScreenState extends State<SurahScreen> {
     if (snapshot.exists) {
       final data = Map<String, dynamic>.from(snapshot.value as Map);
       setState(() {
-        surahList = data.entries.map((entry) {
-          final value = entry.value as Map<dynamic, dynamic>;
-          return {
-            'title': value['title'] ?? 'Tanpa Judul',
-            'fileId': value['fileId'] ?? '',
-          };
-        }).toList();
+        surahList =
+            data.entries.map((entry) {
+              final value = entry.value as Map<dynamic, dynamic>;
+              return {
+                'title': value['title'] ?? 'Tanpa Judul',
+                'fileId': value['fileId'] ?? '',
+              };
+            }).toList();
         isLoading = false;
       });
     } else {
@@ -63,9 +65,9 @@ class _SurahScreenState extends State<SurahScreen> {
   Future<void> togglePlayPause(int index) async {
     final fileId = surahList[index]['fileId'];
     if (fileId.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('FileId tidak tersedia')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('FileId tidak tersedia')));
       return;
     }
 
@@ -109,31 +111,29 @@ class _SurahScreenState extends State<SurahScreen> {
           ),
         ),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : surahList.isEmpty
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : surahList.isEmpty
               ? const Center(child: Text('Data surah tidak tersedia.'))
               : ListView.builder(
-                  itemCount: surahList.length,
-                  itemBuilder: (context, index) {
-                    final surah = surahList[index];
-                    final isCurrentPlaying =
-                        (currentIndex == index && isPlaying);
+                itemCount: surahList.length,
+                itemBuilder: (context, index) {
+                  final surah = surahList[index];
+                  final isCurrentPlaying = (currentIndex == index && isPlaying);
 
-                    return ListTile(
-                      title: Text(surah['title']),
-                      trailing: IconButton(
-                        icon: Icon(
-                          isCurrentPlaying
-                              ? Icons.pause
-                              : Icons.play_arrow,
-                        ),
-                        onPressed: () => togglePlayPause(index),
+                  return ListTile(
+                    title: Text(surah['title']),
+                    trailing: IconButton(
+                      icon: Icon(
+                        isCurrentPlaying ? Icons.pause : Icons.play_arrow,
                       ),
-                      onTap: () => togglePlayPause(index),
-                    );
-                  },
-                ),
+                      onPressed: () => togglePlayPause(index),
+                    ),
+                    onTap: () => togglePlayPause(index),
+                  );
+                },
+              ),
     );
   }
 }

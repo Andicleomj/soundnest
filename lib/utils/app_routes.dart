@@ -8,8 +8,6 @@ import 'package:soundnest/screens/home/dashboard_screen.dart';
 import 'package:soundnest/screens/schedule/buat_jadwal.dart';
 import 'package:soundnest/screens/splash_screen.dart';
 import 'package:soundnest/screens/home/musik/daftar_musik.dart';
-import 'package:soundnest/screens/home/musik/musik_kategori.dart';
-import 'package:soundnest/screens/home/musik/add_musik.dart';
 import 'package:soundnest/screens/schedule/daftar.dart';
 import 'package:soundnest/screens/schedule/musik.dart';
 
@@ -39,7 +37,6 @@ class AppRoutes {
       dashboard: (context) => const DashboardScreen(),
       schedule: (context) => const Schedule(),
       daftar: (context) => const DaftarJadwalScreen(),
-      musikKategori: (context) => const MusikKategoriScreen(),
       musik: (context) => const MusikScheduleForm(),
 
       daftarMusik: (context) {
@@ -51,12 +48,6 @@ class AppRoutes {
           categoryId: categoryId,
           categoryName: categoryName,
         );
-      },
-
-      addMusik: (context) {
-        final args = ModalRoute.of(context)?.settings.arguments as Map?;
-        final String categoryId = args?['categoryId'] ?? '';
-        return AddMusikScreen(categoryId: categoryId);
       },
     };
   }

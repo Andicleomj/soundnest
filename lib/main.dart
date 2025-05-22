@@ -22,9 +22,7 @@ void main() async {
     scheduleService.start();
     print("✅ ScheduleService berhasil dijalankan.");
 
-    runApp(
-      MyApp(scheduleService: scheduleService),
-    ); // <- INI HARUS DI DALAM TRY
+    runApp(MyApp(scheduleService: scheduleService));
   } catch (e, stack) {
     print("❌ Gagal menginisialisasi Firebase: $e");
     print(stack);

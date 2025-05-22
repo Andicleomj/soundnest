@@ -8,11 +8,11 @@ class HajiScreen extends StatefulWidget {
   final bool selectMode;
 
   const HajiScreen({
-    Key? key,
+    super.key,
     required this.categoryPath,
     required this.categoryName,
     this.selectMode = false,
-  }) : super(key: key);
+  });
 
   @override
   _HajiScreenState createState() => _HajiScreenState();

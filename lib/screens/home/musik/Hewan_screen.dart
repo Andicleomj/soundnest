@@ -8,11 +8,11 @@ class HewanScreen extends StatefulWidget {
   final bool selectMode;
 
   const HewanScreen({
-    Key? key,
+    super.key,
     required this.categoryPath,
     required this.categoryName,
     this.selectMode = false,
-  }) : super(key: key);
+  });
 
   @override
   _HewanScreenState createState() => _HewanScreenState();

@@ -8,11 +8,11 @@ class SundaScreen extends StatefulWidget {
   final bool selectMode;
 
   const SundaScreen({
-    Key? key,
+    super.key,
     required this.categoryPath,
     required this.categoryName,
     this.selectMode = false,
-  }) : super(key: key);
+  });
 
   @override
   _SundaScreenState createState() => _SundaScreenState();

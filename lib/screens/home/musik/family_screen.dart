@@ -8,11 +8,11 @@ class FamilyScreen extends StatefulWidget {
   final bool selectMode;
 
   const FamilyScreen({
-    Key? key,
+    super.key,
     required this.categoryPath,
     required this.categoryName,
     this.selectMode = false,
-  }) : super(key: key);
+  });
 
   @override
   _FamilyScreenState createState() => _FamilyScreenState();
