@@ -14,7 +14,6 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
   String? selectedMurottal;
   String? selectedFileId;
 
-  final TextEditingController _durationController = TextEditingController();
   TimeOfDay? selectedTime;
   bool repeatEveryday = false;
   List<String> selectedDays = [];
@@ -29,18 +28,12 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
     'Minggu',
   ];
 
-  @override
-  void dispose() {
-    _durationController.dispose();
-    super.dispose();
-  }
-
   Future<void> _pickMurottal() async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const MurottalPickerScreen()),
     );
-    //tes
+
     if (result != null && result is Map<String, dynamic>) {
       setState(() {
         selectedCategory = result['category'] as String?;
@@ -67,8 +60,6 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
         selectedFileId == null ||
         selectedCategory == null ||
         selectedTime == null ||
-        _durationController.text.trim().isEmpty ||
-        int.tryParse(_durationController.text.trim()) == null ||
         (!repeatEveryday && selectedDays.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Lengkapi semua isian dengan benar')),
@@ -89,7 +80,6 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
 
     final databaseRef = FirebaseDatabase.instance.ref();
 
-    // Simpan ke path: /devices/devices_01/schedule/manual_murottal/
     await databaseRef
         .child('devices')
         .child('devices_01')
