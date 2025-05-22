@@ -119,6 +119,7 @@ class _BumiScreenState extends State<BumiScreen> {
                       icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
                       onPressed: () => togglePlay(index),
                     ),
+                    onTap: () => togglePlay(index),
                   );
                 },
               ),
