@@ -120,6 +120,7 @@ class _MamaScreenState extends State<MamaScreen> {
                       icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
                       onPressed: () => togglePlay(index),
                     ),
+                    onTap: () => togglePlay(index),
                   );
                 },
               ),

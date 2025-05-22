@@ -118,6 +118,7 @@ class _ProfesiScreenState extends State<ProfesiScreen> {
                       icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
                       onPressed: () => togglePlay(index),
                     ),
+                    onTap: () => togglePlay(index),
                   );
                 },
               ),

@@ -51,9 +51,8 @@ class _HewanScreenState extends State<HewanScreen> {
         isLoading = false;
       });
     } else {
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
+      print('Data di path ${widget.categoryPath} tidak ditemukan di database.');
     }
   }
 
@@ -89,7 +88,24 @@ class _HewanScreenState extends State<HewanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.categoryName)),
+      appBar: AppBar(
+        title: const Text(
+          'Hewan',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+      ),
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -97,15 +113,15 @@ class _HewanScreenState extends State<HewanScreen> {
                 itemCount: musicList.length,
                 itemBuilder: (context, index) {
                   final music = musicList[index];
+                  final isCurrent = currentIndex == index && isPlaying;
+
                   return ListTile(
                     title: Text(music['title']),
-                    onTap:
-                        widget.selectMode
-                            ? () => Navigator.pop(context, {
-                              "category": widget.categoryName,
-                              "music": music['title'],
-                            })
-                            : () => togglePlayPause(index),
+                    trailing: IconButton(
+                      icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
+                      onPressed: () => togglePlayPause(index),
+                    ),
+                    onTap: () => togglePlayPause(index),
                   );
                 },
               ),

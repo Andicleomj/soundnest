@@ -8,11 +8,11 @@ class KendaraanScreen extends StatefulWidget {
   final bool selectMode;
 
   const KendaraanScreen({
-    Key? key,
+    super.key,
     required this.categoryPath,
     required this.categoryName,
     this.selectMode = false,
-  }) : super(key: key);
+  });
 
   @override
   _KendaraanScreenState createState() => _KendaraanScreenState();
@@ -120,6 +120,7 @@ class _KendaraanScreenState extends State<KendaraanScreen> {
                       icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
                       onPressed: () => togglePlay(index),
                     ),
+                    onTap: () => togglePlay(index),
                   );
                 },
               ),
