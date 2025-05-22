@@ -19,9 +19,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   void initState() {
     super.initState();
-    _recorder.openRecorder();
-    _player.openPlayer();
-    _requestPermissions();
+    _init();
+  }
+
+  Future<void> _init() async {
+    await _requestPermissions();
+    // Tidak perlu openAudioSession lagi
   }
 
   Future<void> _requestPermissions() async {
@@ -38,20 +41,28 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   Future<void> _toggleRecording() async {
     if (!_isRecording) {
-      // Start recording
       _filePath = '/sdcard/Download/recorded_voice.aac';
-      await _recorder.startRecorder(toFile: _filePath, codec: Codec.aacADTS);
-      setState(() {
-        _isRecording = true;
-      });
+
+      try {
+        await _recorder.startRecorder(toFile: _filePath, codec: Codec.aacADTS);
+        setState(() {
+          _isRecording = true;
+        });
+      } catch (e) {
+        print("Error saat merekam: $e");
+      }
     } else {
-      // Stop recording
-      await _recorder.stopRecorder();
-      setState(() {
-        _isRecording = false;
-      });
-      if (_filePath != null) {
-        await _player.startPlayer(fromURI: _filePath, codec: Codec.aacADTS);
+      try {
+        await _recorder.stopRecorder();
+        setState(() {
+          _isRecording = false;
+        });
+
+        if (_filePath != null) {
+          await _player.startPlayer(fromURI: _filePath, codec: Codec.aacADTS);
+        }
+      } catch (e) {
+        print("Error saat menghentikan/memutar rekaman: $e");
       }
     }
   }
