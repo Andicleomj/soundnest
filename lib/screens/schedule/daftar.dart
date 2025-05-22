@@ -231,6 +231,16 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                           children: [
                             Text("Hari: ${schedule['hari']}"),
                             Text("Mulai: ${schedule['waktu']}"),
+                            Text(
+                              "Status: ${schedule['enabled'] ? 'Aktif' : 'Nonaktif'}",
+                              style: TextStyle(
+                                color:
+                                    schedule['enabled']
+                                        ? Colors.green
+                                        : Colors.red,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ],
                         ),
                       ),
