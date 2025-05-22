@@ -14,7 +14,6 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
   String? selectedMusic;
   String? selectedFileId;
 
-  final TextEditingController _durationController = TextEditingController();
   TimeOfDay? selectedTime;
   bool repeatEveryday = false;
   List<String> selectedDays = [];
@@ -29,10 +28,16 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
     'Minggu',
   ];
 
-  @override
-  void dispose() {
-    _durationController.dispose();
-    super.dispose();
+  void _pickTime() async {
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (time != null) {
+      setState(() {
+        selectedTime = time;
+      });
+    }
   }
 
   Future<void> _pickMusic() async {
@@ -50,25 +55,11 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
     }
   }
 
-  void _pickTime() async {
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (time != null) {
-      setState(() {
-        selectedTime = time;
-      });
-    }
-  }
-
   void _saveSchedule() async {
     if (selectedMusic == null ||
         selectedFileId == null ||
         selectedCategory == null ||
         selectedTime == null ||
-        _durationController.text.trim().isEmpty ||
-        int.tryParse(_durationController.text.trim()) == null ||
         (!repeatEveryday && selectedDays.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Lengkapi semua isian dengan benar')),
@@ -77,21 +68,18 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
     }
 
     final waktuFormatted = selectedTime!.format(context);
-    final durasi = _durationController.text.trim();
 
     final data = {
       'title': selectedMusic,
       'file_id': selectedFileId,
       'category': selectedCategory,
       'waktu': waktuFormatted,
-      'durasi': durasi,
       'hari': repeatEveryday ? 'Setiap Hari' : selectedDays,
       'enabled': true,
     };
 
     final databaseRef = FirebaseDatabase.instance.ref();
 
-    // Simpan ke path: /devices/devices_01/schedule/manual_music/
     await databaseRef
         .child('devices')
         .child('devices_01')
@@ -133,11 +121,6 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
               ),
               trailing: const Icon(Icons.access_time),
               onTap: _pickTime,
-            ),
-            TextField(
-              controller: _durationController,
-              decoration: const InputDecoration(labelText: "Durasi (menit)"),
-              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
             SwitchListTile(

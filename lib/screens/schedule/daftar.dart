@@ -72,7 +72,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                 'category': schedule['category'] ?? '-',
                 'hari': hari,
                 'waktu': schedule['waktu'] ?? 'Tidak ada waktu',
-                'durasi': schedule['durasi']?.toString() ?? '0',
                 'enabled': schedule['enabled'] ?? false,
               };
             } catch (e) {
@@ -83,7 +82,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                 'category': '-',
                 'hari': '-',
                 'waktu': '-',
-                'durasi': '0',
                 'enabled': false,
               };
             }
@@ -233,7 +231,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                           children: [
                             Text("Hari: ${schedule['hari']}"),
                             Text("Mulai: ${schedule['waktu']}"),
-                            Text("Durasi: ${schedule['durasi']} menit"),
                           ],
                         ),
                       ),
