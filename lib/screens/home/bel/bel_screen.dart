@@ -10,10 +10,27 @@ class BellScreen extends StatefulWidget {
 
 class _BellScreenState extends State<BellScreen> {
   final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isPlaying = false;
 
-  void _playBellSound() async {
-    await _audioPlayer.setSourceAsset('sounds/bell.mp3');
-    await _audioPlayer.resume();
+  void _toggleBellSound() async {
+    if (_isPlaying) {
+      await _audioPlayer.pause();
+      setState(() {
+        _isPlaying = false;
+      });
+    } else {
+      await _audioPlayer.setSourceAsset('sounds/bell.mp3');
+      await _audioPlayer.resume();
+      setState(() {
+        _isPlaying = true;
+      });
+      // Setelah suara selesai, otomatis set _isPlaying = false
+      _audioPlayer.onPlayerComplete.listen((event) {
+        setState(() {
+          _isPlaying = false;
+        });
+      });
+    }
   }
 
   @override
@@ -85,18 +102,20 @@ class _BellScreenState extends State<BellScreen> {
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: _playBellSound,
+                        onPressed: _toggleBellSound,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blueAccent,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 14),
+                            horizontal: 24,
+                            vertical: 14,
+                          ),
                         ),
-                        child: const Text(
-                          "Bunyikan Bel",
-                          style: TextStyle(
+                        child: Text(
+                          _isPlaying ? "Hentikan Bel" : "Bunyikan Bel",
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -125,10 +144,7 @@ class _BellScreenState extends State<BellScreen> {
             const SizedBox(height: 12),
             const Text(
               "📢 Tetap semangat dan disiplin waktu!",
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 13,
-              ),
+              style: TextStyle(color: Colors.grey, fontSize: 13),
             ),
           ],
         ),
