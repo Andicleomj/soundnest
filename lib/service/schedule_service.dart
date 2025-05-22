@@ -63,6 +63,9 @@ class ScheduleService {
           hari = '-';
         }
 
+        // Ambil file_id atau fileId dari data, prioritaskan file_id
+        final fileId = data['file_id'] ?? data['fileId'] ?? '';
+
         schedules.add({
           'key': entry.key,
           'title': data['title'] ?? 'Tanpa Judul',
@@ -71,7 +74,7 @@ class ScheduleService {
           'waktu': data['waktu'] ?? '-',
           'durasi': data['durasi']?.toString() ?? '0',
           'enabled': data['enabled'] ?? false,
-          'file_id': data['file_id'] ?? '',
+          'file_id': fileId,
         });
       } catch (e) {
         print('❌ Error parsing schedule: $e');
@@ -127,7 +130,7 @@ class ScheduleService {
 
         if (fileId.isNotEmpty) {
           print(
-            '▶️ Memutar musik: ${schedule['title']} dengan file_id $fileId selama $durasi menit',
+            '▶️ Memutar musik/murottal: ${schedule['title']} dengan file_id $fileId selama $durasi menit',
           );
           await _playerService.playFromFileId(fileId, duration: durasi);
         } else {
