@@ -77,14 +77,12 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
     }
 
     final waktuFormatted = selectedTime!.format(context);
-    final durasi = _durationController.text.trim();
 
     final data = {
       'title': selectedMurottal,
       'fileId': selectedFileId,
       'category': selectedCategory,
       'waktu': waktuFormatted,
-      'durasi': durasi,
       'hari': repeatEveryday ? 'Setiap Hari' : selectedDays,
       'enabled': true,
     };
@@ -133,11 +131,6 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
               ),
               trailing: const Icon(Icons.access_time),
               onTap: _pickTime,
-            ),
-            TextField(
-              controller: _durationController,
-              decoration: const InputDecoration(labelText: "Durasi (menit)"),
-              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 12),
             SwitchListTile(
