@@ -7,10 +7,10 @@ class AyatKursi extends StatefulWidget {
   final String categoryName;
 
   const AyatKursi({
-    Key? key,
+    super.key,
     required this.categoryPath,
     required this.categoryName,
-  }) : super(key: key);
+  });
 
   @override
   _AyatKursiState createState() => _AyatKursiState();
@@ -133,6 +133,7 @@ class _AyatKursiState extends State<AyatKursi> {
                       icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
                       onPressed: () => togglePlay(index),
                     ),
+                    onTap: () => togglePlay(index),
                   );
                 },
               ),
