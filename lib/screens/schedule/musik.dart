@@ -98,7 +98,23 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Buat Jadwal Musik")),
+      appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        title: const Text(
+          "Buat Jadwal Musik",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
