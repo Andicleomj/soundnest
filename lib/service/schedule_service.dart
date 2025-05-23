@@ -65,7 +65,6 @@ class ScheduleService {
           'category': data['category'] ?? '-',
           'hari': hari,
           'waktu': data['waktu'] ?? '-',
-          'durasi': data['durasi']?.toString() ?? '0',
           'enabled': data['enabled'] ?? false,
           'file_id': fileId,
         });
@@ -125,21 +124,10 @@ class ScheduleService {
 
       if (isToday && jadwalWaktu == currentTime) {
         final fileId = schedule['file_id'] ?? '';
-        final durasi = int.tryParse(schedule['durasi'] ?? '0') ?? 0;
-
-        if (durasi <= 0) {
-          print('⚠️ Durasi 0 menit, tidak memutar: ${schedule['title']}');
-          continue;
-        }
-
-        print('🎵 Jadwal cocok → ${schedule['title']} (durasi: $durasi menit)');
 
         if (fileId.isNotEmpty) {
-          print(
-            '▶️ Memutar musik/murottal: ${schedule['title']} '
-            'dengan file_id $fileId selama $durasi menit',
-          );
-          await _playerService.playFromFileId(fileId, duration: durasi);
+          print('▶️ Memutar: ${schedule['title']} dengan file_id $fileId');
+          await _playerService.playFromFileId(fileId);
         } else {
           print('⚠️ File ID kosong untuk jadwal: ${schedule['title']}');
         }
