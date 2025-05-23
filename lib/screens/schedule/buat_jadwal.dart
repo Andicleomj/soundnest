@@ -55,59 +55,65 @@ class ScheduleScreen extends StatelessWidget {
               Color(0xFFE1F5FE), // Biru sangat muda
             ],
           ),
-          image: DecorationImage(
-            image: AssetImage('assets/kids.jpg'),
-            fit: BoxFit.fitWidth,
-          ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: InkWell(
-                  onTap: () => _navigateToMusik(context),
-                  child: Container(
-                    height: 100,
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 106, 161, 255),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      "Jadwal Musik",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
+        child: Container(
+          width: double.infinity,
+          height: 300, // atur tinggi sesuai kebutuhan
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/kids.jpg'),
+              fit: BoxFit.cover, // atau contain, fill, etc
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () => _navigateToMusik(context),
+                    child: Container(
+                      height: 100,
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 106, 161, 255),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        "Jadwal Musik",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: InkWell(
-                  onTap: () => _navigateToMurottal(context),
-                  child: Container(
-                    height: 100,
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 106, 161, 255),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      "Jadwal Murottal",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
+                const SizedBox(width: 15),
+                Expanded(
+                  child: InkWell(
+                    onTap: () => _navigateToMurottal(context),
+                    child: Container(
+                      height: 100,
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 106, 161, 255),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        "Jadwal Murottal",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
