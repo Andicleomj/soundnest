@@ -62,7 +62,7 @@ class ScheduleScreen extends StatelessWidget {
           decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage('assets/kids.jpg'),
-              fit: BoxFit.cover, // atau contain, fill, etc
+              fit: BoxFit.fitWidth, // atau contain, fill, etc
             ),
           ),
           child: Padding(
