@@ -11,10 +11,9 @@ class ScheduleService {
 
   final MusicPlayerService _playerService = MusicPlayerService();
   Timer? _timer;
-
   bool _initialized = false;
 
-  /// Inisialisasi locale date formatting
+  /// Inisialisasi locale untuk format hari (Indonesia)
   Future<void> initialize() async {
     if (!_initialized) {
       await initializeDateFormatting('id_ID', null);
@@ -23,7 +22,7 @@ class ScheduleService {
     }
   }
 
-  /// Ambil daftar jadwal manual dari Firebase
+  /// Ambil dan parse semua jadwal manual dari Firebase
   Future<List<Map<String, dynamic>>> getManualSchedules() async {
     final snapshot = await _manualRef.get();
     if (!snapshot.exists) return [];
@@ -50,20 +49,15 @@ class ScheduleService {
         if (raw is! Map) continue;
 
         final data = Map<String, dynamic>.from(raw);
-        final hariData = data['hari'];
-        String hari;
-
-        if (hariData is String) {
-          hari = hariData;
-        } else if (hariData is List) {
-          hari = hariData.join(', ');
-        } else if (hariData is Map) {
-          hari = hariData.values.join(', ');
-        } else {
-          hari = '-';
-        }
-
         final fileId = data['file_id'] ?? data['fileId'] ?? '';
+        final hariData = data['hari'];
+
+        String hari = switch (hariData) {
+          String s => s,
+          List l => l.join(', '),
+          Map m => m.values.join(', '),
+          _ => '-',
+        };
 
         schedules.add({
           'key': entry.key,
@@ -83,10 +77,12 @@ class ScheduleService {
     return schedules;
   }
 
+  /// Mengaktifkan/menonaktifkan jadwal
   Future<void> toggleScheduleEnabled(String key, bool enabled) async {
     await _manualRef.child(key).update({'enabled': enabled});
   }
 
+  /// Mulai pengecekan periodik jadwal (tiap 30 detik)
   void start() async {
     if (!_initialized) {
       await initialize();
@@ -96,19 +92,20 @@ class ScheduleService {
       await _checkAndPlaySchedules();
     });
     print('✅ ScheduleService started.');
-    _checkAndPlaySchedules(); // langsung jalan saat start
+    _checkAndPlaySchedules(); // jalan langsung sekali saat start
   }
 
+  /// Stop pengecekan periodik
   void stop() {
     _timer?.cancel();
     _timer = null;
     print('🛑 ScheduleService stopped.');
   }
 
+  /// Cek semua jadwal, jika sesuai hari dan waktu → play
   Future<void> _checkAndPlaySchedules() async {
     final schedules = await getManualSchedules();
     final now = DateTime.now();
-
     final currentDay = DateFormat('EEEE', 'id_ID').format(now);
     final currentTime = DateFormat('h:mm a').format(now); // tanpa leading zero
 
@@ -119,7 +116,6 @@ class ScheduleService {
 
       final hariStr = schedule['hari'] as String;
       final jadwalWaktu = schedule['waktu'] as String;
-
       final isToday =
           hariStr == 'Setiap Hari' || hariStr.split(', ').contains(currentDay);
 
@@ -130,6 +126,11 @@ class ScheduleService {
       if (isToday && jadwalWaktu == currentTime) {
         final fileId = schedule['file_id'] ?? '';
         final durasi = int.tryParse(schedule['durasi'] ?? '0') ?? 0;
+
+        if (durasi <= 0) {
+          print('⚠️ Durasi 0 menit, tidak memutar: ${schedule['title']}');
+          continue;
+        }
 
         print('🎵 Jadwal cocok → ${schedule['title']} (durasi: $durasi menit)');
 
