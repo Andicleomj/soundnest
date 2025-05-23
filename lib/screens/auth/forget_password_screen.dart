@@ -18,7 +18,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
     if (email.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Please enter your email")));
+      ).showSnackBar(const SnackBar(content: Text("Silahkan Masukkan Email")));
       return;
     }
 
@@ -26,19 +26,22 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
       // Mengirimkan email reset password
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Password reset email sent to $email")),
+        SnackBar(
+          content: Text("Email pengaturan ulang kata sandi dikirim ke $email"),
+        ),
       );
       // Navigasi atau aksi lain setelah email terkirim
       Navigator.pop(context); // Navigasi kembali ke halaman sebelumnya
     } catch (e) {
-      String errorMessage = 'An error occurred. Please try again later.';
+      String errorMessage = 'Terjadi kesalahan. Silakan coba lagi nanti.';
       if (e is FirebaseAuthException) {
         switch (e.code) {
           case 'invalid-email':
-            errorMessage = 'The email address is not valid.';
+            errorMessage = 'Alamat email tidak valid.';
             break;
           case 'user-not-found':
-            errorMessage = 'No user found for that email.';
+            errorMessage =
+                'Tidak ada pengguna yang ditemukan untuk email tersebut.';
             break;
           default:
             errorMessage = 'Error: ${e.message}';
@@ -54,7 +57,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, 
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -69,22 +72,22 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Forget Password",
+              "Lupa Kata Sandi",
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 5),
             const Text(
-              "Please enter your email to receive a password reset link.",
+              "Silakan masukkan email Anda untuk menerima tautan pengaturan ulang kata sandi.",
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 20),
-            const Text("Your Email"),
+            const Text("Email Anda"),
             const SizedBox(height: 5),
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-                hintText: "Enter your email",
+                hintText: "Mausukkan email anda",
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -103,7 +106,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                   ),
                 ),
                 child: const Text(
-                  "Reset Password",
+                  "Atur Ulang Kata Sandi",
                   style: TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.bold,
