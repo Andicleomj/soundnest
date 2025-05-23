@@ -131,7 +131,7 @@ class _BellScreenState extends State<BellScreen> {
             const SizedBox(height: 30),
 
             const Text(
-              "Klik tombol untuk membunyikan bel.\nPastikan volume aktif.",
+              "Klik tombol untuk membunyikan bel.",
               style: TextStyle(
                 color: Colors.black54,
                 fontSize: 14,
