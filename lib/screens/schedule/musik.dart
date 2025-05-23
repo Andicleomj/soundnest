@@ -144,7 +144,10 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
                     ? "Pilih Waktu"
                     : "Waktu: ${selectedTime!.format(context)}",
               ),
-              trailing: const Icon(Icons.access_time),
+              trailing: const Icon(
+                Icons.access_time,
+                color: Color.fromARGB(255, 164, 214, 255),
+              ),
               onTap: _pickTime,
             ),
             const SizedBox(height: 12),
