@@ -60,7 +60,13 @@ class ScheduleScreen extends StatelessWidget {
                     color: const Color.fromARGB(255, 106, 161, 255),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text("Jadwal Musik"),
+                  child: const Text(
+                    "Jadwal Musik",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -76,7 +82,13 @@ class ScheduleScreen extends StatelessWidget {
                     color: const Color.fromARGB(255, 106, 161, 255),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text("Jadwal Murottal"),
+                  child: const Text(
+                    "Jadwal Murottal",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ),
             ),
