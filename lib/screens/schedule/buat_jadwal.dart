@@ -47,29 +47,29 @@ class ScheduleScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
+        child: Row(
           children: [
-            InkWell(
-              onTap: () => _navigateToMusik(context),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blueAccent,
-                  borderRadius: BorderRadius.zero,
+            Expanded(
+              child: InkWell(
+                onTap: () => _navigateToMusik(context),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 106, 161, 255),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text("Jadwal Musik"),
                 ),
-                child: const Text("Jadwal Musik"),
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(width: 15),
             InkWell(
               onTap: () => _navigateToMurottal(context),
               child: Container(
-                width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blueAccent,
-                  borderRadius: BorderRadius.zero,
+                  color: const Color.fromARGB(255, 106, 161, 255),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text("Jadwal Murottal"),
               ),
