@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:soundnest/utils/app_routes.dart';
 
 class Login extends StatefulWidget {
@@ -10,36 +11,59 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _login() async {
-    String email = _emailController.text.trim();
+    String username = _usernameController.text.trim();
     String password = _passwordController.text.trim();
 
     try {
+      // Ambil semua user dari Realtime Database
+      final DatabaseReference ref = FirebaseDatabase.instance.ref('users');
+      final DataSnapshot snapshot = await ref.get();
+
+      String? email;
+
+      // Loop untuk cari email berdasarkan username
+      if (snapshot.exists) {
+        final Map users = snapshot.value as Map;
+        for (final entry in users.entries) {
+          final user = Map<String, dynamic>.from(entry.value);
+          if (user['username'] == username) {
+            email = user['email'];
+            break;
+          }
+        }
+      }
+
+      if (email == null) {
+        throw Exception("Username tidak ditemukan");
+      }
+
+      // Login pakai email yang ditemukan
       await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // Jika berhasil login
+      // Sukses login
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Login berhasil!")));
       Navigator.pushNamed(context, AppRoutes.login);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Login gagal"),
+        SnackBar(
+          content: Text("Login gagal: ${e.toString()}"),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -62,7 +86,6 @@ class _LoginState extends State<Login> {
                 Navigator.pop(context);
               },
             ),
-
             Center(
               child: Column(
                 children: [
@@ -76,11 +99,10 @@ class _LoginState extends State<Login> {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            const Text("Email"),
+            const Text("Username"),
             TextField(
-              controller: _emailController,
+              controller: _usernameController,
               decoration: const InputDecoration(border: UnderlineInputBorder()),
-              keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 20),
             const Text("Password"),
