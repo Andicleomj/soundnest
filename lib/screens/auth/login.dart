@@ -38,7 +38,7 @@ class _LoginState extends State<Login> {
         final Map users = snapshot.value as Map;
         for (final entry in users.entries) {
           final user = Map<String, dynamic>.from(entry.value);
-          if (user['username'] == username) {
+          if (user['Nama Pengguna'] == username) {
             email = user['email'];
             break;
           }
@@ -46,7 +46,7 @@ class _LoginState extends State<Login> {
       }
 
       if (email == null) {
-        throw Exception("Username tidak ditemukan");
+        throw Exception("Nama Pengguna tidak ditemukan");
       }
 
       // Login pakai email yang ditemukan
@@ -101,13 +101,13 @@ class _LoginState extends State<Login> {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            const Text("Username"),
+            const Text("Nama Pengguna"),
             TextField(
               controller: _usernameController,
               decoration: const InputDecoration(border: UnderlineInputBorder()),
             ),
             const SizedBox(height: 20),
-            const Text("Password"),
+            const Text("Kata Sandi"),
             TextField(
               controller: _passwordController,
               obscureText: _obscurePassword,
@@ -134,7 +134,7 @@ class _LoginState extends State<Login> {
                   Navigator.pushNamed(context, AppRoutes.forgetPassword);
                 },
                 child: const Text(
-                  "Forgot Password?",
+                  "Lupa Kata Sandi?",
                   style: TextStyle(
                     color: Colors.blueAccent,
                     fontWeight: FontWeight.bold,
