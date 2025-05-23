@@ -77,7 +77,7 @@ class ScheduleScreen extends StatelessWidget {
                       alignment: Alignment.center,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 106, 161, 255),
+                        color: const Color.fromARGB(255, 132, 173, 245),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
@@ -99,7 +99,7 @@ class ScheduleScreen extends StatelessWidget {
                       alignment: Alignment.center,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 106, 161, 255),
+                        color: const Color.fromARGB(255, 132, 173, 245),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
