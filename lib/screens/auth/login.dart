@@ -59,9 +59,7 @@ class _LoginState extends State<Login> {
             IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: () {
-                Navigator.pop(
-                  context,
-                ); // ini akan kembali ke halaman sebelumnya
+                Navigator.pop(context);
               },
             ),
 
