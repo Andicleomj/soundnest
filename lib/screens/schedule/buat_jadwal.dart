@@ -46,20 +46,15 @@ class ScheduleScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFB2EBF2), // Biru muda
-              Color(0xFFE1F5FE), // Biru sangat muda
-            ],
-          ),
+        width: double.infinity,
+        height: 300, // atur tinggi sesuai kebutuhan
+        decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/kids.jpg'),
-            fit: BoxFit.cover,
+            image: AssetImage('assets/icons/kids.jpg'),
+            fit: BoxFit.fitWidth, // atau contain, fill, etc
           ),
         ),
+
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
