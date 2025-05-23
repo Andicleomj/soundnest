@@ -56,7 +56,7 @@ class ScheduleScreen extends StatelessWidget {
             ],
           ),
           image: DecorationImage(
-            image: AssetImage('assets/background_cloud.png'),
+            image: AssetImage('assets/kids.jpg'),
             fit: BoxFit.cover,
           ),
         ),
