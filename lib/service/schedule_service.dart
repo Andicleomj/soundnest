@@ -13,6 +13,10 @@ class ScheduleService {
   Timer? _timer;
   bool _initialized = false;
 
+  // 🔒 Variabel untuk mencegah pemutaran ulang dalam 1 menit
+  DateTime? _lastPlayedTime;
+  String? _lastPlayedScheduleKey;
+
   /// Inisialisasi locale untuk format hari (Indonesia)
   Future<void> initialize() async {
     if (!_initialized) {
@@ -113,21 +117,30 @@ class ScheduleService {
     for (final schedule in schedules) {
       if (schedule['enabled'] != true) continue;
 
+      final key = schedule['key'] as String;
       final hariStr = schedule['hari'] as String;
       final jadwalWaktu = schedule['waktu'] as String;
       final isToday =
           hariStr == 'Setiap Hari' || hariStr.split(', ').contains(currentDay);
 
+      final alreadyPlayed =
+          _lastPlayedScheduleKey == key &&
+          _lastPlayedTime != null &&
+          now.difference(_lastPlayedTime!).inMinutes < 1;
+
       print(
-        '🔍 Cek jadwal: ${schedule['title']} → Hari: $hariStr, Waktu: $jadwalWaktu',
+        '🔍 Cek jadwal: ${schedule['title']} → Hari: $hariStr, Waktu: $jadwalWaktu, Already played: $alreadyPlayed',
       );
 
-      if (isToday && jadwalWaktu == currentTime) {
+      if (isToday && jadwalWaktu == currentTime && !alreadyPlayed) {
         final fileId = schedule['file_id'] ?? '';
 
         if (fileId.isNotEmpty) {
           print('▶️ Memutar: ${schedule['title']} dengan file_id $fileId');
           await _playerService.playFromFileId(fileId);
+
+          _lastPlayedScheduleKey = key;
+          _lastPlayedTime = now;
         } else {
           print('⚠️ File ID kosong untuk jadwal: ${schedule['title']}');
         }

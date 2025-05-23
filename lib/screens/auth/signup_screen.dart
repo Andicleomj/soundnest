@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -16,11 +15,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       TextEditingController();
 
   bool _isButtonEnabled = false;
-  bool _passwordVisible = false;
-  bool _rePasswordVisible = false;
-
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final DatabaseReference _database = FirebaseDatabase.instance.ref();
 
   void _validateFields() {
     setState(() {
@@ -48,44 +42,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Future<void> _signUp() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
-    final rePassword = _reenterPasswordController.text;
-
-    if (password != rePassword) {
+    if (_passwordController.text != _reenterPasswordController.text) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Password tidak cocok.")));
+      ).showSnackBar(const SnackBar(content: Text("Password tidak cocok")));
       return;
     }
 
     try {
-      final userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
       );
-
-      await _database.child("users/${userCredential.user!.uid}").set({
-        "email": email,
-      });
-
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Akun berhasil dibuat!")));
-
       Navigator.pop(context);
-    } on FirebaseAuthException catch (e) {
-      String message = "Terjadi kesalahan.";
-
-      if (e.code == 'email-already-in-use') {
-        message = "Email sudah digunakan.";
-      } else if (e.code == 'weak-password') {
-        message = "Password terlalu lemah.";
-      }
-
+    } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(message)));
+      ).showSnackBar(SnackBar(content: Text("Gagal mendaftar: $e")));
     }
   }
 
@@ -95,113 +71,61 @@ class _SignUpScreenState extends State<SignUpScreen> {
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 30),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 60),
-
-              Center(
-                child: Image.asset(
-                  'assets/Logo 1.png',
-                  width: 200,
-                  height: 200,
-                ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
               ),
-              const SizedBox(height: 20),
-
-              const Text(
-                "SIGN UP",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              const Text("Email"),
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  border: UnderlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              const Text("Password"),
-              TextField(
-                controller: _passwordController,
-                obscureText: !_passwordVisible,
-                decoration: InputDecoration(
-                  border: const UnderlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _passwordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _passwordVisible = !_passwordVisible;
-                      });
-                    },
+            ),
+            Center(
+              child: Image.asset('assets/Logo 1.png', width: 200, height: 200),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              "SIGN UP",
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            const Text("Email"),
+            TextField(
+              controller: _emailController,
+              decoration: const InputDecoration(border: UnderlineInputBorder()),
+            ),
+            const SizedBox(height: 20),
+            const Text("Password"),
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(border: UnderlineInputBorder()),
+            ),
+            const SizedBox(height: 20),
+            const Text("Re-Enter Password"),
+            TextField(
+              controller: _reenterPasswordController,
+              obscureText: true,
+              decoration: const InputDecoration(border: UnderlineInputBorder()),
+            ),
+            const SizedBox(height: 30),
+            Center(
+              child: ElevatedButton(
+                onPressed: _isButtonEnabled ? _signUp : null,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 50,
+                    vertical: 15,
                   ),
                 ),
+                child: const Text("Sign Up"),
               ),
-              const SizedBox(height: 20),
-
-              const Text("Re-Enter Password"),
-              TextField(
-                controller: _reenterPasswordController,
-                obscureText: !_rePasswordVisible,
-                decoration: InputDecoration(
-                  border: const UnderlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _rePasswordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _rePasswordVisible = !_rePasswordVisible;
-                      });
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              Center(
-                child: ElevatedButton(
-                  onPressed: _isButtonEnabled ? _signUp : null,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 50,
-                      vertical: 15,
-                    ),
-                    backgroundColor:
-                        _isButtonEnabled ? Colors.blueAccent : Colors.grey[300],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    elevation: 3,
-                  ),
-                  child: Text(
-                    "Sign Up",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: _isButtonEnabled ? Colors.white : Colors.black45,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
