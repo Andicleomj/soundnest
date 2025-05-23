@@ -53,6 +53,7 @@ class ScheduleScreen extends StatelessWidget {
               child: InkWell(
                 onTap: () => _navigateToMusik(context),
                 child: Container(
+                  height: 100,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(255, 106, 161, 255),
@@ -63,15 +64,18 @@ class ScheduleScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 15),
-            InkWell(
-              onTap: () => _navigateToMurottal(context),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 106, 161, 255),
-                  borderRadius: BorderRadius.circular(20),
+            Expanded(
+              child: InkWell(
+                onTap: () => _navigateToMurottal(context),
+                child: Container(
+                  height: 100,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 106, 161, 255),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text("Jadwal Murottal"),
                 ),
-                child: const Text("Jadwal Murottal"),
               ),
             ),
           ],
