@@ -54,6 +54,7 @@ class ScheduleScreen extends StatelessWidget {
                 onTap: () => _navigateToMusik(context),
                 child: Container(
                   height: 100,
+                  alignment: Alignment.center,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(255, 106, 161, 255),
@@ -69,6 +70,7 @@ class ScheduleScreen extends StatelessWidget {
                 onTap: () => _navigateToMurottal(context),
                 child: Container(
                   height: 100,
+                  alignment: Alignment.center,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(255, 106, 161, 255),
