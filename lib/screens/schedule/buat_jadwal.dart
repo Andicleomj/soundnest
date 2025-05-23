@@ -45,54 +45,70 @@ class ScheduleScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Expanded(
-              child: InkWell(
-                onTap: () => _navigateToMusik(context),
-                child: Container(
-                  height: 100,
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 106, 161, 255),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    "Jadwal Musik",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFB2EBF2), // Biru muda
+              Color(0xFFE1F5FE), // Biru sangat muda
+            ],
+          ),
+          image: DecorationImage(
+            image: AssetImage('assets/background_cloud.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => _navigateToMusik(context),
+                  child: Container(
+                    height: 100,
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 106, 161, 255),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      "Jadwal Musik",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 15),
-            Expanded(
-              child: InkWell(
-                onTap: () => _navigateToMurottal(context),
-                child: Container(
-                  height: 100,
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 106, 161, 255),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    "Jadwal Murottal",
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
+              const SizedBox(width: 15),
+              Expanded(
+                child: InkWell(
+                  onTap: () => _navigateToMurottal(context),
+                  child: Container(
+                    height: 100,
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 106, 161, 255),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      "Jadwal Murottal",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
