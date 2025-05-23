@@ -79,6 +79,10 @@ class ScheduleScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Color.fromARGB(255, 164, 214, 255),
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color.fromARGB(255, 115, 166, 255),
+                          width: 4,
+                        ),
                       ),
                       child: const Text(
                         "Jadwal Musik",
@@ -101,6 +105,10 @@ class ScheduleScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Color.fromARGB(255, 164, 214, 255),
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color.fromARGB(255, 115, 166, 255),
+                          width: 4,
+                        ),
                       ),
                       child: const Text(
                         "Jadwal Murottal",
