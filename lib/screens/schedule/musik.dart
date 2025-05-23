@@ -131,7 +131,10 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
                     ? "Pilih Musik"
                     : "$selectedMusic (${selectedCategory ?? '-'})",
               ),
-              trailing: const Icon(Icons.library_music),
+              trailing: const Icon(
+                Icons.library_music,
+                color: Color.fromARGB(255, 164, 214, 255),
+              ),
               onTap: _pickMusic,
             ),
             const Divider(),
@@ -148,6 +151,22 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
             SwitchListTile(
               title: const Text("Ulangi Setiap Hari"),
               value: repeatEveryday,
+              activeColor: const Color.fromARGB(
+                255,
+                71,
+                167,
+                245,
+              ), // warna thumb saat aktif
+              activeTrackColor: const Color.fromARGB(
+                255,
+                71,
+                167,
+                245,
+              ), // warna track saat aktif
+              inactiveThumbColor:
+                  Colors.grey[300], // warna thumb saat tidak aktif
+              inactiveTrackColor:
+                  Colors.grey[400], // warna track saat tidak aktif
               onChanged: (val) {
                 setState(() {
                   repeatEveryday = val;
@@ -155,6 +174,7 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
                 });
               },
             ),
+
             if (!repeatEveryday)
               Wrap(
                 spacing: 8,
