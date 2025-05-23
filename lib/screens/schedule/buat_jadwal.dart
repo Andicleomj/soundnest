@@ -81,7 +81,7 @@ class ScheduleScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: const Color.fromARGB(255, 115, 166, 255),
-                          width: 4,
+                          width: 2,
                         ),
                       ),
                       child: const Text(
@@ -107,7 +107,7 @@ class ScheduleScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: const Color.fromARGB(255, 115, 166, 255),
-                          width: 4,
+                          width: 2,
                         ),
                       ),
                       child: const Text(
