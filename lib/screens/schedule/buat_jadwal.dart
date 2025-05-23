@@ -51,8 +51,8 @@ class ScheduleScreen extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color.fromARGB(255, 189, 238, 245), // Biru muda
-              Color.fromARGB(255, 189, 238, 245), // Biru sangat muda
+              Color.fromARGB(255, 164, 214, 255), // Biru muda
+              Color.fromARGB(255, 164, 214, 255), // Biru sangat muda
             ],
           ),
         ),
