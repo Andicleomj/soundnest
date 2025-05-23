@@ -58,7 +58,7 @@ class ScheduleScreen extends StatelessWidget {
         ),
         child: Container(
           width: double.infinity,
-          height: 300, // atur tinggi sesuai kebutuhan
+          height: 500, // atur tinggi sesuai kebutuhan
           decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage('assets/kids.jpg'),
