@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soundnest/screens/auth/login.dart';
-import 'package:soundnest/screens/auth/signup_screen.dart'; 
+import 'package:soundnest/screens/auth/signup_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -14,27 +14,25 @@ class LoginScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo dengan Border
             Container(
               padding: const EdgeInsets.all(8),
-              child: Image.asset(
-                'assets/Logo 1.png', 
-                width: 200,
-                height: 200,
-              ),
+              child: Image.asset('assets/Logo 1.png', width: 200, height: 200),
             ),
             const SizedBox(height: 30),
 
             // Tombol Login
             ElevatedButton(
               onPressed: () {
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => Login()),
+                  MaterialPageRoute(builder: (context) => const Login()),
                 );
               },
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 50,
+                  vertical: 15,
+                ),
                 backgroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25),
@@ -44,10 +42,7 @@ class LoginScreen extends StatelessWidget {
               ),
               child: const Text(
                 "Login",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.black),
               ),
             ),
             const SizedBox(height: 20),
