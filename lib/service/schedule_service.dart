@@ -63,7 +63,6 @@ class ScheduleService {
           hari = '-';
         }
 
-        // Ambil file_id atau fileId dari data, prioritaskan file_id
         final fileId = data['file_id'] ?? data['fileId'] ?? '';
 
         schedules.add({
@@ -93,7 +92,7 @@ class ScheduleService {
       await initialize();
     }
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(minutes: 1), (_) async {
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) async {
       await _checkAndPlaySchedules();
     });
     print('✅ ScheduleService started.');
@@ -111,7 +110,9 @@ class ScheduleService {
     final now = DateTime.now();
 
     final currentDay = DateFormat('EEEE', 'id_ID').format(now);
-    final currentTime12h = DateFormat('hh:mm a').format(now);
+    final currentTime = DateFormat('h:mm a').format(now); // tanpa leading zero
+
+    print('🕒 Sekarang: $currentDay $currentTime');
 
     for (final schedule in schedules) {
       if (schedule['enabled'] != true) continue;
@@ -122,7 +123,11 @@ class ScheduleService {
       final isToday =
           hariStr == 'Setiap Hari' || hariStr.split(', ').contains(currentDay);
 
-      if (isToday && jadwalWaktu == currentTime12h) {
+      print(
+        '🔍 Cek jadwal: ${schedule['title']} → Hari: $hariStr, Waktu: $jadwalWaktu',
+      );
+
+      if (isToday && jadwalWaktu == currentTime) {
         final fileId = schedule['file_id'] ?? '';
         final durasi = int.tryParse(schedule['durasi'] ?? '0') ?? 0;
 
@@ -130,7 +135,8 @@ class ScheduleService {
 
         if (fileId.isNotEmpty) {
           print(
-            '▶️ Memutar musik/murottal: ${schedule['title']} dengan file_id $fileId selama $durasi menit',
+            '▶️ Memutar musik/murottal: ${schedule['title']} '
+            'dengan file_id $fileId selama $durasi menit',
           );
           await _playerService.playFromFileId(fileId, duration: durasi);
         } else {
@@ -140,4 +146,3 @@ class ScheduleService {
     }
   }
 }
-//p
