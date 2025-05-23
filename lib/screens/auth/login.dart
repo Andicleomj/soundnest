@@ -35,7 +35,7 @@ class _LoginState extends State<Login> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Login berhasil!")));
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      Navigator.pushNamed(context, AppRoutes.login);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
