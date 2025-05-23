@@ -157,12 +157,7 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
                 167,
                 245,
               ), // warna thumb saat aktif
-              activeTrackColor: const Color.fromARGB(
-                255,
-                71,
-                167,
-                245,
-              ), // warna track saat aktif
+              activeTrackColor: Colors.blue[200], // warna track saat aktif
               inactiveThumbColor:
                   Colors.grey[300], // warna thumb saat tidak aktif
               inactiveTrackColor:
@@ -197,8 +192,15 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
                     }).toList(),
               ),
             const SizedBox(height: 20),
-            ElevatedButton(
+            OutlinedButton(
               onPressed: _saveSchedule,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.blue, // Warna teks
+                side: const BorderSide(
+                  color: Colors.blue,
+                ), // Garis pinggir biru
+                shape: const StadiumBorder(), // Membuat tombol lonjong
+              ),
               child: const Text("Simpan Jadwal"),
             ),
           ],
