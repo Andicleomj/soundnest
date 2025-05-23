@@ -133,7 +133,7 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
               ),
               trailing: const Icon(
                 Icons.library_music,
-                color: Color.fromARGB(255, 164, 214, 255),
+                color: Color.fromARGB(255, 81, 177, 255),
               ),
               onTap: _pickMusic,
             ),
@@ -146,7 +146,7 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
               ),
               trailing: const Icon(
                 Icons.access_time,
-                color: Color.fromARGB(255, 164, 214, 255),
+                color: Color.fromARGB(255, 81, 177, 255),
               ),
               onTap: _pickTime,
             ),
@@ -154,11 +154,11 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
             SwitchListTile(
               title: const Text("Ulangi Setiap Hari"),
               value: repeatEveryday,
-              activeColor: const Color.fromARGB(
+              activeColor: Color.fromARGB(
                 255,
-                71,
-                167,
-                245,
+                81,
+                177,
+                255,
               ), // warna thumb saat aktif
               activeTrackColor: Colors.blue[200], // warna track saat aktif
               inactiveThumbColor:
@@ -185,7 +185,7 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
                           style: TextStyle(
                             color:
                                 isSelected
-                                    ? const Color.fromARGB(255, 71, 167, 245)
+                                    ? Color.fromARGB(255, 81, 177, 255)
                                     : Colors.black,
                           ),
                         ),
@@ -206,7 +206,12 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
             OutlinedButton(
               onPressed: _saveSchedule,
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.blue, // Warna teks
+                foregroundColor: Color.fromARGB(
+                  255,
+                  81,
+                  177,
+                  255,
+                ), // Warna teks
                 side: const BorderSide(
                   color: Colors.blue,
                 ), // Garis pinggir biru
