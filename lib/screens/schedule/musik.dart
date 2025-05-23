@@ -177,7 +177,15 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
                     daysOfWeek.map((day) {
                       final isSelected = selectedDays.contains(day);
                       return FilterChip(
-                        label: Text(day),
+                        label: Text(
+                          day,
+                          style: TextStyle(
+                            color:
+                                isSelected
+                                    ? const Color.fromARGB(255, 71, 167, 245)
+                                    : Colors.black,
+                          ),
+                        ),
                         selected: isSelected,
                         onSelected: (val) {
                           setState(() {
