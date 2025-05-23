@@ -38,7 +38,7 @@ class _LoginState extends State<Login> {
         final Map users = snapshot.value as Map;
         for (final entry in users.entries) {
           final user = Map<String, dynamic>.from(entry.value);
-          if (user['Username'] == username) {
+          if (user['username'] == username) {
             email = user['email'];
             break;
           }
