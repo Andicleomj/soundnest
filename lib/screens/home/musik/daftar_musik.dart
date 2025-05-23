@@ -6,10 +6,10 @@ class DaftarMusikScreen extends StatefulWidget {
   final String categoryName;
 
   const DaftarMusikScreen({
-    Key? key,
+    super.key,
     required this.categoryId,
     required this.categoryName,
-  }) : super(key: key);
+  });
 
   @override
   _DaftarMusikScreenState createState() => _DaftarMusikScreenState();

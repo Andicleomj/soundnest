@@ -7,11 +7,11 @@ class SurahScreen extends StatefulWidget {
   final String categoryName;
 
   const SurahScreen({
-    Key? key,
+    super.key,
     required this.categoryPath,
     required this.categoryName,
     required String categoryId,
-  }) : super(key: key);
+  });
 
   @override
   _SurahScreenState createState() => _SurahScreenState();
