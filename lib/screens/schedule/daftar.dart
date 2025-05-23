@@ -12,6 +12,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   final DatabaseReference _manualRef = FirebaseDatabase.instance.ref(
     'devices/devices_01/schedule/manual',
   );
+
   List<Map<String, dynamic>> schedules = [];
   bool isLoading = true;
 
@@ -27,12 +28,18 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
     setState(() => isLoading = true);
 
     final manualSnapshot = await _manualRef.get();
+
     List<Map<String, dynamic>> loadedSchedules = [];
 
-    if (manualSnapshot.exists) {
-      final data = manualSnapshot.value;
+    List<Map<String, dynamic>> parseSnapshot(
+      DataSnapshot snapshot,
+      String source,
+    ) {
+      if (!snapshot.exists) return [];
 
+      final data = snapshot.value;
       Map<dynamic, dynamic> dataMap;
+
       if (data is Map<dynamic, dynamic>) {
         dataMap = data;
       } else if (data is List) {
@@ -44,51 +51,57 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
         dataMap = {};
       }
 
-      loadedSchedules =
-          dataMap.entries.map((entry) {
-            try {
-              final scheduleRaw = entry.value;
-              if (scheduleRaw is! Map) throw Exception("Format jadwal salah");
+      return dataMap.entries.map((entry) {
+        try {
+          final scheduleRaw = entry.value;
+          if (scheduleRaw is! Map) throw Exception("Format jadwal salah");
 
-              final schedule = Map<String, dynamic>.from(scheduleRaw);
-              final hariData = schedule['hari'];
-              String hari;
+          final schedule = Map<String, dynamic>.from(scheduleRaw);
+          final hariData = schedule['hari'];
+          String hari;
 
-              if (hariData is String) {
-                hari = hariData;
-              } else if (hariData is List) {
-                hari = hariData.join(', ');
-              } else if (hariData is Map) {
-                hari = hariData.values.join(', ');
-              } else {
-                hari = '-';
-              }
+          if (hariData is String) {
+            hari = hariData;
+          } else if (hariData is List) {
+            hari = hariData.join(', ');
+          } else if (hariData is Map) {
+            hari = hariData.values.join(', ');
+          } else {
+            hari = '-';
+          }
 
-              playingStatus[entry.key] ??= false;
+          // Key unik gabungan source + key firebase
+          final key = '$source-${entry.key}';
 
-              return {
-                'key': entry.key,
-                'title': schedule['title'] ?? 'Tanpa Judul',
-                'category': schedule['category'] ?? '-',
-                'hari': hari,
-                'waktu': schedule['waktu'] ?? 'Tidak ada waktu',
-                'durasi': schedule['durasi']?.toString() ?? '0',
-                'enabled': schedule['enabled'] ?? false,
-              };
-            } catch (e) {
-              print("⚠️ Error parsing entry ${entry.key}: $e");
-              return {
-                'key': entry.key,
-                'title': 'Format Tidak Valid',
-                'category': '-',
-                'hari': '-',
-                'waktu': '-',
-                'durasi': '0',
-                'enabled': false,
-              };
-            }
-          }).toList();
+          playingStatus[key] ??= false;
+
+          return {
+            'key': key,
+            'rawKey': entry.key, // key asli di DB, untuk update/delete
+            'title': schedule['title'] ?? 'Tanpa Judul',
+            'category': schedule['category'] ?? '-',
+            'hari': hari,
+            'waktu': schedule['waktu'] ?? 'Tidak ada waktu',
+            'enabled': schedule['enabled'] ?? false,
+            'source': source,
+          };
+        } catch (e) {
+          print("⚠️ Error parsing entry ${entry.key} di $source: $e");
+          return {
+            'key': '$source-${entry.key}',
+            'rawKey': entry.key,
+            'title': 'Format Tidak Valid',
+            'category': '-',
+            'hari': '-',
+            'waktu': '-',
+            'enabled': false,
+            'source': source,
+          };
+        }
+      }).toList();
     }
+
+    loadedSchedules.addAll(parseSnapshot(manualSnapshot, 'manual'));
 
     setState(() {
       schedules = loadedSchedules;
@@ -96,14 +109,29 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
     });
   }
 
+  DatabaseReference _getRefBySource(String source) {
+    switch (source) {
+      case 'manual':
+        return _manualRef;
+      default:
+        throw Exception('Unknown source: $source');
+    }
+  }
+
   Future<void> _toggleSchedule(String key, bool isActive) async {
     try {
+      final idx = schedules.indexWhere((s) => s['key'] == key);
+      if (idx == -1) return;
+
+      final schedule = schedules[idx];
+      final ref = _getRefBySource(schedule['source']);
+
       setState(() {
-        final idx = schedules.indexWhere((s) => s['key'] == key);
-        if (idx != -1) schedules[idx]['enabled'] = isActive;
+        schedules[idx]['enabled'] = isActive;
       });
 
-      await _manualRef.child(key).update({"enabled": isActive});
+      await ref.child(schedule['rawKey']).update({"enabled": isActive});
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -125,11 +153,19 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
 
   Future<void> _deleteSchedule(String key) async {
     try {
-      await _manualRef.child(key).remove();
+      final idx = schedules.indexWhere((s) => s['key'] == key);
+      if (idx == -1) return;
+
+      final schedule = schedules[idx];
+      final ref = _getRefBySource(schedule['source']);
+
+      await ref.child(schedule['rawKey']).remove();
+
       setState(() {
-        schedules.removeWhere((s) => s['key'] == key);
+        schedules.removeAt(idx);
         playingStatus.remove(key);
       });
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Jadwal berhasil dihapus")));
@@ -161,15 +197,18 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  await _manualRef.child(schedule['key']).update({
+                  final ref = _getRefBySource(schedule['source']);
+                  await ref.child(schedule['rawKey']).update({
                     'title': newTitle,
                   });
-                  setState(() {
-                    final idx = schedules.indexWhere(
-                      (s) => s['key'] == schedule['key'],
-                    );
-                    if (idx != -1) schedules[idx]['title'] = newTitle;
-                  });
+                  final idx = schedules.indexWhere(
+                    (s) => s['key'] == schedule['key'],
+                  );
+                  if (idx != -1) {
+                    setState(() {
+                      schedules[idx]['title'] = newTitle;
+                    });
+                  }
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Jadwal berhasil diperbarui")),
@@ -233,7 +272,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                           children: [
                             Text("Hari: ${schedule['hari']}"),
                             Text("Mulai: ${schedule['waktu']}"),
-                            Text("Durasi: ${schedule['durasi']} menit"),
+                            Text("Sumber: ${schedule['source']}"),
                           ],
                         ),
                       ),
