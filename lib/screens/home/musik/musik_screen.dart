@@ -173,7 +173,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
                   if (!isPlaying || musicPlayerService.currentTitle == null)
                     return const SizedBox.shrink();
                   return Container(
-                    height: 100,
+                    height: 60,
                     color: Colors.blue.shade100,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
