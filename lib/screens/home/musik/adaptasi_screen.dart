@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:soundnest/service/music_player_service.dart'; // sesuaikan path kamu
+
+final MusicPlayerService musicPlayerService = MusicPlayerService();
 
 class AdaptasiScreen extends StatefulWidget {
-  final String categoryPath; // Path lengkap di Firebase Realtime Database
-  final String categoryName; // Nama kategori untuk judul AppBar
+  final String categoryPath;
+  final String categoryName;
   final bool selectMode;
   final bool fromScheduleTab;
 
@@ -13,7 +15,7 @@ class AdaptasiScreen extends StatefulWidget {
     required this.categoryPath,
     required this.categoryName,
     this.selectMode = false,
-    this.fromScheduleTab = false, // default false
+    this.fromScheduleTab = false,
   });
 
   @override
@@ -22,11 +24,9 @@ class AdaptasiScreen extends StatefulWidget {
 
 class _AdaptasiScreenState extends State<AdaptasiScreen> {
   late DatabaseReference databaseRef;
-  final AudioPlayer _audioPlayer = AudioPlayer();
   List<Map<String, dynamic>> adaptasiList = [];
   bool isLoading = true;
   int currentIndex = -1;
-  bool isPlaying = false;
 
   @override
   void initState() {
@@ -56,31 +56,23 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
     }
   }
 
-  // sudah
   void togglePlay(int index) async {
     final fileId = adaptasiList[index]['file_id'];
-    final url = 'http://localhost:3000/stream/$fileId';
 
-    if (isPlaying && currentIndex == index) {
-      await _audioPlayer.pause();
-      setState(() => isPlaying = false);
+    if (musicPlayerService.isPlaying &&
+        musicPlayerService.currentFileId == fileId) {
+      await musicPlayerService.pauseMusic();
     } else {
-      await _audioPlayer.stop();
-      await _audioPlayer.play(UrlSource(url));
+      await musicPlayerService.playFromFileId(fileId);
       setState(() {
         currentIndex = index;
-        isPlaying = true;
-      });
-
-      _audioPlayer.onPlayerComplete.listen((event) {
-        setState(() => isPlaying = false);
       });
     }
   }
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
+    // Jangan dispose audio player agar tetap play setelah back
     super.dispose();
   }
 
@@ -115,20 +107,20 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
                 itemCount: adaptasiList.length,
                 itemBuilder: (context, index) {
                   final music = adaptasiList[index];
-                  final isCurrent = currentIndex == index && isPlaying;
+                  final isCurrent =
+                      musicPlayerService.currentFileId == music['file_id'] &&
+                      musicPlayerService.isPlaying;
 
                   return ListTile(
                     title: Text(music['title']),
                     onTap: () {
                       if (widget.fromScheduleTab) {
-                        // Jika dari tab penjadwalan, kembali dengan data ke form jadwal
                         Navigator.pop(context, {
                           'title': music['title'],
                           'file_id': music['file_id'],
                           'category': widget.categoryName,
                         });
                       } else {
-                        // Jika bukan, langsung play musik
                         togglePlay(index);
                       }
                     },
