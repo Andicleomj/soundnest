@@ -182,13 +182,29 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        String newTitle = schedule['title'];
+        String newHari = schedule['hari'];
+        String newWaktu = schedule['waktu'];
+
         return AlertDialog(
           title: const Text('Edit Jadwal'),
-          content: TextFormField(
-            initialValue: schedule['title'],
-            decoration: const InputDecoration(labelText: 'Judul'),
-            onChanged: (val) => newTitle = val,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                initialValue: newHari,
+                decoration: const InputDecoration(
+                  labelText: 'Hari (pisah koma jika banyak)',
+                ),
+                onChanged: (val) => newHari = val,
+              ),
+              TextFormField(
+                initialValue: newWaktu,
+                decoration: const InputDecoration(
+                  labelText: 'Waktu (misal: 14:00 PM)',
+                ),
+                onChanged: (val) => newWaktu = val,
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -199,17 +215,26 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
               onPressed: () async {
                 try {
                   final ref = _getRefBySource(schedule['source']);
+
+                  // Buat list hari dari string input
+                  final hariList =
+                      newHari.split(',').map((e) => e.trim()).toList();
+
                   await ref.child(schedule['rawKey']).update({
-                    'title': newTitle,
+                    'hari': hariList,
+                    'waktu': newWaktu,
                   });
+
                   final idx = schedules.indexWhere(
                     (s) => s['key'] == schedule['key'],
                   );
                   if (idx != -1) {
                     setState(() {
-                      schedules[idx]['title'] = newTitle;
+                      schedules[idx]['hari'] = newHari;
+                      schedules[idx]['waktu'] = newWaktu;
                     });
                   }
+
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Jadwal berhasil diperbarui")),
