@@ -28,21 +28,33 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
   bool isLoading = true;
   int currentIndex = -1;
 
+  late final VoidCallback _playerListener;
+
   @override
   void initState() {
     super.initState();
+
     databaseRef = FirebaseDatabase.instance.ref(widget.categoryPath);
     fetchMusicData();
 
-    // Listener untuk update UI otomatis saat status play berubah (pause/stop/play)
-    musicPlayerService.isPlayingNotifier.addListener(() {
-      final playing = musicPlayerService.isPlayingNotifier.value;
-      if (!playing) {
+    _playerListener = () {
+      if (!mounted) return;
+
+      // Jika musik berhenti, update UI agar item yang sedang aktif di-reset
+      if (!musicPlayerService.isPlayingNotifier.value) {
         setState(() {
           currentIndex = -1;
         });
       }
-    });
+    };
+
+    musicPlayerService.isPlayingNotifier.addListener(_playerListener);
+  }
+
+  @override
+  void dispose() {
+    musicPlayerService.isPlayingNotifier.removeListener(_playerListener);
+    super.dispose();
   }
 
   void fetchMusicData() async {
