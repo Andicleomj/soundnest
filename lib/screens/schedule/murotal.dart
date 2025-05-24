@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:soundnest/screens/home/murottal/pickmurottal.dart'; // Pastikan file ini ada
-import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
+import 'package:soundnest/screens/home/murottal/pickmurottal.dart';
 
 class MurottalScheduleForm extends StatefulWidget {
   const MurottalScheduleForm({super.key});
@@ -44,53 +43,16 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
     }
   }
 
-  void _pickTime() {
-    showDialog(
+  void _pickTime() async {
+    final time = await showTimePicker(
       context: context,
-      builder: (BuildContext context) {
-        TimeOfDay tempSelectedTime = selectedTime ?? TimeOfDay.now();
-        DateTime initialTime = DateTime(
-          0,
-          0,
-          0,
-          tempSelectedTime.hour,
-          tempSelectedTime.minute,
-        );
-
-        return AlertDialog(
-          title: const Text("Pilih Waktu"),
-          content: SizedBox(
-            height: 180,
-            child: TimePickerSpinner(
-              is24HourMode: true,
-              normalTextStyle: const TextStyle(
-                fontSize: 18,
-                color: Colors.grey,
-              ),
-              highlightedTextStyle: const TextStyle(
-                fontSize: 24,
-                color: Colors.blue,
-              ),
-              spacing: 40,
-              itemHeight: 40,
-              isForce2Digits: true,
-              time: initialTime,
-              onTimeChange: (DateTime time) {
-                setState(() {
-                  selectedTime = TimeOfDay.fromDateTime(time);
-                });
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text("OK"),
-            ),
-          ],
-        );
-      },
+      initialTime: TimeOfDay.now(),
     );
+    if (time != null) {
+      setState(() {
+        selectedTime = time;
+      });
+    }
   }
 
   void _saveSchedule() async {
