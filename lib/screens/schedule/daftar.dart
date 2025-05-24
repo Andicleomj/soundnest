@@ -179,122 +179,51 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   }
 
   void _editSchedule(Map<String, dynamic> schedule) {
-    TimeOfDay selectedTime = TimeOfDay(
-      hour: int.tryParse(schedule['waktu']?.split(":")[0] ?? '7') ?? 7,
-      minute: int.tryParse(schedule['waktu']?.split(":")[1] ?? '0') ?? 0,
-    );
-    List<String> days = [
-      "Senin",
-      "Selasa",
-      "Rabu",
-      "Kamis",
-      "Jumat",
-      "Sabtu",
-      "Minggu",
-    ];
-    List<String> selectedDays = [];
-
-    if (schedule['hari'] is String) {
-      selectedDays = schedule['hari'].split(',').map((d) => d.trim()).toList();
-    }
-
-    String newTitle = schedule['title'];
-
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Edit Jadwal'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextFormField(
-                      initialValue: newTitle,
-                      decoration: const InputDecoration(labelText: 'Judul'),
-                      onChanged: (val) => newTitle = val,
-                    ),
-                    const SizedBox(height: 12),
-                    ListTile(
-                      title: const Text("Waktu"),
-                      subtitle: Text(selectedTime.format(context)),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.access_time),
-                        onPressed: () async {
-                          final picked = await showTimePicker(
-                            context: context,
-                            initialTime: selectedTime,
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              selectedTime = picked;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text("Pilih Hari:"),
-                    Wrap(
-                      spacing: 8.0,
-                      children:
-                          days.map((day) {
-                            final isSelected = selectedDays.contains(day);
-                            return FilterChip(
-                              label: Text(day),
-                              selected: isSelected,
-                              onSelected: (val) {
-                                setState(() {
-                                  if (val) {
-                                    selectedDays.add(day);
-                                  } else {
-                                    selectedDays.remove(day);
-                                  }
-                                });
-                              },
-                            );
-                          }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Batal'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      final ref = _getRefBySource(schedule['source']);
-                      await ref.child(schedule['rawKey']).update({
-                        'title': newTitle,
-                        'waktu': selectedTime.format(context),
-                        'hari': selectedDays,
-                      });
-                      _loadSchedules(); // Refresh list
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Jadwal berhasil diperbarui"),
-                        ),
-                      );
-                    } catch (e) {
-                      print("⚠️ Gagal update jadwal ${schedule['key']}: $e");
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Gagal memperbarui jadwal"),
-                        ),
-                      );
-                    }
-                  },
-                  child: const Text('Simpan'),
-                ),
-              ],
-            );
-          },
+        String newTitle = schedule['title'];
+        return AlertDialog(
+          title: const Text('Edit Jadwal'),
+          content: TextFormField(
+            initialValue: schedule['title'],
+            decoration: const InputDecoration(labelText: 'Judul'),
+            onChanged: (val) => newTitle = val,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  final ref = _getRefBySource(schedule['source']);
+                  await ref.child(schedule['rawKey']).update({
+                    'title': newTitle,
+                  });
+                  final idx = schedules.indexWhere(
+                    (s) => s['key'] == schedule['key'],
+                  );
+                  if (idx != -1) {
+                    setState(() {
+                      schedules[idx]['title'] = newTitle;
+                    });
+                  }
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Jadwal berhasil diperbarui")),
+                  );
+                } catch (e) {
+                  print("⚠️ Gagal update jadwal ${schedule['key']}: $e");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Gagal memperbarui jadwal")),
+                  );
+                }
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
         );
       },
     );
