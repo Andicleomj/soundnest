@@ -153,12 +153,7 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
             SwitchListTile(
               title: const Text("Ulangi Setiap Hari"),
               value: repeatEveryday,
-              activeColor: Color.fromARGB(
-                255,
-                81,
-                177,
-                255,
-              ), // warna thumb saat aktif
+              activeColor: Colors.white, // warna thumb saat aktif
               activeTrackColor: Colors.blue[200], // warna track saat aktif
               inactiveThumbColor:
                   Colors.grey[300], // warna thumb saat tidak aktif

@@ -325,7 +325,18 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                                   onChanged: (bool value) {
                                     _toggleSchedule(schedule['key'], value);
                                   },
+                                  activeColor:
+                                      Colors.white, // Warna tombol saat aktif
+                                  activeTrackColor:
+                                      Colors
+                                          .blue[200], // Warna lintasan saat aktif
+                                  inactiveThumbColor:
+                                      Colors.grey, // Warna tombol saat nonaktif
+                                  inactiveTrackColor:
+                                      Colors
+                                          .black12, // Warna lintasan saat nonaktif
                                 ),
+
                                 const SizedBox(width: 4),
                                 IconButton(
                                   icon: Icon(
