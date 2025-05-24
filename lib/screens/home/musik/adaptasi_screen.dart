@@ -3,7 +3,6 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:soundnest/service/music_player_service.dart'; // sesuaikan path kamu
 
 final MusicPlayerService musicPlayerService = MusicPlayerService();
-// Inisialisasi service sebelum digunakan
 
 class AdaptasiScreen extends StatefulWidget {
   final String categoryPath;
@@ -73,12 +72,6 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
         currentIndex = index;
       });
     }
-  }
-
-  @override
-  void dispose() {
-    // Jangan dispose audio player agar tetap play setelah back
-    super.dispose();
   }
 
   @override

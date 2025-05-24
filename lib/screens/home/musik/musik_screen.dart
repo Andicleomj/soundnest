@@ -13,6 +13,9 @@ import 'package:soundnest/screens/home/musik/haji_screen.dart';
 import 'package:soundnest/screens/home/musik/mama_screen.dart';
 import 'package:soundnest/screens/home/musik/sunda_screen.dart';
 import 'package:soundnest/screens/home/musik/guru_screen.dart';
+import 'package:soundnest/service/music_player_service.dart';
+
+final musicPlayerService = MusicPlayerService();
 
 class MusicScreen extends StatelessWidget {
   final bool selectMode;
@@ -155,27 +158,20 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
                           'Profesi',
                           'Kendaraan',
                         ], isDeletable: true),
-
                         const SizedBox(height: 20),
-
-                        if (dynamicCategories.isNotEmpty) ...[
-                          const SizedBox(height: 10),
+                        if (dynamicCategories.isNotEmpty)
                           _buildDynamicCategoryGrid(context),
-                        ],
                       ],
                     ),
                   ),
                 ),
               ),
-
               // ✅ Mini Player di bagian bawah
-              ValueListenableBuilder(
+              ValueListenableBuilder<bool>(
                 valueListenable: musicPlayerService.isPlayingNotifier,
                 builder: (context, isPlaying, _) {
-                  if (!isPlaying || musicPlayerService.currentTitle == null) {
+                  if (!isPlaying || musicPlayerService.currentTitle == null)
                     return const SizedBox.shrink();
-                  }
-
                   return Container(
                     color: Colors.blue.shade100,
                     padding: const EdgeInsets.symmetric(
@@ -190,35 +186,37 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                musicPlayerService.currentTitle ?? '',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                overflow: TextOverflow.ellipsis,
+                              ValueListenableBuilder<String?>(
+                                valueListenable:
+                                    musicPlayerService.currentTitleNotifier,
+                                builder:
+                                    (context, title, _) => Text(
+                                      title ?? '',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                               ),
-                              Text(
-                                musicPlayerService.currentCategory ?? '',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.black54,
-                                ),
-                                overflow: TextOverflow.ellipsis,
+                              ValueListenableBuilder<String?>(
+                                valueListenable:
+                                    musicPlayerService.currentCategoryNotifier,
+                                builder:
+                                    (context, category, _) => Text(
+                                      category ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black54,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                               ),
                             ],
                           ),
                         ),
                         IconButton(
-                          icon: Icon(
-                            isPlaying ? Icons.pause : Icons.play_arrow,
-                          ),
-                          onPressed: () {
-                            if (isPlaying) {
-                              musicPlayerService.pauseMusic();
-                            } else {
-                              musicPlayerService.resumeMusic();
-                            }
-                          },
+                          icon: const Icon(Icons.pause),
+                          onPressed: musicPlayerService.pauseMusic,
                         ),
                       ],
                     ),
