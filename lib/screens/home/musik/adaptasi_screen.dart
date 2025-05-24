@@ -33,6 +33,16 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
     super.initState();
     databaseRef = FirebaseDatabase.instance.ref(widget.categoryPath);
     fetchMusicData();
+
+    // Listener untuk update UI otomatis saat status play berubah (pause/stop/play)
+    musicPlayerService.isPlayingNotifier.addListener(() {
+      final playing = musicPlayerService.isPlayingNotifier.value;
+      if (!playing) {
+        setState(() {
+          currentIndex = -1;
+        });
+      }
+    });
   }
 
   void fetchMusicData() async {
@@ -61,13 +71,11 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
 
     if (musicPlayerService.isPlaying &&
         musicPlayerService.currentFileId == fileId) {
-      // Pause musik dan update UI
       await musicPlayerService.pauseMusic();
       setState(() {
-        currentIndex = -1; // karena sudah pause, tidak ada yang diputar
+        currentIndex = -1;
       });
     } else {
-      // Play musik dan update UI
       await musicPlayerService.playFromFileId(
         fileId,
         title: adaptasiList[index]['title'],
