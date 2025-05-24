@@ -60,6 +60,9 @@ class _BumiScreenState extends State<BumiScreen> {
     if (musicPlayerService.isPlaying &&
         musicPlayerService.currentFileId == fileId) {
       await musicPlayerService.pauseMusic();
+      setState(() {
+        currentIndex = -1;
+      });
     } else {
       await musicPlayerService.playFromFileId(
         fileId,
