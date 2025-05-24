@@ -160,7 +160,7 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
                 177,
                 255,
               ), // warna thumb saat aktif
-              activeTrackColor: Colors.blue[200], // warna track saat aktif
+              activeTrackColor: Colors.white, // warna track saat aktif
               inactiveThumbColor:
                   Colors.grey[300], // warna thumb saat tidak aktif
               inactiveTrackColor:
