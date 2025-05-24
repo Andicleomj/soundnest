@@ -47,6 +47,7 @@ dependencies:
   intl: ^0.18.1
   url_launcher: ^6.1.7
   speech_to_text: ^6.1.1
+  time_picker_spinner: ^2.0.0
 
 dev_dependencies:
   flutter_test:

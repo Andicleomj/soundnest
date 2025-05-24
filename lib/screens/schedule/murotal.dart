@@ -138,21 +138,17 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
             ),
             const Divider(),
             ListTile(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: Colors.grey.shade300),
-              ),
-              tileColor: Colors.grey.shade100,
-              leading: Icon(Icons.access_time, color: Color(0xFF51B1FF)),
               title: Text(
                 selectedTime == null
                     ? "Pilih Waktu"
                     : "Waktu: ${selectedTime!.format(context)}",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              trailing: const Icon(
+                Icons.access_time,
+                color: Color.fromARGB(255, 81, 177, 255),
               ),
               onTap: _pickTime,
             ),
-
             const SizedBox(height: 12),
             SwitchListTile(
               title: const Text("Ulangi Setiap Hari"),
