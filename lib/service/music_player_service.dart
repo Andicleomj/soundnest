@@ -51,6 +51,9 @@ class MusicPlayerService {
     String? category,
   }) async {
     final proxyUrl = "$_baseProxyUrl/stream/$fileId";
+    if (isPlaying) {
+      await pauseMusic(); // atau stopMusic()
+    }
 
     try {
       await _audioPlayer.setVolume(1.0);

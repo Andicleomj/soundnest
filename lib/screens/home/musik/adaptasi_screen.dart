@@ -61,8 +61,13 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
 
     if (musicPlayerService.isPlaying &&
         musicPlayerService.currentFileId == fileId) {
+      // Pause musik dan update UI
       await musicPlayerService.pauseMusic();
+      setState(() {
+        currentIndex = -1; // karena sudah pause, tidak ada yang diputar
+      });
     } else {
+      // Play musik dan update UI
       await musicPlayerService.playFromFileId(
         fileId,
         title: adaptasiList[index]['title'],
