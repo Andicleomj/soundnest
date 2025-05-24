@@ -148,6 +148,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Gagal mengubah status jadwal")),
       );
+      // Add the missing closing parenthesis for Scaffold
     }
   }
 
@@ -181,13 +182,29 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        String newTitle = schedule['title'];
+        String newHari = schedule['hari'];
+        String newWaktu = schedule['waktu'];
+
         return AlertDialog(
           title: const Text('Edit Jadwal'),
-          content: TextFormField(
-            initialValue: schedule['title'],
-            decoration: const InputDecoration(labelText: 'Judul'),
-            onChanged: (val) => newTitle = val,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                initialValue: newHari,
+                decoration: const InputDecoration(
+                  labelText: 'Hari (pisah koma jika banyak)',
+                ),
+                onChanged: (val) => newHari = val,
+              ),
+              TextFormField(
+                initialValue: newWaktu,
+                decoration: const InputDecoration(
+                  labelText: 'Waktu (misal: 14:00 PM)',
+                ),
+                onChanged: (val) => newWaktu = val,
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -198,17 +215,26 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
               onPressed: () async {
                 try {
                   final ref = _getRefBySource(schedule['source']);
+
+                  // Buat list hari dari string input
+                  final hariList =
+                      newHari.split(',').map((e) => e.trim()).toList();
+
                   await ref.child(schedule['rawKey']).update({
-                    'title': newTitle,
+                    'hari': hariList,
+                    'waktu': newWaktu,
                   });
+
                   final idx = schedules.indexWhere(
                     (s) => s['key'] == schedule['key'],
                   );
                   if (idx != -1) {
                     setState(() {
-                      schedules[idx]['title'] = newTitle;
+                      schedules[idx]['hari'] = newHari;
+                      schedules[idx]['waktu'] = newWaktu;
                     });
                   }
+
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Jadwal berhasil diperbarui")),
@@ -243,110 +269,167 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Daftar Jadwal Musik"),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        title: const Text(
+          "Daftar Jadwal",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
         centerTitle: true,
       ),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : schedules.isEmpty
-              ? const Center(child: Text("Belum ada jadwal"))
-              : ListView.builder(
-                padding: const EdgeInsets.all(16.0),
-                itemCount: schedules.length,
-                itemBuilder: (context, index) {
-                  final schedule = schedules[index];
-                  final isPlaying = playingStatus[schedule['key']] ?? false;
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.fromARGB(255, 164, 214, 255), // Biru muda
+              Color.fromARGB(255, 164, 214, 255), // Biru sangat muda
+            ],
+          ),
+        ),
+        child: Container(
+          width: double.infinity,
+          height: 600,
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/cloud.jpg'),
+              fit: BoxFit.fitWidth,
+            ),
+          ),
+          child:
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : schedules.isEmpty
+                  ? const Center(child: Text("Belum ada jadwal"))
+                  : ListView.builder(
+                    padding: const EdgeInsets.all(16.0),
+                    itemCount: schedules.length,
+                    itemBuilder: (context, index) {
+                      final schedule = schedules[index];
+                      final isPlaying = playingStatus[schedule['key']] ?? false;
 
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: ListTile(
-                      title: Text(
-                        "${schedule['title']} (${schedule['category']})",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Hari: ${schedule['hari']}"),
-                            Text("Mulai: ${schedule['waktu']}"),
-                            Text("Sumber: ${schedule['source']}"),
-                          ],
-                        ),
-                      ),
-                      trailing: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Switch.adaptive(
-                              value: schedule['enabled'],
-                              onChanged: (bool value) {
-                                _toggleSchedule(schedule['key'], value);
-                              },
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          title: Text(
+                            "${schedule['title']} (${schedule['category']})",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("Hari: ${schedule['hari']}"),
+                                Text("Mulai: ${schedule['waktu']}"),
+                                Text("Sumber: ${schedule['source']}"),
+                              ],
                             ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              icon: Icon(
-                                isPlaying
-                                    ? Icons.pause_circle
-                                    : Icons.play_circle,
-                              ),
-                              color: isPlaying ? Colors.green : null,
-                              onPressed: () {
-                                _togglePlayPause(schedule['key']);
-                              },
-                              tooltip: isPlaying ? 'Pause Musik' : 'Play Musik',
-                            ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () {
-                                _editSchedule(schedule);
-                              },
-                              tooltip: 'Edit Jadwal',
-                            ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              color: Colors.red,
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder:
-                                      (context) => AlertDialog(
-                                        title: const Text('Konfirmasi Hapus'),
-                                        content: Text(
-                                          'Yakin ingin menghapus "${schedule['title']}"?',
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed:
-                                                () => Navigator.pop(context),
-                                            child: const Text('Batal'),
+                          ),
+                          trailing: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Switch.adaptive(
+                                  value: schedule['enabled'],
+                                  onChanged: (bool value) {
+                                    _toggleSchedule(schedule['key'], value);
+                                  },
+                                  activeColor:
+                                      Colors.white, // Warna tombol saat aktif
+                                  activeTrackColor:
+                                      Colors
+                                          .blue[200], // Warna lintasan saat aktif
+                                  inactiveThumbColor:
+                                      Colors.grey, // Warna tombol saat nonaktif
+                                  inactiveTrackColor:
+                                      Colors
+                                          .black12, // Warna lintasan saat nonaktif
+                                ),
+
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  icon: Icon(
+                                    isPlaying
+                                        ? Icons.pause_circle
+                                        : Icons.play_circle,
+                                  ),
+                                  color: isPlaying ? Colors.green : null,
+                                  onPressed: () {
+                                    _togglePlayPause(schedule['key']);
+                                  },
+                                  tooltip:
+                                      isPlaying ? 'Pause Musik' : 'Play Musik',
+                                ),
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () {
+                                    _editSchedule(schedule);
+                                  },
+                                  tooltip: 'Edit Jadwal',
+                                ),
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  color: Colors.red,
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder:
+                                          (context) => AlertDialog(
+                                            title: const Text(
+                                              'Konfirmasi Hapus',
+                                            ),
+                                            content: Text(
+                                              'Yakin ingin menghapus "${schedule['title']}"?',
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed:
+                                                    () =>
+                                                        Navigator.pop(context),
+                                                child: const Text('Batal'),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  Navigator.pop(context);
+                                                  _deleteSchedule(
+                                                    schedule['key'],
+                                                  );
+                                                },
+                                                child: const Text('Hapus'),
+                                              ),
+                                            ],
                                           ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                              _deleteSchedule(schedule['key']);
-                                            },
-                                            child: const Text('Hapus'),
-                                          ),
-                                        ],
-                                      ),
-                                );
-                              },
-                              tooltip: 'Hapus Jadwal',
+                                    );
+                                  },
+                                  tooltip: 'Hapus Jadwal',
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+                      );
+                    },
+                  ),
+        ),
+      ),
     );
   }
 }

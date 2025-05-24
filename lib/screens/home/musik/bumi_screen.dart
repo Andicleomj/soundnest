@@ -1,36 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:soundnest/service/music_player_service.dart'; // sesuaikan path kamu
+
+final MusicPlayerService musicPlayerService = MusicPlayerService();
 
 class BumiScreen extends StatefulWidget {
-  final String categoryPath; // Path lengkap di Firebase Realtime Database
-  final String categoryName; // Nama kategori untuk judul AppBar
+  final String categoryPath;
+  final String categoryName;
   final bool selectMode;
 
   const BumiScreen({
     super.key,
     required this.categoryPath,
     required this.categoryName,
-    this.selectMode = false, // default false
+    this.selectMode = false,
   });
+
   @override
   _BumiScreenState createState() => _BumiScreenState();
 }
 
 class _BumiScreenState extends State<BumiScreen> {
   late DatabaseReference databaseRef;
-  final AudioPlayer _audioPlayer = AudioPlayer();
   List<Map<String, dynamic>> musicList = [];
   bool isLoading = true;
   int currentIndex = -1;
-  bool isPlaying = false;
 
   @override
   void initState() {
     super.initState();
-    databaseRef = FirebaseDatabase.instance.ref(
-      'devices/devices_01/music/categories/kategori_006/files',
-    );
+    databaseRef = FirebaseDatabase.instance.ref(widget.categoryPath);
     fetchMusicData();
   }
 
@@ -57,29 +56,23 @@ class _BumiScreenState extends State<BumiScreen> {
 
   void togglePlay(int index) async {
     final fileId = musicList[index]['file_id'];
-    final url = 'http://localhost:3000/stream/$fileId';
 
-    if (isPlaying && currentIndex == index) {
-      await _audioPlayer.pause();
-      setState(() => isPlaying = false);
+    if (musicPlayerService.isPlaying &&
+        musicPlayerService.currentFileId == fileId) {
+      await musicPlayerService.pauseMusic();
+      setState(() {
+        currentIndex = -1;
+      });
     } else {
-      await _audioPlayer.stop();
-      await _audioPlayer.play(UrlSource(url));
+      await musicPlayerService.playFromFileId(
+        fileId,
+        title: musicList[index]['title'],
+        category: widget.categoryName,
+      );
       setState(() {
         currentIndex = index;
-        isPlaying = true;
-      });
-
-      _audioPlayer.onPlayerComplete.listen((event) {
-        setState(() => isPlaying = false);
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
   }
 
   @override
@@ -107,11 +100,15 @@ class _BumiScreenState extends State<BumiScreen> {
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
+              : musicList.isEmpty
+              ? const Center(child: Text('Data musik tidak tersedia.'))
               : ListView.builder(
                 itemCount: musicList.length,
                 itemBuilder: (context, index) {
                   final music = musicList[index];
-                  final isCurrent = currentIndex == index && isPlaying;
+                  final isCurrent =
+                      musicPlayerService.currentFileId == music['file_id'] &&
+                      musicPlayerService.isPlaying;
 
                   return ListTile(
                     title: Text(music['title']),

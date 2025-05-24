@@ -40,7 +40,7 @@ class ScheduleScreen extends StatelessWidget {
           ),
         ),
         title: const Text(
-          "Penjadwalan",
+          "Buat Jadwal",
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         centerTitle: true,
@@ -58,11 +58,11 @@ class ScheduleScreen extends StatelessWidget {
         ),
         child: Container(
           width: double.infinity,
-          height: 600, // atur tinggi sesuai kebutuhan
+          height: 600,
           decoration: const BoxDecoration(
             image: DecorationImage(
               image: AssetImage('assets/kids.jpg'),
-              fit: BoxFit.fitWidth, // atau contain, fill, etc
+              fit: BoxFit.fitWidth,
             ),
           ),
           child: Padding(
