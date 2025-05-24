@@ -6,26 +6,26 @@ plugins {
 
 android {
     namespace = "com.example.soundnest"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 35
+    ndkVersion = "27.0.12077973"
 
-    defaultConfig {
-        applicationId = "com.example.soundnest"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
-
-        missingDimensionStrategy 'react-native-notifications', 'react-native-firebase'
-    }
-
-    compileOptions {
+compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true 
     }
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
+    }
+
+    defaultConfig {
+        applicationId = "com.example.soundnest"
+        minSdk = 24 // Diperbaiki
+        targetSdk = 35 // Diperbaiki
+        versionCode = 1
+        versionName = "1.0"
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -41,10 +41,11 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-messaging:23.2.1")
     implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("androidx.multidex:multidex:2.0.1")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
-// Apply plugin 'com.google.gms.google-services' di bagian paling bawah
-apply plugin: "com.google.gms.google-services"
+apply(plugin = "com.google.gms.google-services") 
 
 flutter {
     source = "../.."
