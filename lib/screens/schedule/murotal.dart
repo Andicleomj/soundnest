@@ -62,7 +62,7 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
           content: SizedBox(
             height: 180,
             child: TimePickerSpinner(
-              is24HourMode: false,
+              is24HourMode: true,
               normalTextStyle: const TextStyle(
                 fontSize: 18,
                 color: Colors.grey,
