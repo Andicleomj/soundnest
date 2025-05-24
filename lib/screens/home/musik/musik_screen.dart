@@ -131,37 +131,101 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
               ),
             ],
           ),
-          body: Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  _buildCategoryGrid(context, [
-                    'Masa Adaptasi Sekolah',
-                    'Aku Suka Olahraga',
-                    'My Family',
-                    'Bumi Planet',
-                    'Hari Kemerdekaan',
-                    'Ramadhan',
-                    'Hewan',
-                    'Manasik Haji',
-                    'Budaya Sunda',
-                    'Batik',
-                    'Mother Day',
-                    'Guruku Tersayang',
-                    'Profesi',
-                    'Kendaraan',
-                  ], isDeletable: true),
+          body: Column(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(15.0),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _buildCategoryGrid(context, [
+                          'Masa Adaptasi Sekolah',
+                          'Aku Suka Olahraga',
+                          'My Family',
+                          'Bumi Planet',
+                          'Hari Kemerdekaan',
+                          'Ramadhan',
+                          'Hewan',
+                          'Manasik Haji',
+                          'Budaya Sunda',
+                          'Batik',
+                          'Mother Day',
+                          'Guruku Tersayang',
+                          'Profesi',
+                          'Kendaraan',
+                        ], isDeletable: true),
 
-                  const SizedBox(height: 20),
+                        const SizedBox(height: 20),
 
-                  if (dynamicCategories.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    _buildDynamicCategoryGrid(context),
-                  ],
-                ],
+                        if (dynamicCategories.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          _buildDynamicCategoryGrid(context),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
+
+              // ✅ Mini Player di bagian bawah
+              ValueListenableBuilder(
+                valueListenable: musicPlayerService.isPlayingNotifier,
+                builder: (context, isPlaying, _) {
+                  if (!isPlaying || musicPlayerService.currentTitle == null) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return Container(
+                    color: Colors.blue.shade100,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.music_note),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                musicPlayerService.currentTitle ?? '',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                musicPlayerService.currentCategory ?? '',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black54,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            isPlaying ? Icons.pause : Icons.play_arrow,
+                          ),
+                          onPressed: () {
+                            if (isPlaying) {
+                              musicPlayerService.pauseMusic();
+                            } else {
+                              musicPlayerService.resumeMusic();
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ),
       ],
@@ -464,5 +528,3 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
     );
   }
 }
-
-//baru

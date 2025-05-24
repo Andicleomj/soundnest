@@ -3,6 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:soundnest/service/music_player_service.dart'; // sesuaikan path kamu
 
 final MusicPlayerService musicPlayerService = MusicPlayerService();
+// Inisialisasi service sebelum digunakan
 
 class AdaptasiScreen extends StatefulWidget {
   final String categoryPath;
@@ -63,7 +64,11 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
         musicPlayerService.currentFileId == fileId) {
       await musicPlayerService.pauseMusic();
     } else {
-      await musicPlayerService.playFromFileId(fileId);
+      await musicPlayerService.playFromFileId(
+        fileId,
+        title: adaptasiList[index]['title'],
+        category: widget.categoryName,
+      );
       setState(() {
         currentIndex = index;
       });
