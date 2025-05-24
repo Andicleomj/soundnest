@@ -109,7 +109,10 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
                     ? "Pilih Murottal"
                     : "$selectedMurottal (${selectedCategory ?? '-'})",
               ),
-              trailing: const Icon(Icons.menu_book),
+              trailing: const Icon(
+                Icons.menu_book,
+                color: Color.fromARGB(255, 81, 177, 255),
+              ),
               onTap: _pickMurottal,
             ),
             const Divider(),
@@ -119,13 +122,27 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
                     ? "Pilih Waktu"
                     : "Waktu: ${selectedTime!.format(context)}",
               ),
-              trailing: const Icon(Icons.access_time),
+              trailing: const Icon(
+                Icons.access_time,
+                color: Color.fromARGB(255, 81, 177, 255),
+              ),
               onTap: _pickTime,
             ),
             const SizedBox(height: 12),
             SwitchListTile(
               title: const Text("Ulangi Setiap Hari"),
               value: repeatEveryday,
+              activeColor: Color.fromARGB(
+                255,
+                81,
+                177,
+                255,
+              ), // warna thumb saat aktif
+              activeTrackColor: Colors.blue[200], // warna track saat aktif
+              inactiveThumbColor:
+                  Colors.grey[300], // warna thumb saat tidak aktif
+              inactiveTrackColor:
+                  Colors.grey[400], // warna track saat tidak aktif
               onChanged: (val) {
                 setState(() {
                   repeatEveryday = val;
@@ -140,7 +157,15 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
                     daysOfWeek.map((day) {
                       final isSelected = selectedDays.contains(day);
                       return FilterChip(
-                        label: Text(day),
+                        label: Text(
+                          day,
+                          style: TextStyle(
+                            color:
+                                isSelected
+                                    ? Color.fromARGB(255, 81, 177, 255)
+                                    : Colors.black,
+                          ),
+                        ),
                         selected: isSelected,
                         onSelected: (val) {
                           setState(() {
@@ -157,6 +182,18 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _saveSchedule,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Color.fromARGB(
+                  255,
+                  81,
+                  177,
+                  255,
+                ), // Warna teks
+                side: const BorderSide(
+                  color: Colors.blue,
+                ), // Garis pinggir biru
+                shape: const StadiumBorder(), // Membuat tombol lonjong
+              ),
               child: const Text("Simpan Jadwal"),
             ),
           ],
