@@ -154,13 +154,8 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
             SwitchListTile(
               title: const Text("Ulangi Setiap Hari"),
               value: repeatEveryday,
-              activeColor: Color.fromARGB(
-                255,
-                81,
-                177,
-                255,
-              ), // warna thumb saat aktif
-              activeTrackColor: Colors.white, // warna track saat aktif
+              activeColor: Colors.white,
+              activeTrackColor: Colors.blue[200], // warna track saat aktif
               inactiveThumbColor:
                   Colors.grey[300], // warna thumb saat tidak aktif
               inactiveTrackColor:
