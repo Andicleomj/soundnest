@@ -51,8 +51,9 @@ class MusicPlayerService {
     String? category,
   }) async {
     final proxyUrl = "$_baseProxyUrl/stream/$fileId";
+
     if (isPlaying) {
-      await pauseMusic(); // atau stopMusic()
+      await stopMusic(); // <-- ganti pauseMusic dengan stopMusic
     }
 
     try {
