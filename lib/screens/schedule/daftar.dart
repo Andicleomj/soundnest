@@ -281,7 +281,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
           height: 600,
           decoration: const BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('assets/kids.jpg'),
+              image: AssetImage('assets/cloud.jpg'),
               fit: BoxFit.fitWidth,
             ),
           ),
