@@ -5,34 +5,42 @@ import 'package:flutter/foundation.dart';
 typedef VoidCallback = void Function();
 
 class MusicPlayerService {
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  static final MusicPlayerService _instance = MusicPlayerService._internal();
 
-  VoidCallback? _onComplete;
-  String? currentFileId;
-  bool isPlaying = false;
+  factory MusicPlayerService() {
+    return _instance;
+  }
 
-  // ✅ Notifier untuk UI (mini player)
-  final ValueNotifier<bool> isPlayingNotifier = ValueNotifier(false);
-  final ValueNotifier<String?> currentTitleNotifier = ValueNotifier(null);
-  final ValueNotifier<String?> currentCategoryNotifier = ValueNotifier(null);
-
-  MusicPlayerService() {
+  MusicPlayerService._internal() {
+    // Listen state player dan update isPlaying serta notifiers
     _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
+      final playing = state == PlayerState.playing;
+      if (isPlaying != playing) {
+        isPlaying = playing;
+        isPlayingNotifier.value = isPlaying;
+      }
       print("🎧 Audio player state: $state");
-      isPlaying = state == PlayerState.playing;
-      isPlayingNotifier.value = isPlaying; // 🔔 Update UI state
     });
 
     _audioPlayer.onPlayerComplete.listen((_) {
       print("✅ Playback selesai");
-      isPlaying = false;
-      isPlayingNotifier.value = false;
-      currentFileId = null;
-      currentTitleNotifier.value = null;
-      currentCategoryNotifier.value = null;
+      _clearCurrentMusic();
       _onComplete?.call();
     });
   }
+
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  // Informasi state musik
+  bool isPlaying = false;
+  String? currentFileId;
+
+  // Notifier untuk UI binding
+  final ValueNotifier<bool> isPlayingNotifier = ValueNotifier(false);
+  final ValueNotifier<String?> currentTitleNotifier = ValueNotifier(null);
+  final ValueNotifier<String?> currentCategoryNotifier = ValueNotifier(null);
+
+  VoidCallback? _onComplete;
 
   String get _baseProxyUrl {
     if (kIsWeb) {
@@ -44,7 +52,6 @@ class MusicPlayerService {
     }
   }
 
-  /// ✅ Mainkan musik dan update informasi judul dan kategori
   Future<void> playFromFileId(
     String fileId, {
     String? title,
@@ -53,7 +60,7 @@ class MusicPlayerService {
     final proxyUrl = "$_baseProxyUrl/stream/$fileId";
 
     if (isPlaying) {
-      await stopMusic(); // <-- ganti pauseMusic dengan stopMusic
+      await stopMusic(); // ini menghentikan musik apa pun yang sedang jalan
     }
 
     try {
@@ -89,6 +96,8 @@ class MusicPlayerService {
   }
 
   Future<void> pauseMusic() async {
+    if (!isPlaying) return; // Jika sudah pause, skip
+
     await _audioPlayer.pause();
     isPlaying = false;
     isPlayingNotifier.value = false;
@@ -96,27 +105,27 @@ class MusicPlayerService {
   }
 
   Future<void> resumeMusic() async {
+    if (isPlaying) return; // Jika sudah play, skip
+
     await _audioPlayer.resume();
     isPlaying = true;
     isPlayingNotifier.value = true;
     print("▶️ Music resumed.");
   }
 
-  Future<void> setVolume(double volume) async {
-    await _audioPlayer.setVolume(volume);
-    print("🔊 Volume set to: $volume");
-  }
-
   Future<void> stopMusic() async {
     await _audioPlayer.stop();
+    _clearCurrentMusic();
+    print("🛑 Music stopped.");
+  }
+
+  void _clearCurrentMusic() {
     isPlaying = false;
     isPlayingNotifier.value = false;
 
     currentFileId = null;
     currentTitleNotifier.value = null;
     currentCategoryNotifier.value = null;
-
-    print("🛑 Music stopped.");
   }
 
   void setOnCompleteListener(VoidCallback callback) {
@@ -128,7 +137,7 @@ class MusicPlayerService {
     print("🗑️ AudioPlayer disposed.");
   }
 
-  /// ✅ Getter bantuan untuk dibaca dari luar
+  // Getter untuk akses dari luar
   String? get currentTitle => currentTitleNotifier.value;
   String? get currentCategory => currentCategoryNotifier.value;
 }
