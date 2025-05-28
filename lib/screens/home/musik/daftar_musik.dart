@@ -36,7 +36,7 @@ class _DaftarMusikScreenState extends State<DaftarMusikScreen> {
         _musicList =
             data
                 .map<Map<String, String>>(
-                  (e) => {'title': e['title'], 'file_id': e['file_id']},
+                  (e) => {'title': e['title'], 'fileid': e['fileid']},
                 )
                 .toList();
       });
@@ -53,7 +53,7 @@ class _DaftarMusikScreenState extends State<DaftarMusikScreen> {
           final music = _musicList[index];
           return ListTile(
             title: Text(music['title'] ?? 'Judul Tidak Diketahui'),
-            subtitle: Text('File ID: ${music['file_id']}'),
+            subtitle: Text('File ID: ${music['fileid']}'),
           );
         },
       ),

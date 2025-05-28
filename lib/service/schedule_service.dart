@@ -53,7 +53,7 @@ class ScheduleService {
         if (raw is! Map) continue;
 
         final data = Map<String, dynamic>.from(raw);
-        final fileId = data['file_id'] ?? data['fileId'] ?? '';
+        final fileId = data['fileid'] ?? data['fileId'] ?? '';
         final hariData = data['hari'];
 
         String hari = switch (hariData) {
@@ -70,7 +70,7 @@ class ScheduleService {
           'hari': hari,
           'waktu': data['waktu'] ?? '-',
           'enabled': data['enabled'] ?? false,
-          'file_id': fileId,
+          'fileid': fileId,
         });
       } catch (e) {
         print('❌ Error parsing schedule: $e');
@@ -133,10 +133,10 @@ class ScheduleService {
       );
 
       if (isToday && jadwalWaktu == currentTime && !alreadyPlayed) {
-        final fileId = schedule['file_id'] ?? '';
+        final fileId = schedule['fileid'] ?? '';
 
         if (fileId.isNotEmpty) {
-          print('▶️ Memutar: ${schedule['title']} dengan file_id $fileId');
+          print('▶️ Memutar: ${schedule['title']} dengan fileid $fileId');
           await _playerService.playFromFileId(fileId);
 
           _lastPlayedScheduleKey = key;

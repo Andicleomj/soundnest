@@ -15,7 +15,7 @@ class MusicFileManagement {
   ) async {
     try {
       final fileRef = _musicRef.child('$categoryId/files').push();
-      await fileRef.set({'title': title, 'file_id': fileId});
+      await fileRef.set({'title': title, 'fileid': fileId});
       return true;
     } catch (e) {
       print("❌ Gagal menambahkan musik: $e");

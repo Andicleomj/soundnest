@@ -42,7 +42,7 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
               final fileData = Map<String, dynamic>.from(e.value);
               return {
                 'title': fileData['title'] ?? 'Judul tidak tersedia',
-                'file_id': fileData['file_id'] ?? '',
+                'fileid': fileData['fileid'] ?? '',
               };
             }).toList();
 
@@ -83,7 +83,7 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
                         children:
                             musicList.map((music) {
                               final title = music['title'];
-                              final fileId = music['file_id'];
+                              final fileId = music['fileid'];
 
                               return ListTile(
                                 title: Text(title),
@@ -91,7 +91,7 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
                                   Navigator.pop(context, {
                                     'category': categoryName,
                                     'title': title,
-                                    'file_id': fileId,
+                                    'fileid': fileId,
                                   });
                                 },
                               );

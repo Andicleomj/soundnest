@@ -15,7 +15,7 @@ class MusicService {
     try {
       final categoryRef = _musicRef.child('$category/files');
       final newFileRef = categoryRef.push();
-      await newFileRef.set({'title': title, 'file_id': fileId});
+      await newFileRef.set({'title': title, 'fileid': fileId});
       print("✅ Musik berhasil ditambahkan.");
     } catch (e) {
       print("❌ Error menambahkan musik: $e");
@@ -61,7 +61,7 @@ class MusicService {
           return {
             'id': entry.key,
             'title': file['title'] ?? 'Unknown Title',
-            'file_id': file['file_id'] ?? '',
+            'fileid': file['fileid'] ?? '',
           };
         }).toList();
       }

@@ -45,7 +45,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               final value = e.value as Map<dynamic, dynamic>;
               return {
                 'title': value['title'] ?? 'Tidak ada judul',
-                'file_id': value['file_id'] ?? '',
+                'fileid': value['fileid'] ?? '',
               };
             }).toList();
         isLoading = false;
@@ -57,7 +57,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
 
   void togglePlay(int index) async {
-    final fileId = familyList[index]['file_id'];
+    final fileId = familyList[index]['fileid'];
     final url = 'http://localhost:3000/stream/$fileId';
 
     if (isPlaying && currentIndex == index) {

@@ -45,7 +45,7 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
               final value = e.value as Map<dynamic, dynamic>;
               return {
                 'title': value['title'] ?? 'Tidak ada judul',
-                'file_id': value['file_id'] ?? '',
+                'fileid': value['fileid'] ?? '',
               };
             }).toList();
         isLoading = false;
@@ -58,7 +58,7 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
 
   // sudah
   void togglePlay(int index) async {
-    final fileId = adaptasiList[index]['file_id'];
+    final fileId = adaptasiList[index]['fileid'];
     final url = 'http://localhost:3000/stream/$fileId';
 
     if (isPlaying && currentIndex == index) {
@@ -124,7 +124,7 @@ class _AdaptasiScreenState extends State<AdaptasiScreen> {
                         // Jika dari tab penjadwalan, kembali dengan data ke form jadwal
                         Navigator.pop(context, {
                           'title': music['title'],
-                          'file_id': music['file_id'],
+                          'fileid': music['fileid'],
                           'category': widget.categoryName,
                         });
                       } else {

@@ -45,7 +45,7 @@ class _HariScreenState extends State<HariScreen> {
                 .map(
                   (e) => {
                     'title': e.value['title'] ?? 'Tidak ada judul',
-                    'file_id': e.value['file_id'] ?? '',
+                    'fileid': e.value['fileid'] ?? '',
                   },
                 )
                 .toList();
@@ -58,7 +58,7 @@ class _HariScreenState extends State<HariScreen> {
   }
 
   void togglePlay(int index) async {
-    final fileId = musicList[index]['file_id'];
+    final fileId = musicList[index]['fileid'];
     final url = 'http://localhost:3000/stream/$fileId';
 
     if (isPlaying && currentIndex == index) {
