@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:soundnest/firebase_options.dart';
-import 'package:soundnest/screens/auth/auth_check.dart';
+import 'package:soundnest/screens/splash_screen.dart';
 import 'package:soundnest/service/schedule_service.dart';
 import 'package:soundnest/screens/home/musik/musik_screen.dart';
 import 'package:soundnest/screens/home/musik/daftar_musik.dart';
@@ -39,9 +39,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'SoundNest',
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      initialRoute: AppRoutes.splash,
       routes: {
-        '/': (context) => const AuthCheck(),
+        AppRoutes.splash: (context) => const SplashScreen(),
         ...AppRoutes.getRoutes(),
         '/music': (context) => const MusicScreen(),
         '/music/list':
@@ -50,6 +50,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        inputDecorationTheme: const InputDecorationTheme(
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.blue), // Warna saat fokus
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(
+              color: Colors.grey,
+            ), // Warna saat tidak fokus
+          ),
+          // Jika ingin warna teks input juga bisa tambah:
+          // labelStyle: TextStyle(color: Colors.black),
+        ),
       ),
     );
   }

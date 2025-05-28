@@ -63,7 +63,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       final uid = userCredential.user!.uid;
 
-      // Simpan data user ke Realtime Database
       final DatabaseReference ref = FirebaseDatabase.instance.ref();
       await ref.child('users/$uid').set({
         'username': _usernameController.text.trim(),
@@ -90,19 +89,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 30),
         child: SingleChildScrollView(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 50),
-              Align(
-                alignment: Alignment.topLeft,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ),
               Center(
                 child: Image.asset(
                   'assets/Logo 1.png',
@@ -110,46 +98,67 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   height: 200,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
               const Text(
                 "SIGN UP",
                 style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
+
               const Text("Nama Pengguna"),
+              const SizedBox(height: 6),
               TextField(
                 controller: _usernameController,
                 decoration: const InputDecoration(
                   border: UnderlineInputBorder(),
+                  prefixIcon: Icon(Icons.person, size: 20),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+
               const Text("Email"),
+              const SizedBox(height: 6),
               TextField(
                 controller: _emailController,
                 decoration: const InputDecoration(
                   border: UnderlineInputBorder(),
+                  prefixIcon: Icon(Icons.email, size: 20),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+
               const Text("Kata Sandi"),
+              const SizedBox(height: 6),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
                 decoration: const InputDecoration(
                   border: UnderlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock, size: 20),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+
               const Text("Ulangi Kata Sandi"),
+              const SizedBox(height: 6),
               TextField(
                 controller: _reenterPasswordController,
                 obscureText: true,
                 decoration: const InputDecoration(
                   border: UnderlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock_outline, size: 20),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
               const SizedBox(height: 30),
+
               Center(
                 child: ElevatedButton(
                   onPressed: _isButtonEnabled ? _signUp : null,
@@ -158,11 +167,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       horizontal: 50,
                       vertical: 15,
                     ),
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                      side: const BorderSide(color: Colors.blueAccent),
+                    ),
+                    elevation: 3,
                   ),
-                  child: const Text("Sign Up"),
+                  child: const Text(
+                    "Sign Up",
+                    style: TextStyle(fontSize: 16, color: Colors.black),
+                  ),
                 ),
               ),
-              const SizedBox(height: 50),
             ],
           ),
         ),

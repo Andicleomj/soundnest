@@ -5,6 +5,12 @@ import 'package:flutter/foundation.dart';
 class MusicPlayerService {
   final AudioPlayer _audioPlayer = AudioPlayer();
 
+  var currentTitle;
+
+  var isPlayingNotifier;
+
+  var pauseMusic;
+
   MusicPlayerService() {
     _audioPlayer.onPlayerStateChanged.listen((PlayerState state) {
       print("🎧 Audio player state: $state");
@@ -25,6 +31,10 @@ class MusicPlayerService {
       return 'http://localhost:3000';
     }
   }
+
+  get currentCategoryNotifier => null;
+
+  get currentTitleNotifier => null;
 
   /// Mainkan dari File ID melalui proxy backend
   Future<void> playFromFileId(String fileId) async {
