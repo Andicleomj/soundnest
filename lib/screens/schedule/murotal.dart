@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:soundnest/screens/home/murottal/pickmurottal.dart'; // Pastikan file ini ada
+import 'package:soundnest/screens/home/murottal/pickmurottal.dart';
 
 class MurottalScheduleForm extends StatefulWidget {
   const MurottalScheduleForm({super.key});
@@ -98,7 +98,28 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Buat Jadwal Murottal")),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        title: const Text(
+          "Buat Jadwal Murottal",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        centerTitle: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
@@ -109,7 +130,10 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
                     ? "Pilih Murottal"
                     : "$selectedMurottal (${selectedCategory ?? '-'})",
               ),
-              trailing: const Icon(Icons.menu_book),
+              trailing: const Icon(
+                Icons.menu_book,
+                color: Color.fromARGB(255, 81, 177, 255),
+              ),
               onTap: _pickMurottal,
             ),
             const Divider(),
@@ -119,13 +143,22 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
                     ? "Pilih Waktu"
                     : "Waktu: ${selectedTime!.format(context)}",
               ),
-              trailing: const Icon(Icons.access_time),
+              trailing: const Icon(
+                Icons.access_time,
+                color: Color.fromARGB(255, 81, 177, 255),
+              ),
               onTap: _pickTime,
             ),
             const SizedBox(height: 12),
             SwitchListTile(
               title: const Text("Ulangi Setiap Hari"),
               value: repeatEveryday,
+              activeColor: Colors.white, // warna thumb saat aktif
+              activeTrackColor: Colors.blue[200], // warna track saat aktif
+              inactiveThumbColor:
+                  Colors.grey[300], // warna thumb saat tidak aktif
+              inactiveTrackColor:
+                  Colors.grey[400], // warna track saat tidak aktif
               onChanged: (val) {
                 setState(() {
                   repeatEveryday = val;
@@ -140,7 +173,15 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
                     daysOfWeek.map((day) {
                       final isSelected = selectedDays.contains(day);
                       return FilterChip(
-                        label: Text(day),
+                        label: Text(
+                          day,
+                          style: TextStyle(
+                            color:
+                                isSelected
+                                    ? Color.fromARGB(255, 81, 177, 255)
+                                    : Colors.black,
+                          ),
+                        ),
                         selected: isSelected,
                         onSelected: (val) {
                           setState(() {
@@ -157,6 +198,18 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _saveSchedule,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Color.fromARGB(
+                  255,
+                  81,
+                  177,
+                  255,
+                ), // Warna teks
+                side: const BorderSide(
+                  color: Colors.blue,
+                ), // Garis pinggir biru
+                shape: const StadiumBorder(), // Membuat tombol lonjong
+              ),
               child: const Text("Simpan Jadwal"),
             ),
           ],

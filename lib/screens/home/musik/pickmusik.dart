@@ -42,7 +42,7 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
               final fileData = Map<String, dynamic>.from(e.value);
               return {
                 'title': fileData['title'] ?? 'Judul tidak tersedia',
-                'fileid': fileData['fileid'] ?? '',
+                'fileId': fileData['fileId'] ?? '',
               };
             }).toList();
 
@@ -65,7 +65,26 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Pilih Musik')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          'Pilih Musik',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -83,7 +102,7 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
                         children:
                             musicList.map((music) {
                               final title = music['title'];
-                              final fileId = music['fileid'];
+                              final fileId = music['fileId'];
 
                               return ListTile(
                                 title: Text(title),
@@ -91,7 +110,7 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
                                   Navigator.pop(context, {
                                     'category': categoryName,
                                     'title': title,
-                                    'fileid': fileId,
+                                    'fileId': fileId,
                                   });
                                 },
                               );

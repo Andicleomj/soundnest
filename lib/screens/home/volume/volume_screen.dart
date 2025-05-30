@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class VolumeScreen extends StatefulWidget {
   const VolumeScreen({super.key});
@@ -10,24 +11,8 @@ class VolumeScreen extends StatefulWidget {
 class _VolumeScreenState extends State<VolumeScreen>
     with SingleTickerProviderStateMixin {
   double _volume = 50;
+  double _tempVolume = 50; // volume sementara saat tekan tombol naik/turun
   late AnimationController _controller;
-
-  void _increaseVolume() {
-    setState(() => _volume = (_volume + 10).clamp(0, 100));
-  }
-
-  void _decreaseVolume() {
-    setState(() => _volume = (_volume - 10).clamp(0, 100));
-  }
-
-  void _saveVolume() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Volume disimpan: ${_volume.toInt()}%"),
-        backgroundColor: Colors.indigo,
-      ),
-    );
-  }
 
   @override
   void initState() {
@@ -35,6 +20,41 @@ class _VolumeScreenState extends State<VolumeScreen>
     _controller =
         AnimationController(vsync: this, duration: const Duration(seconds: 2))
           ..repeat();
+    _loadVolume();
+  }
+
+  Future<void> _loadVolume() async {
+    final prefs = await SharedPreferences.getInstance();
+    double savedVolume = prefs.getDouble('saved_volume') ?? 50;
+    setState(() {
+      _volume = savedVolume;
+      _tempVolume = savedVolume;
+    });
+  }
+
+  void _increaseVolume() {
+    setState(() => _tempVolume = (_tempVolume + 10).clamp(0, 100));
+  }
+
+  void _decreaseVolume() {
+    setState(() => _tempVolume = (_tempVolume - 10).clamp(0, 100));
+  }
+
+  Future<void> _saveVolume() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('saved_volume', _tempVolume);
+    setState(() {
+      _volume = _tempVolume;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Volume disimpan: ${_volume.toInt()}%"),
+        backgroundColor: Colors.indigo,
+      ),
+    );
+
+    // TODO: Integrasi dengan musik, murottal, dan penjadwalan
+    // Contoh: update player.setVolume(_volume / 100);
   }
 
   @override
@@ -56,7 +76,7 @@ class _VolumeScreenState extends State<VolumeScreen>
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black), // warna hitam
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         flexibleSpace: Container(
@@ -83,7 +103,7 @@ class _VolumeScreenState extends State<VolumeScreen>
                         width: 200,
                         height: 200,
                         child: CircularProgressIndicator(
-                          value: _volume / 100,
+                          value: _tempVolume / 100,
                           strokeWidth: 12,
                           backgroundColor: Colors.grey[300],
                           valueColor: const AlwaysStoppedAnimation<Color>(
@@ -95,7 +115,7 @@ class _VolumeScreenState extends State<VolumeScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            "${_volume.toInt()}%",
+                            "${_tempVolume.toInt()}%",
                             style: const TextStyle(
                               fontSize: 40,
                               color: Colors.black,
@@ -104,8 +124,7 @@ class _VolumeScreenState extends State<VolumeScreen>
                           ),
                           const Text(
                             "Volume",
-                            style:
-                                TextStyle(color: Colors.black54, fontSize: 16),
+                            style: TextStyle(color: Colors.black54, fontSize: 16),
                           ),
                         ],
                       ),

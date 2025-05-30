@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sound/flutter_sound.dart';
+import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class NotificationScreen extends StatefulWidget {
@@ -10,69 +10,63 @@ class NotificationScreen extends StatefulWidget {
 }
 
 class _NotificationScreenState extends State<NotificationScreen> {
-  final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
-  final FlutterSoundPlayer _player = FlutterSoundPlayer();
-
   bool _isRecording = false;
-  String? _filePath;
+
+  static const platform = MethodChannel('com.example.soundnest/audio');
 
   @override
   void initState() {
     super.initState();
-    _init();
-  }
-
-  Future<void> _init() async {
-    await _requestPermissions();
-    // Tidak perlu openAudioSession lagi
+    _requestPermissions();
   }
 
   Future<void> _requestPermissions() async {
     await Permission.microphone.request();
-    await Permission.storage.request();
+    await Permission.bluetooth.request();
+    await Permission.bluetoothConnect.request();
+    await Permission.bluetoothAdvertise.request();
+    await Permission.bluetoothScan.request();
+    await Permission.audio.request();
   }
 
-  @override
-  void dispose() {
-    _recorder.closeRecorder();
-    _player.closePlayer();
-    super.dispose();
+  Future<void> _startMicLoop() async {
+    print("Calling startMicLoop...");
+    try {
+      await platform.invokeMethod('startMicLoop');
+      print("startMicLoop called");
+    } catch (e) {
+      print("Start error: $e");
+    }
   }
 
-  Future<void> _toggleRecording() async {
-    if (!_isRecording) {
-      _filePath = '/sdcard/Download/recorded_voice.aac';
-
-      try {
-        await _recorder.startRecorder(toFile: _filePath, codec: Codec.aacADTS);
-        setState(() {
-          _isRecording = true;
-        });
-      } catch (e) {
-        print("Error saat merekam: $e");
-      }
-    } else {
-      try {
-        await _recorder.stopRecorder();
-        setState(() {
-          _isRecording = false;
-        });
-
-        if (_filePath != null) {
-          await _player.startPlayer(fromURI: _filePath, codec: Codec.aacADTS);
-        }
-      } catch (e) {
-        print("Error saat menghentikan/memutar rekaman: $e");
-      }
+  Future<void> _stopMicLoop() async {
+    print("Calling stopMicLoop...");
+    try {
+      await platform.invokeMethod('stopMicLoop');
+      print("stopMicLoop called");
+    } catch (e) {
+      print("Stop error: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Perekam Suara"),
-        backgroundColor: Colors.blueAccent,
+        centerTitle: true,
+        title: const Text("Mic to Speaker", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
       ),
       body: Center(
         child: Column(
@@ -85,19 +79,25 @@ class _NotificationScreenState extends State<NotificationScreen> {
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _toggleRecording,
+              onPressed: () async {
+                if (_isRecording) {
+                  await _stopMicLoop();
+                } else {
+                  await _startMicLoop();
+                }
+                setState(() {
+                  _isRecording = !_isRecording;
+                });
+              },
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 backgroundColor: _isRecording ? Colors.red : Colors.blue,
               ),
-              child: Text(_isRecording ? "Stop & Play" : "Mulai Rekam"),
+              child: Text(_isRecording ? "Stop" : "Mulai Rekam"),
             ),
             const SizedBox(height: 20),
             const Text(
-              "Klik tombol untuk merekam suara\nkemudian akan diputar kembali",
+              "Suara dari mic akan langsung diputar di speaker",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:soundnest/screens/home/murottal/ayat_kursi.dart';
 import 'package:soundnest/screens/home/murottal/surah_screen.dart';
+import 'package:soundnest/service/music_player_service.dart';
 
 class MurottalScreen extends StatefulWidget {
   const MurottalScreen({super.key});
@@ -18,12 +19,35 @@ class _MurottalScreenState extends State<MurottalScreen> {
   final List<String> defaultCategories = ['Ayat Kursi', 'Surah Pendek'];
   List<String> customCategories = [];
 
+  // MusicPlayerService instance (pastikan ini singleton agar state konsisten)
+  final MusicPlayerService musicPlayerService = MusicPlayerService();
+
+  // Dua listener terpisah untuk notifiers isPlaying dan currentTitle
+  late VoidCallback _isPlayingListener;
+  late VoidCallback _currentTitleListener;
+
   @override
   void initState() {
     super.initState();
     fetchCustomCategories();
+
+    _isPlayingListener = () => setState(() {});
+    _currentTitleListener = () => setState(() {});
+
+    musicPlayerService.isPlayingNotifier.addListener(_isPlayingListener);
+    musicPlayerService.currentTitleNotifier.addListener(_currentTitleListener);
   }
 
+  @override
+  void dispose() {
+    musicPlayerService.isPlayingNotifier.removeListener(_isPlayingListener);
+    musicPlayerService.currentTitleNotifier.removeListener(
+      _currentTitleListener,
+    );
+    super.dispose();
+  }
+
+  // Ambil kategori kustom dari Firebase Realtime Database
   Future<void> fetchCustomCategories() async {
     final snapshot = await categoriesRef.get();
     if (snapshot.exists) {
@@ -33,8 +57,11 @@ class _MurottalScreenState extends State<MurottalScreen> {
 
       for (var key in keys) {
         final files = data[key];
-        if (files is Map && files['name'] != null) {
-          titles.add(files['name']);
+        if (files is Map && files.containsKey('name')) {
+          final name = files['name'];
+          if (name is String) {
+            titles.add(name);
+          }
         }
       }
 
@@ -45,8 +72,9 @@ class _MurottalScreenState extends State<MurottalScreen> {
     }
   }
 
+  // Dialog tambah kategori baru
   void _showAddCategoryDialog() {
-    final TextEditingController _controller = TextEditingController();
+    final TextEditingController controller = TextEditingController();
 
     showDialog(
       context: context,
@@ -54,7 +82,7 @@ class _MurottalScreenState extends State<MurottalScreen> {
           (context) => AlertDialog(
             title: const Text('Tambah Kategori Baru'),
             content: TextField(
-              controller: _controller,
+              controller: controller,
               decoration: const InputDecoration(hintText: 'Nama kategori'),
             ),
             actions: [
@@ -64,12 +92,12 @@ class _MurottalScreenState extends State<MurottalScreen> {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  final name = _controller.text.trim();
+                  final name = controller.text.trim();
                   if (name.isNotEmpty) {
                     final newRef = categoriesRef.push();
                     await newRef.set({'name': name, 'files': {}});
                     Navigator.pop(context);
-                    fetchCustomCategories();
+                    await fetchCustomCategories();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Kategori "$name" ditambahkan')),
                     );
@@ -82,7 +110,8 @@ class _MurottalScreenState extends State<MurottalScreen> {
     );
   }
 
-  void navigateToCategoryScreen(BuildContext context, String category) {
+  // Navigasi ke layar kategori tertentu
+   void navigateToCategoryScreen(BuildContext context, String category) {
     String categoryPath;
     Widget screen;
 
@@ -97,9 +126,12 @@ class _MurottalScreenState extends State<MurottalScreen> {
         categoryId: '',
       );
     } else {
+      // Buat format key Firebase yang konsisten (lowercase & underscore)
+      final formattedCategory = category.toLowerCase().replaceAll(' ', '_');
+      categoryPath =
+          'devices/devices_01/murottal/categories/$formattedCategory/files';
       screen = SurahScreen(
-        categoryPath:
-            'devices/devices_01/murottal/categories/${category.toLowerCase().replaceAll(' ', '_')}/files',
+        categoryPath: categoryPath,
         categoryName: category,
         categoryId: '',
       );
@@ -108,6 +140,7 @@ class _MurottalScreenState extends State<MurottalScreen> {
     Navigator.push(context, MaterialPageRoute(builder: (context) => screen));
   }
 
+  // Konfirmasi hapus kategori kustom
   void _confirmDeleteCategory(BuildContext context, String category) {
     showDialog(
       context: context,
@@ -134,6 +167,7 @@ class _MurottalScreenState extends State<MurottalScreen> {
     );
   }
 
+  // Hapus kategori dari Firebase Realtime Database
   Future<void> _deleteCategory(String category) async {
     try {
       final snapshot = await categoriesRef.get();
@@ -149,7 +183,7 @@ class _MurottalScreenState extends State<MurottalScreen> {
 
         if (keyToDelete != null) {
           await categoriesRef.child(keyToDelete!).remove();
-          fetchCustomCategories();
+          await fetchCustomCategories();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Kategori "$category" berhasil dihapus')),
           );
@@ -164,6 +198,107 @@ class _MurottalScreenState extends State<MurottalScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text('Gagal menghapus kategori: $e')));
     }
+  }
+
+  // Widget mini player di bawah layar, tampil saat ada musik diputar
+  Widget _buildMiniPlayer() {
+    if (!musicPlayerService.isPlaying) {
+      return const SizedBox.shrink();
+    }
+
+    final title = musicPlayerService.currentTitle ?? 'Unknown';
+    final category = musicPlayerService.currentCategory ?? '';
+
+    return Container(
+      color: Colors.blue.shade100,
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+      child: Row(
+        children: [
+          const Icon(Icons.music_note, size: 30, color: Colors.blueAccent),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (category.isNotEmpty)
+                  Text(
+                    category,
+                    style: const TextStyle(fontSize: 12, color: Colors.black54),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(
+              musicPlayerService.isPlaying
+                  ? Icons.pause_circle_filled
+                  : Icons.play_circle_fill,
+              size: 32,
+              color: Colors.blueAccent,
+            ),
+            onPressed: () {
+              if (musicPlayerService.isPlaying) {
+                musicPlayerService.pauseMusic();
+              } else {
+                musicPlayerService.resumeMusic();
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build UI kategori dalam bentuk Grid
+  Widget _buildCategoryCard(BuildContext context, String category) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click, // ini bikin cursor berubah pointer
+      child: GestureDetector(
+        onTap: () => navigateToCategoryScreen(context, category),
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 3,
+          color: Colors.blue.shade100,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8.0,
+              vertical: 12.0,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    category,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _confirmDeleteCategory(context, category),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -203,57 +338,32 @@ class _MurottalScreenState extends State<MurottalScreen> {
               ),
             ),
           ),
-          body: Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 13,
-              mainAxisSpacing: 13,
-              childAspectRatio: 3,
-              children: [
-                ...defaultCategories.map(
-                  (cat) => _buildCategoryCard(context, cat),
-                ),
-                ...customCategories.map(
-                  (cat) => _buildCategoryCard(context, cat),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCategoryCard(BuildContext context, String category) {
-    return GestureDetector(
-      onTap: () => navigateToCategoryScreen(context, category),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 3,
-        color: Colors.blue.shade100,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 12.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          body: Column(
             children: [
               Expanded(
-                child: Text(
-                  category,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                child: Padding(
+                  padding: const EdgeInsets.all(15.0),
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 13,
+                    mainAxisSpacing: 13,
+                    childAspectRatio: 3,
+                    children: [
+                      ...defaultCategories.map(
+                        (cat) => _buildCategoryCard(context, cat),
+                      ),
+                      ...customCategories.map(
+                        (cat) => _buildCategoryCard(context, cat),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () => _confirmDeleteCategory(context, category),
-              ),
+              _buildMiniPlayer(),
             ],
           ),
         ),
-      ),
+      ],
     );
   }
 }

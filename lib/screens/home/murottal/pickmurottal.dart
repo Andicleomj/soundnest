@@ -64,7 +64,26 @@ class _MurottalPickerScreenState extends State<MurottalPickerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Pilih Murottal')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          'Pilih Murottal',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())

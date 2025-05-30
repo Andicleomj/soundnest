@@ -53,7 +53,7 @@ class ScheduleService {
         if (raw is! Map) continue;
 
         final data = Map<String, dynamic>.from(raw);
-        final fileId = data['fileid'] ?? data['fileId'] ?? '';
+        final fileId = data['fileId'] ?? '';
         final hariData = data['hari'];
 
         String hari = switch (hariData) {
@@ -64,13 +64,13 @@ class ScheduleService {
         };
 
         schedules.add({
-          'key': entry.key,
+          'key': entry.key.toString(),
           'title': data['title'] ?? 'Tanpa Judul',
           'category': data['category'] ?? '-',
           'hari': hari,
           'waktu': data['waktu'] ?? '-',
           'enabled': data['enabled'] ?? false,
-          'fileid': fileId,
+          'fileId': fileId,
         });
       } catch (e) {
         print('❌ Error parsing schedule: $e');
@@ -95,7 +95,7 @@ class ScheduleService {
       await _checkAndPlaySchedules();
     });
     print('✅ ScheduleService started.');
-    _checkAndPlaySchedules(); // jalan langsung sekali saat start
+    _checkAndPlaySchedules(); // jalankan langsung saat pertama kali
   }
 
   /// Stop pengecekan periodik
@@ -110,7 +110,8 @@ class ScheduleService {
     final schedules = await getManualSchedules();
     final now = DateTime.now();
     final currentDay = DateFormat('EEEE', 'id_ID').format(now);
-    final currentTime = DateFormat('h:mm a').format(now); // tanpa leading zero
+    final currentTime = DateFormat('HH:mm').format(now);
+
 
     print('🕒 Sekarang: $currentDay $currentTime');
 
@@ -120,6 +121,9 @@ class ScheduleService {
       final key = schedule['key'] as String;
       final hariStr = schedule['hari'] as String;
       final jadwalWaktu = schedule['waktu'] as String;
+
+      if (jadwalWaktu.isEmpty || jadwalWaktu == '-') continue;
+
       final isToday =
           hariStr == 'Setiap Hari' || hariStr.split(', ').contains(currentDay);
 
@@ -133,14 +137,18 @@ class ScheduleService {
       );
 
       if (isToday && jadwalWaktu == currentTime && !alreadyPlayed) {
-        final fileId = schedule['fileid'] ?? '';
+        final fileId = schedule['fileId'] ?? '';
 
         if (fileId.isNotEmpty) {
-          print('▶️ Memutar: ${schedule['title']} dengan fileid $fileId');
-          await _playerService.playFromFileId(fileId);
+          try {
+            print('▶️ Memutar: ${schedule['title']} dengan fileId $fileId');
+            await _playerService.playFromFileId(fileId);
 
-          _lastPlayedScheduleKey = key;
-          _lastPlayedTime = now;
+            _lastPlayedScheduleKey = key;
+            _lastPlayedTime = now;
+          } catch (e) {
+            print('❌ Gagal memutar file: $e');
+          }
         } else {
           print('⚠️ File ID kosong untuk jadwal: ${schedule['title']}');
         }

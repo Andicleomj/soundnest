@@ -44,8 +44,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
         dataMap = data;
       } else if (data is List) {
         dataMap = {
-          for (int i = 0; i < data.length; i++)
-            if (data[i] != null) i: data[i],
+          for (int i = 0; i < data.length; i++) if (data[i] != null) i: data[i],
         };
       } else {
         dataMap = {};
@@ -181,13 +180,29 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        String newTitle = schedule['title'];
+        String newHari = schedule['hari'];
+        String newWaktu = schedule['waktu'];
+
         return AlertDialog(
           title: const Text('Edit Jadwal'),
-          content: TextFormField(
-            initialValue: schedule['title'],
-            decoration: const InputDecoration(labelText: 'Judul'),
-            onChanged: (val) => newTitle = val,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                initialValue: newHari,
+                decoration: const InputDecoration(
+                  labelText: 'Hari (pisah koma jika banyak)',
+                ),
+                onChanged: (val) => newHari = val,
+              ),
+              TextFormField(
+                initialValue: newWaktu,
+                decoration: const InputDecoration(
+                  labelText: 'Waktu (misal: 14:00)',
+                ),
+                onChanged: (val) => newWaktu = val,
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -198,17 +213,26 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
               onPressed: () async {
                 try {
                   final ref = _getRefBySource(schedule['source']);
+
+                  // Buat list hari dari string input
+                  final hariList =
+                      newHari.split(',').map((e) => e.trim()).toList();
+
                   await ref.child(schedule['rawKey']).update({
-                    'title': newTitle,
+                    'hari': hariList,
+                    'waktu': newWaktu,
                   });
+
                   final idx = schedules.indexWhere(
                     (s) => s['key'] == schedule['key'],
                   );
                   if (idx != -1) {
                     setState(() {
-                      schedules[idx]['title'] = newTitle;
+                      schedules[idx]['hari'] = newHari;
+                      schedules[idx]['waktu'] = newWaktu;
                     });
                   }
+
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Jadwal berhasil diperbarui")),
@@ -243,110 +267,145 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Daftar Jadwal Musik"),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        title: const Text(
+          "Daftar Jadwal",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
         centerTitle: true,
       ),
-      body:
-          isLoading
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.fromARGB(255, 164, 214, 255),
+              Color.fromARGB(255, 164, 214, 255),
+            ],
+          ),
+        ),
+        child: Container(
+          width: double.infinity,
+          // HAPUS height: 600, biarkan fleksibel
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/cloud.jpg'),
+              fit: BoxFit.fitWidth,
+            ),
+          ),
+          child: isLoading
               ? const Center(child: CircularProgressIndicator())
               : schedules.isEmpty
-              ? const Center(child: Text("Belum ada jadwal"))
-              : ListView.builder(
-                padding: const EdgeInsets.all(16.0),
-                itemCount: schedules.length,
-                itemBuilder: (context, index) {
-                  final schedule = schedules[index];
-                  final isPlaying = playingStatus[schedule['key']] ?? false;
+                  ? const Center(child: Text("Belum ada jadwal"))
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16.0),
+                      itemCount: schedules.length,
+                      itemBuilder: (context, index) {
+                        final schedule = schedules[index];
+                        final isPlaying = playingStatus[schedule['key']] ?? false;
 
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    child: ListTile(
-                      title: Text(
-                        "${schedule['title']} (${schedule['category']})",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Hari: ${schedule['hari']}"),
-                            Text("Mulai: ${schedule['waktu']}"),
-                            Text("Sumber: ${schedule['source']}"),
-                          ],
-                        ),
-                      ),
-                      trailing: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Switch.adaptive(
-                              value: schedule['enabled'],
-                              onChanged: (bool value) {
-                                _toggleSchedule(schedule['key'], value);
-                              },
-                            ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              icon: Icon(
-                                isPlaying
-                                    ? Icons.pause_circle
-                                    : Icons.play_circle,
-                              ),
-                              color: isPlaying ? Colors.green : null,
-                              onPressed: () {
-                                _togglePlayPause(schedule['key']);
-                              },
-                              tooltip: isPlaying ? 'Pause Musik' : 'Play Musik',
-                            ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () {
-                                _editSchedule(schedule);
-                              },
-                              tooltip: 'Edit Jadwal',
-                            ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              color: Colors.red,
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder:
-                                      (context) => AlertDialog(
-                                        title: const Text('Konfirmasi Hapus'),
-                                        content: Text(
-                                          'Yakin ingin menghapus "${schedule['title']}"?',
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: Container(
+                            height: 150,
+                            padding: const EdgeInsets.all(8),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "${schedule['title']} (${schedule['category']})",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
                                         ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed:
-                                                () => Navigator.pop(context),
-                                            child: const Text('Batal'),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                              _deleteSchedule(schedule['key']);
+                                        maxLines: null,
+                                        overflow: TextOverflow.visible,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      ...[
+                                        "Hari: ${schedule['hari']}",
+                                        "Mulai: ${schedule['waktu']}",
+                                        "Sumber: Manual",
+                                      ]
+                                          .map(
+                                            (text) => Text(
+                                              text,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                SizedBox(
+                                  width: 120,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Switch.adaptive(
+                                            value: schedule['enabled'],
+                                            onChanged: (bool value) {
+                                              _toggleSchedule(schedule['key'], value);
                                             },
-                                            child: const Text('Hapus'),
+                                            activeColor: Colors.white,
+                                            activeTrackColor: Colors.blue[200],
+                                            inactiveThumbColor: Colors.grey,
+                                            inactiveTrackColor: Colors.grey[400],
+                                          )
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.edit, color: Colors.blue),
+                                            tooltip: "Edit Jadwal",
+                                            onPressed: () => _editSchedule(schedule),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete, color: Colors.red),
+                                            tooltip: "Hapus Jadwal",
+                                            onPressed: () => _deleteSchedule(schedule['key']),
                                           ),
                                         ],
                                       ),
-                                );
-                              },
-                              tooltip: 'Hapus Jadwal',
+                                    ],
+                                  ),
+                                )
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
+        ),
+      ),
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:soundnest/service/music_player_service.dart';
+
+final MusicPlayerService musicPlayerService = MusicPlayerService();
 
 class HariScreen extends StatefulWidget {
   final String categoryPath; // Path lengkap di Firebase Realtime Database
@@ -20,11 +22,9 @@ class HariScreen extends StatefulWidget {
 
 class _HariScreenState extends State<HariScreen> {
   late DatabaseReference databaseRef;
-  final AudioPlayer _audioPlayer = AudioPlayer();
   List<Map<String, dynamic>> musicList = [];
   bool isLoading = true;
   int currentIndex = -1;
-  bool isPlaying = false;
 
   @override
   void initState() {
@@ -45,7 +45,7 @@ class _HariScreenState extends State<HariScreen> {
                 .map(
                   (e) => {
                     'title': e.value['title'] ?? 'Tidak ada judul',
-                    'fileid': e.value['fileid'] ?? '',
+                    'fileId': e.value['fileId'] ?? '',
                   },
                 )
                 .toList();
@@ -58,30 +58,24 @@ class _HariScreenState extends State<HariScreen> {
   }
 
   void togglePlay(int index) async {
-    final fileId = musicList[index]['fileid'];
-    final url = 'http://localhost:3000/stream/$fileId';
+    final fileId = musicList[index]['fileId'];
 
-    if (isPlaying && currentIndex == index) {
-      await _audioPlayer.pause();
-      setState(() => isPlaying = false);
+    if (musicPlayerService.isPlaying &&
+        musicPlayerService.currentFileId == fileId) {
+      await musicPlayerService.pauseMusic();
+      setState(() {
+        currentIndex = -1;
+      });
     } else {
-      await _audioPlayer.stop();
-      await _audioPlayer.play(UrlSource(url));
+      await musicPlayerService.playFromFileId(
+        fileId,
+        title: musicList[index]['title'],
+        category: widget.categoryName,
+      );
       setState(() {
         currentIndex = index;
-        isPlaying = true;
-      });
-
-      _audioPlayer.onPlayerComplete.listen((event) {
-        setState(() => isPlaying = false);
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
   }
 
   @override
@@ -109,11 +103,15 @@ class _HariScreenState extends State<HariScreen> {
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
+              : musicList.isEmpty
+              ? const Center(child: Text('Data musik tidak tersedia.'))
               : ListView.builder(
                 itemCount: musicList.length,
                 itemBuilder: (context, index) {
                   final music = musicList[index];
-                  final isCurrent = currentIndex == index && isPlaying;
+                  final isCurrent =
+                      musicPlayerService.currentFileId == music['fileId'] &&
+                      musicPlayerService.isPlaying;
 
                   return ListTile(
                     title: Text(music['title']),

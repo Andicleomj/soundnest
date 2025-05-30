@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:soundnest/service/music_player_service.dart';
+
+final MusicPlayerService musicPlayerService = MusicPlayerService();
 
 class AyatKursi extends StatefulWidget {
   final String categoryPath;
@@ -18,11 +20,9 @@ class AyatKursi extends StatefulWidget {
 
 class _AyatKursiState extends State<AyatKursi> {
   late DatabaseReference databaseRef;
-  final AudioPlayer _audioPlayer = AudioPlayer();
   List<Map<String, dynamic>> surahList = [];
   bool isLoading = true;
-  int? currentIndex;
-  bool isPlaying = false;
+  int currentIndex = -1;
 
   @override
   void initState() {
@@ -67,34 +67,23 @@ class _AyatKursiState extends State<AyatKursi> {
 
   void togglePlay(int index) async {
     final fileId = surahList[index]['fileId'];
-    final url = 'http://localhost:3000/stream/$fileId';
 
-    // Jika sedang memainkan surah yang sama → PAUSE
-    if (isPlaying && currentIndex == index) {
-      await _audioPlayer.pause();
-      setState(() => isPlaying = false);
-    }
-    // Jika sedang tidak memainkan atau berpindah surah → PLAY
-    else {
-      await _audioPlayer.stop();
-      await _audioPlayer.play(UrlSource(url));
+    if (musicPlayerService.isPlaying &&
+        musicPlayerService.currentFileId == fileId) {
+      await musicPlayerService.pauseMusic();
+      setState(() {
+        currentIndex = -1;
+      });
+    } else {
+      await musicPlayerService.playFromFileId(
+        fileId,
+        title: surahList[index]['title'],
+        category: widget.categoryName,
+      );
       setState(() {
         currentIndex = index;
-        isPlaying = true;
-      });
-
-      _audioPlayer.onPlayerComplete.listen((event) {
-        setState(() {
-          isPlaying = false;
-        });
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
   }
 
   @override
@@ -120,15 +109,17 @@ class _AyatKursiState extends State<AyatKursi> {
           isLoading
               ? const Center(child: CircularProgressIndicator())
               : surahList.isEmpty
-              ? const Center(child: Text('Data surah tidak tersedia.'))
+              ? const Center(child: Text('Data musik tidak tersedia.'))
               : ListView.builder(
                 itemCount: surahList.length,
                 itemBuilder: (context, index) {
-                  final surah = surahList[index];
-                  final isCurrent = currentIndex == index && isPlaying;
+                  final murottal = surahList[index];
+                  final isCurrent =
+                      musicPlayerService.currentFileId == murottal['fileId'] &&
+                      musicPlayerService.isPlaying;
 
                   return ListTile(
-                    title: Text(surah['title']),
+                    title: Text(murottal['title']),
                     trailing: IconButton(
                       icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
                       onPressed: () => togglePlay(index),
