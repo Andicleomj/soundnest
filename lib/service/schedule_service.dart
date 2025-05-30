@@ -8,6 +8,9 @@ class ScheduleService {
   final DatabaseReference _manualRef = FirebaseDatabase.instance.ref(
     'devices/devices_01/schedule/manual',
   );
+  final DatabaseReference _otomatisRef = FirebaseDatabase.instance.ref(
+    'devices/devices_01/schedule/otomatis',
+  );
 
   final MusicPlayerService _playerService = MusicPlayerService();
   Timer? _timer;
@@ -71,6 +74,7 @@ class ScheduleService {
           'waktu': data['waktu'] ?? '-',
           'enabled': data['enabled'] ?? false,
           'fileId': fileId,
+          'source': 'manual', // tambahan source untuk membedakan
         });
       } catch (e) {
         print('❌ Error parsing schedule: $e');
@@ -80,7 +84,62 @@ class ScheduleService {
     return schedules;
   }
 
-  /// Mengaktifkan/menonaktifkan jadwal
+  /// Ambil dan parse semua jadwal otomatis dari Firebase
+  Future<List<Map<String, dynamic>>> getOtomatisSchedules() async {
+    final snapshot = await _otomatisRef.get();
+    if (!snapshot.exists) return [];
+
+    final value = snapshot.value;
+    Map<dynamic, dynamic> dataMap;
+
+    if (value is Map) {
+      dataMap = value;
+    } else if (value is List) {
+      dataMap = {
+        for (int i = 0; i < value.length; i++)
+          if (value[i] != null) i: value[i],
+      };
+    } else {
+      return [];
+    }
+
+    List<Map<String, dynamic>> schedules = [];
+
+    for (var entry in dataMap.entries) {
+      try {
+        final raw = entry.value;
+        if (raw is! Map) continue;
+
+        final data = Map<String, dynamic>.from(raw);
+        final fileId = data['fileId'] ?? '';
+        final hariData = data['hari'];
+
+        String hari = switch (hariData) {
+          String s => s,
+          List l => l.join(', '),
+          Map m => m.values.join(', '),
+          _ => '-',
+        };
+
+        schedules.add({
+          'key': entry.key.toString(),
+          'title': data['title'] ?? 'Tanpa Judul',
+          'category': data['category'] ?? '-',
+          'hari': hari,
+          'waktu': data['waktu'] ?? '-',
+          'enabled': data['enabled'] ?? false,
+          'fileId': fileId,
+          'source': 'otomatis', // source otomatis
+        });
+      } catch (e) {
+        print('❌ Error parsing otomatis schedule: $e');
+      }
+    }
+
+    return schedules;
+  }
+
+  /// Mengaktifkan/menonaktifkan jadwal (manual saja)
   Future<void> toggleScheduleEnabled(String key, bool enabled) async {
     await _manualRef.child(key).update({'enabled': enabled});
   }
@@ -105,13 +164,15 @@ class ScheduleService {
     print('🛑 ScheduleService stopped.');
   }
 
-  /// Cek semua jadwal, jika sesuai hari dan waktu → play
+  /// Cek semua jadwal manual dan otomatis, jika sesuai hari dan waktu → play
   Future<void> _checkAndPlaySchedules() async {
-    final schedules = await getManualSchedules();
+    final manualSchedules = await getManualSchedules();
+    final otomatisSchedules = await getOtomatisSchedules();
+
+    final schedules = [...manualSchedules, ...otomatisSchedules];
     final now = DateTime.now();
     final currentDay = DateFormat('EEEE', 'id_ID').format(now);
     final currentTime = DateFormat('HH:mm').format(now);
-
 
     print('🕒 Sekarang: $currentDay $currentTime');
 
@@ -133,7 +194,7 @@ class ScheduleService {
           now.difference(_lastPlayedTime!).inMinutes < 1;
 
       print(
-        '🔍 Cek jadwal: ${schedule['title']} → Hari: $hariStr, Waktu: $jadwalWaktu, Already played: $alreadyPlayed',
+        '🔍 Cek jadwal (${schedule['source']}): ${schedule['title']} → Hari: $hariStr, Waktu: $jadwalWaktu, Already played: $alreadyPlayed',
       );
 
       if (isToday && jadwalWaktu == currentTime && !alreadyPlayed) {
@@ -141,7 +202,7 @@ class ScheduleService {
 
         if (fileId.isNotEmpty) {
           try {
-            print('▶️ Memutar: ${schedule['title']} dengan fileId $fileId');
+            print('▶️ Memutar (${schedule['source']}): ${schedule['title']} dengan fileId $fileId');
             await _playerService.playFromFileId(fileId);
 
             _lastPlayedScheduleKey = key;
