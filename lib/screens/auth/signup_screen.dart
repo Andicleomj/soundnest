@@ -13,10 +13,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _reenterPasswordController =
-      TextEditingController();
+  final TextEditingController _reenterPasswordController = TextEditingController();
 
   bool _isButtonEnabled = false;
+  bool _isPasswordVisible = false;
+  bool _isReenterPasswordVisible = false;
 
   void _validateFields() {
     setState(() {
@@ -46,38 +47,78 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
+  bool _isPasswordStrong(String password) {
+    final hasUppercase = password.contains(RegExp(r'[A-Z]'));
+    final hasDigits = password.contains(RegExp(r'[0-9]'));
+    final hasMinLength = password.length >= 8;
+    return hasUppercase && hasDigits && hasMinLength;
+  }
+
   Future<void> _signUp() async {
-    if (_passwordController.text != _reenterPasswordController.text) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Password tidak cocok")));
+    final password = _passwordController.text;
+    final confirmPassword = _reenterPasswordController.text;
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Password tidak cocok")),
+      );
+      return;
+    }
+
+    if (!_isPasswordStrong(password)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Password harus minimal 8 karakter, mengandung huruf besar dan angka."),
+        ),
+      );
       return;
     }
 
     try {
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
-            email: _emailController.text.trim(),
-            password: _passwordController.text.trim(),
-          );
+        email: _emailController.text.trim(),
+        password: password.trim(),
+      );
+
+      await userCredential.user!.sendEmailVerification();
 
       final uid = userCredential.user!.uid;
-
       final DatabaseReference ref = FirebaseDatabase.instance.ref();
       await ref.child('users/$uid').set({
         'username': _usernameController.text.trim(),
         'email': _emailController.text.trim(),
         'created_at': DateTime.now().toIso8601String(),
+        'verified': false,
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Akun berhasil dibuat!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Akun berhasil dibuat! Silakan cek email untuk verifikasi."),
+        ),
+      );
+
       Navigator.pop(context);
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'email-already-in-use':
+          message = "Email sudah terdaftar.";
+          break;
+        case 'invalid-email':
+          message = "Format email tidak valid.";
+          break;
+        case 'weak-password':
+          message = "Password terlalu lemah.";
+          break;
+        default:
+          message = "Gagal mendaftar: ${e.message}";
+      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Gagal mendaftar: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Gagal mendaftar: $e")),
+      );
     }
   }
 
@@ -91,6 +132,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 40),
               Center(
                 child: Image.asset(
                   'assets/Logo 1.png',
@@ -135,12 +177,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const SizedBox(height: 6),
               TextField(
                 controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  border: UnderlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock, size: 20),
+                obscureText: !_isPasswordVisible,
+                decoration: InputDecoration(
+                  border: const UnderlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock, size: 20),
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordVisible = !_isPasswordVisible;
+                      });
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -149,12 +201,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const SizedBox(height: 6),
               TextField(
                 controller: _reenterPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  border: UnderlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_outline, size: 20),
+                obscureText: !_isReenterPasswordVisible,
+                decoration: InputDecoration(
+                  border: const UnderlineInputBorder(),
+                  prefixIcon: const Icon(Icons.lock_outline, size: 20),
                   isDense: true,
-                  contentPadding: EdgeInsets.symmetric(vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isReenterPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isReenterPasswordVisible = !_isReenterPasswordVisible;
+                      });
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 30),
@@ -180,6 +242,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 40),
             ],
           ),
         ),

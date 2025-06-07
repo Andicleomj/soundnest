@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:soundnest/utils/volume_helper.dart';
 
 class VolumeScreen extends StatefulWidget {
   const VolumeScreen({super.key});
@@ -10,8 +10,7 @@ class VolumeScreen extends StatefulWidget {
 
 class _VolumeScreenState extends State<VolumeScreen>
     with SingleTickerProviderStateMixin {
-  double _volume = 50;
-  double _tempVolume = 50; // volume sementara saat tekan tombol naik/turun
+  double _tempVolume = 50;
   late AnimationController _controller;
 
   @override
@@ -24,12 +23,8 @@ class _VolumeScreenState extends State<VolumeScreen>
   }
 
   Future<void> _loadVolume() async {
-    final prefs = await SharedPreferences.getInstance();
-    double savedVolume = prefs.getDouble('saved_volume') ?? 50;
-    setState(() {
-      _volume = savedVolume;
-      _tempVolume = savedVolume;
-    });
+    int savedVolume = await VolumeHelper.getVolumePercentage();
+    setState(() => _tempVolume = savedVolume.toDouble());
   }
 
   void _increaseVolume() {
@@ -41,20 +36,16 @@ class _VolumeScreenState extends State<VolumeScreen>
   }
 
   Future<void> _saveVolume() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('saved_volume', _tempVolume);
-    setState(() {
-      _volume = _tempVolume;
-    });
+    await VolumeHelper.setVolume(_tempVolume / 100);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("Volume disimpan: ${_volume.toInt()}%"),
+        content: Text("Volume disimpan: ${_tempVolume.toInt()}%"),
         backgroundColor: Colors.indigo,
       ),
     );
 
-    // TODO: Integrasi dengan musik, murottal, dan penjadwalan
-    // Contoh: update player.setVolume(_volume / 100);
+    // TODO: Integrasi dengan player
+    // contoh: player.setVolume(_tempVolume / 100);
   }
 
   @override
@@ -163,8 +154,7 @@ class _VolumeScreenState extends State<VolumeScreen>
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blueAccent,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),

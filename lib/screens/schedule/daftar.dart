@@ -286,7 +286,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
 
   Future<void> _togglePlayPause(String key, String audioUrl) async {
     if (currentlyPlayingKey == key) {
-      // Pause
       await _audioPlayer.pause();
       setState(() {
         currentlyPlayingKey = null;
@@ -295,7 +294,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
         context,
       ).showSnackBar(const SnackBar(content: Text("Pause musik")));
     } else {
-      // Play new audio
       if (audioUrl.isEmpty) {
         ScaffoldMessenger.of(
           context,

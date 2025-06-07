@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import 'package:soundnest/utils/volume_helper.dart';
 
 typedef VoidCallback = void Function();
 
@@ -46,7 +47,7 @@ class MusicPlayerService {
     if (kIsWeb) {
       return 'http://localhost:3000';
     } else if (Platform.isAndroid) {
-      return 'http://192.168.0.102:3000';
+      return 'http://172.20.10.7:3000';
     } else {
       return 'http://localhost:3000';
     }
@@ -64,7 +65,8 @@ class MusicPlayerService {
     }
 
     try {
-      await _audioPlayer.setVolume(1.0);
+      final volume = await VolumeHelper.getVolume(); // <== Ambil volume
+      await _audioPlayer.setVolume(volume); // <== Terapkan volume
       await _audioPlayer.play(UrlSource(proxyUrl));
 
       currentFileId = fileId;
@@ -74,7 +76,7 @@ class MusicPlayerService {
       currentTitleNotifier.value = title;
       currentCategoryNotifier.value = category;
 
-      print("🎶 Playing music from: $proxyUrl");
+      print("🎶 Playing music from: $proxyUrl at volume: ${volume * 100}%");
     } catch (e) {
       print("❌ Gagal memutar musik: $e");
     }
@@ -82,19 +84,19 @@ class MusicPlayerService {
 
   Future<void> playFromUrl(String url) async {
     try {
-      await _audioPlayer.setVolume(1.0);
+      final volume = await VolumeHelper.getVolume(); // <== Ambil volume
+      await _audioPlayer.setVolume(volume); // <== Terapkan volume
       await _audioPlayer.play(UrlSource(url));
 
       currentFileId = url;
       isPlaying = true;
       isPlayingNotifier.value = true;
 
-      print("🎶 Playing from URL: $url");
+      print("🎶 Playing from URL: $url at volume: ${volume * 100}%");
     } catch (e) {
       print("❌ Gagal memutar musik dari URL: $e");
     }
   }
-
   Future<void> pauseMusic() async {
     if (!isPlaying) return; // Jika sudah pause, skip
 

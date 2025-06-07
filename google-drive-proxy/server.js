@@ -88,5 +88,5 @@ app.get("/stream/:fileId", async (req, res) => {
 
 const PORT = 3000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server aktif di http://192.168.0.102:3000:${PORT}`);
+  console.log(`Server aktif di http:/172.20.10.7:${PORT}`);
 });

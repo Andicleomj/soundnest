@@ -15,6 +15,9 @@ class _LoginState extends State<Login> {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
+  String? _usernameError;
+  String? _passwordError;
+
   @override
   void dispose() {
     _usernameController.dispose();
@@ -23,6 +26,11 @@ class _LoginState extends State<Login> {
   }
 
   Future<void> _login() async {
+    setState(() {
+      _usernameError = null;
+      _passwordError = null;
+    });
+
     String username = _usernameController.text.trim();
     String password = _passwordController.text.trim();
 
@@ -44,7 +52,10 @@ class _LoginState extends State<Login> {
       }
 
       if (email == null) {
-        throw Exception("Nama Pengguna tidak ditemukan");
+        setState(() {
+          _usernameError = "Nama Pengguna tidak ditemukan";
+        });
+        return;
       }
 
       await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -56,10 +67,23 @@ class _LoginState extends State<Login> {
         context,
       ).showSnackBar(const SnackBar(content: Text("Login berhasil!")));
       Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password') {
+        setState(() {
+          _passwordError = "Kata sandi salah";
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Login gagal: ${e.message}"),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Login gagal: ${e.toString()}"),
+          content: Text("Terjadi kesalahan: $e"),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -69,20 +93,19 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
       backgroundColor: Colors.white,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 30),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: IntrinsicHeight(
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 20),
                       Center(
                         child: Column(
                           children: [
@@ -109,11 +132,14 @@ class _LoginState extends State<Login> {
                       const SizedBox(height: 6),
                       TextField(
                         controller: _usernameController,
-                        decoration: const InputDecoration(
-                          border: UnderlineInputBorder(),
-                          prefixIcon: Icon(Icons.person, size: 20),
+                        decoration: InputDecoration(
+                          border: const UnderlineInputBorder(),
+                          prefixIcon: const Icon(Icons.person, size: 20),
                           isDense: true,
-                          contentPadding: EdgeInsets.symmetric(vertical: 10),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                          ),
+                          errorText: _usernameError,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -144,6 +170,7 @@ class _LoginState extends State<Login> {
                               });
                             },
                           ),
+                          errorText: _passwordError,
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -189,7 +216,7 @@ class _LoginState extends State<Login> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 30),
+                      const Spacer(), // Tambahkan agar kolom bisa dorong ke atas saat keyboard muncul
                     ],
                   ),
                 ),

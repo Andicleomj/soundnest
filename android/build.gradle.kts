@@ -1,15 +1,16 @@
 buildscript {
-    val kotlinVersion = "2.1.0"
+    val kotlinVersion = "1.8.0"
 
     repositories {
         google()
         mavenCentral()
     }
-    dependencies {
-        classpath("com.google.gms:google-services:4.4.0")
+     dependencies {
+        classpath("com.android.tools.build:gradle:7.4.2")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath("com.google.gms:google-services:4.4.0")
     }
-}
+}   
 
 allprojects {
     repositories {
@@ -30,5 +31,5 @@ subprojects {
 }
 
 tasks.register<Delete>("clean") {
-    delete(rootProject.layout.buildDirectory)
+    delete(layout.buildDirectory)
 }

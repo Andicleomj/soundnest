@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.soundnest">
 
     <!-- Izin yang Dibutuhkan -->
@@ -7,8 +8,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" /> <!-- Izin Notifikasi untuk Android 13+ -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>
 
-
+    <uses-feature android:name="android.hardware.wifi" android:required="false" />
+    
     <application
         android:label="soundnest"
         android:name="${applicationName}"
@@ -34,6 +39,12 @@
             </intent-filter>
         </activity>
 
+        <meta-data
+           android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
+           android:value="com.example.soundnest.CastOptionsProvider" />
+
+
+
         <!-- Meta-data untuk Notifikasi -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
@@ -42,7 +53,8 @@
         <!-- Service untuk menerima notifikasi saat aplikasi di background -->
         <service
             android:name="com.google.firebase.messaging.FirebaseMessagingService"
-            android:exported="true">
+            android:exported="true"
+            tools:replace="android:exported">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
@@ -51,12 +63,14 @@
         <receiver
             android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver"
             android:exported="true"
-            android:permission="com.google.android.c2dm.permission.RECEIVE">
+            android:permission="com.google.android.c2dm.permission.RECEIVE"
+            tools:replace="android:permission">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
                 <category android:name="com.example.soundnest"/>
             </intent-filter>
         </receiver>
+
         
         <meta-data
             android:name="flutterEmbedding"

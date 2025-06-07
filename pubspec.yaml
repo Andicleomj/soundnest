@@ -47,6 +47,8 @@ dependencies:
   intl: ^0.18.1
   url_launcher: ^6.1.7
   shared_preferences: ^2.1.1
+  cast: ^2.1.0
+  volume_controller: ^2.0.5
 
 dev_dependencies:
   flutter_test:

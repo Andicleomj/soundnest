@@ -111,7 +111,7 @@ class _MurottalScreenState extends State<MurottalScreen> {
   }
 
   // Navigasi ke layar kategori tertentu
-   void navigateToCategoryScreen(BuildContext context, String category) {
+  void navigateToCategoryScreen(BuildContext context, String category) {
     String categoryPath;
     Widget screen;
 
@@ -263,38 +263,47 @@ class _MurottalScreenState extends State<MurottalScreen> {
   // Build UI kategori dalam bentuk Grid
   Widget _buildCategoryCard(BuildContext context, String category) {
     return MouseRegion(
-      cursor: SystemMouseCursors.click, // ini bikin cursor berubah pointer
+      cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: () => navigateToCategoryScreen(context, category),
-        child: Card(
-          shape: RoundedRectangleBorder(
+        child: Container(
+          height: 80, // Tambahkan tinggi lebih besar
+          decoration: BoxDecoration(
+            color: Colors.blue.shade100,
             borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 4,
+                offset: Offset(2, 2),
+              ),
+            ],
           ),
-          elevation: 3,
-          color: Colors.blue.shade100,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8.0,
-              vertical: 12.0,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
                   child: Text(
                     category,
                     style: const TextStyle(
-                      fontSize: 15,
+                      fontSize: 12, // Ukuran teks dikurangi
                       fontWeight: FontWeight.w600,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                IconButton(
+              ),
+              Align(
+                alignment: Alignment.center,
+                child: IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () => _confirmDeleteCategory(context, category),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
