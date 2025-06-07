@@ -47,7 +47,7 @@ class MusicPlayerService {
     if (kIsWeb) {
       return 'http://localhost:3000';
     } else if (Platform.isAndroid) {
-      return 'http://172.20.10.7:3000';
+      return 'http://172.20.10.2:3000';
     } else {
       return 'http://localhost:3000';
     }
@@ -97,6 +97,7 @@ class MusicPlayerService {
       print("❌ Gagal memutar musik dari URL: $e");
     }
   }
+
   Future<void> pauseMusic() async {
     if (!isPlaying) return; // Jika sudah pause, skip
 
@@ -142,4 +143,8 @@ class MusicPlayerService {
   // Getter untuk akses dari luar
   String? get currentTitle => currentTitleNotifier.value;
   String? get currentCategory => currentCategoryNotifier.value;
+
+  void addListener(void Function() audioStatusListener) {}
+
+  void removeListener(void Function() audioStatusListener) {}
 }

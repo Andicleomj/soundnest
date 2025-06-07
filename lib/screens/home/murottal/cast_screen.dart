@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:soundnest/service/audio_controller.dart';
 import 'package:soundnest/service/cast_service.dart';
 import 'package:cast/cast.dart';
+import 'package:soundnest/service/schedule_service.dart';
 
 class CastScreen extends StatefulWidget {
   final String streamingUrl;
+  final ScheduleService scheduleService;
+  final AudioControllerService audioControllerService;
 
-  const CastScreen({Key? key, required this.streamingUrl}) : super(key: key);
+   const CastScreen({
+    Key? key,
+    required this.streamingUrl,
+    required this.scheduleService,
+    required this.audioControllerService,
+  }) : super(key: key);
 
   @override
   State<CastScreen> createState() => _CastScreenState();
@@ -13,17 +22,17 @@ class CastScreen extends StatefulWidget {
 
 class _CastScreenState extends State<CastScreen> {
   final CastService _castService = CastService();
-
   CastDevice? _selectedDevice;
 
   bool _isPlaying = false;
   bool _isConnecting = false;
   bool _isLoadingDevices = false;
 
+  // Tidak lagi otomatis discover saat initState
   @override
   void initState() {
     super.initState();
-    _searchDevices();
+    // discoverDevices dipindah ke tombol refresh
   }
 
   Future<void> _searchDevices() async {
@@ -32,7 +41,7 @@ class _CastScreenState extends State<CastScreen> {
     });
 
     try {
-      await _castService.discoverDevices(); // pakai discoverDevices()
+      await _castService.discoverDevices();
     } catch (e) {
       debugPrint('Gagal mencari perangkat: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -60,7 +69,9 @@ class _CastScreenState extends State<CastScreen> {
     } catch (e) {
       debugPrint('Gagal connect/play: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal memutar ke perangkat ${device.name ?? ''}')),
+        SnackBar(
+          content: Text('Gagal memutar ke perangkat ${device.name ?? ''}'),
+        ),
       );
     } finally {
       setState(() => _isConnecting = false);
@@ -87,7 +98,7 @@ class _CastScreenState extends State<CastScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final devices = _castService.devices; // akses dari service
+    final devices = _castService.devices;
 
     return Scaffold(
       appBar: AppBar(
@@ -97,64 +108,83 @@ class _CastScreenState extends State<CastScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: _isLoadingDevices ? null : _searchDevices,
             tooltip: 'Cari ulang perangkat',
-          )
+          ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: _isLoadingDevices
-            ? const Center(child: CircularProgressIndicator())
-            : devices.isEmpty
-                ? const Center(child: Text('Tidak ada perangkat Chromecast ditemukan'))
+        child:
+            _isLoadingDevices
+                ? const Center(child: CircularProgressIndicator())
+                : devices.isEmpty
+                ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Tidak ada perangkat Chromecast ditemukan',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Coba Lagi'),
+                      onPressed: _searchDevices,
+                    ),
+                  ],
+                )
                 : Column(
-                    children: [
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: devices.length,
-                          itemBuilder: (context, index) {
-                            final device = devices[index];
-                            final isSelected = _selectedDevice == device;
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: devices.length,
+                        itemBuilder: (context, index) {
+                          final device = devices[index];
+                          final isSelected = _selectedDevice == device;
 
-                            return ListTile(
-                              title: Text(device.name ?? "Perangkat Tidak Diketahui"),
-                              subtitle: Text(device.host ?? ""),
-                              trailing: ElevatedButton(
-                                onPressed: (_isConnecting || (isSelected && _isPlaying))
-                                    ? null
-                                    : () => _connectAndPlay(device),
-                                child: isSelected
-                                    ? _isPlaying
-                                        ? const Text('Sedang diputar')
-                                        : const Text('Terhubung')
-                                    : const Text('Cast'),
-                              ),
-                            );
-                          },
-                        ),
+                          return ListTile(
+                            title: Text(
+                              device.name ?? "Perangkat Tidak Diketahui",
+                            ),
+                            subtitle: Text(device.host ?? ""),
+                            trailing: ElevatedButton(
+                              onPressed:
+                                  (_isConnecting || (isSelected && _isPlaying))
+                                      ? null
+                                      : () => _connectAndPlay(device),
+                              child:
+                                  isSelected
+                                      ? _isPlaying
+                                          ? const Text('Sedang diputar')
+                                          : const Text('Terhubung')
+                                      : const Text('Cast'),
+                            ),
+                          );
+                        },
                       ),
-                      if (_selectedDevice != null)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.pause),
-                              onPressed: _isPlaying ? _pause : null,
-                              tooltip: 'Pause',
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.play_arrow),
-                              onPressed: !_isPlaying ? _resume : null,
-                              tooltip: 'Play',
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.stop),
-                              onPressed: _stop,
-                              tooltip: 'Stop',
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
+                    ),
+                    if (_selectedDevice != null)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.pause),
+                            onPressed: _isPlaying ? _pause : null,
+                            tooltip: 'Pause',
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.play_arrow),
+                            onPressed: !_isPlaying ? _resume : null,
+                            tooltip: 'Play',
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.stop),
+                            onPressed: _stop,
+                            tooltip: 'Stop',
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:soundnest/service/audio_controller.dart';
 import 'package:soundnest/service/music_player_service.dart';
 
 final MusicPlayerService musicPlayerService = MusicPlayerService();
@@ -7,12 +8,17 @@ final MusicPlayerService musicPlayerService = MusicPlayerService();
 class SurahScreen extends StatefulWidget {
   final String categoryPath;
   final String categoryName;
+  final AudioControllerService audioControllerService;
+  final bool isCasting;
+  final VoidCallback onCastToggle;
 
   const SurahScreen({
     super.key,
     required this.categoryPath,
     required this.categoryName,
-    required String categoryId,
+    required this.audioControllerService,
+    required this.isCasting,
+    required this.onCastToggle,
   });
 
   @override

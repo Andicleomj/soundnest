@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
-const API_KEY = "AIzaSyCvg8k9odUAk87UwtpCwQouOcUvWLXb1to"; 
+const API_KEY = "AIzaSyCvg8k9odUAk87UwtpCwQouOcUvWLXb1to";
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -88,5 +88,5 @@ app.get("/stream/:fileId", async (req, res) => {
 
 const PORT = 3000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server aktif di http:/172.20.10.7:${PORT}`);
+  console.log(`Server aktif di http://172.20.10.2:${PORT}`);
 });
