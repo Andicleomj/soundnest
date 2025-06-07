@@ -89,7 +89,7 @@ class MyApp extends StatelessWidget {
           return MaterialPageRoute(
             builder:
                 (context) => CastScreen(
-                  streamingUrl: 'http://172.20.10.2:3000/stream/$fileId',
+                  streamingUrl: 'http://172.20.10.7:3000/stream/$fileId',
                   scheduleService: scheduleService,
                   audioControllerService: audioControllerService,
                 ),
