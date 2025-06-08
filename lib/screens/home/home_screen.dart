@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soundnest/screens/home/bel/bel_screen.dart';
+import 'package:soundnest/screens/home/cast/cast_screen.dart';
 import 'package:soundnest/screens/home/pemberitahuan/notification_screen.dart';
 import 'package:soundnest/screens/home/volume/volume_screen.dart';
 import 'package:soundnest/widgets/custom_navbar.dart';
@@ -9,7 +10,7 @@ import 'package:soundnest/screens/home/murottal/murottal_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-  
+
   get audioControllerService => null;
 
   @override
@@ -102,6 +103,20 @@ class HomeScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) => const VolumeScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    MenuItem(
+                      icon: 'assets/cast.png',
+                      label: "Cast",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    const CastScreen(playFromFileId: ''),
                           ),
                         );
                       },

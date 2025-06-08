@@ -11,6 +11,8 @@ import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/screens/schedule/daftar.dart';
 import 'package:soundnest/screens/schedule/murotal.dart';
 import 'package:soundnest/screens/schedule/musik.dart';
+import 'package:soundnest/screens/home/cast/cast_screen.dart';
+
 
 class AppRoutes {
   static const String splash = '/splash';
@@ -21,6 +23,7 @@ class AppRoutes {
   static const String schedulescreen = '/schedule-screen';
   static const String dashboard = '/dashboard';
   static const String schedule = '/schedule';
+  static const String cast = '/cast';
   static const String daftar = '/jadwal';
   static const String daftarMusik = '/daftar';
   static const String musik = '/jadwal-musik';
@@ -36,6 +39,7 @@ class AppRoutes {
       schedulescreen: (context) => const ScheduleScreen(),
       dashboard: (context) => const DashboardScreen(),
       schedule: (context) => const Schedule(),
+      cast: (context) => const CastScreen(playFromFileId: '',),
       daftar: (context) => const DaftarJadwalScreen(),
       musik: (context) => const MusikScheduleForm(),
       murotal: (context) => const MurottalScheduleForm(),

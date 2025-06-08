@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:soundnest/service/audio_controller.dart';
 import 'package:soundnest/service/cast_service.dart';
 import 'package:cast/cast.dart';
 import 'package:soundnest/service/schedule_service.dart';
 
 class CastScreen extends StatefulWidget {
-  final String streamingUrl; // Bisa diubah jadi fileId jika pakai playFromFileId
-  final ScheduleService scheduleService;
-  final AudioControllerService audioControllerService;
+  final String  playFromFileId; // Bisa diubah jadi fileId jika pakai playFromFileId
 
   const CastScreen({
     Key? key,
-    required this.streamingUrl,
-    required this.scheduleService,
-    required this.audioControllerService,
+    required this. playFromFileId,
   }) : super(key: key);
 
   @override
@@ -85,7 +80,7 @@ class _CastScreenState extends State<CastScreen> {
 
       // Asumsi streamingUrl adalah fileId untuk demo ini
       await _castService.playFromFileId(
-        widget.streamingUrl,
+        widget. playFromFileId,
         title: "Audio dari Google Drive",
       );
 

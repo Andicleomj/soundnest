@@ -11,7 +11,7 @@ import 'package:soundnest/screens/home/musik/musik_screen.dart';
 import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/utils/app_routes.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:soundnest/screens/home/murottal/cast_screen.dart';
+import 'package:soundnest/screens/home/cast/cast_screen.dart';
 
 Future<void> requestMicPermission() async {
   if (await Permission.microphone.request().isGranted) {
