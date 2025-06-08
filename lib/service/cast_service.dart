@@ -1,45 +1,94 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:cast/cast.dart';
+import 'dart:async';
+
+typedef VoidCallback = void Function();
 
 class CastService {
+  static final CastService _instance = CastService._internal();
+  factory CastService() => _instance;
+  CastService._internal();
+
   CastSession? _session;
+  CastDevice? _connectedDevice;
 
-  // Tambahan: menyimpan daftar perangkat yang ditemukan
+  bool isPlaying = false;
+  String? currentFileId;
+
+  final ValueNotifier<bool> isPlayingNotifier = ValueNotifier(false);
+  final ValueNotifier<String?> currentTitleNotifier = ValueNotifier(null);
+  final ValueNotifier<String?> currentCategoryNotifier = ValueNotifier(null);
+ final ValueNotifier<List<CastDevice>> devicesNotifier = ValueNotifier([]);
+  VoidCallback? _onComplete;
+
   final List<CastDevice> _devices = [];
-
-  // Getter: untuk akses dari luar
   List<CastDevice> get devices => _devices;
 
-  /// Temukan perangkat cast, dan simpan ke _devices
-  Future<void> discoverDevices() async {
+  StreamSubscription<CastSessionState>? _stateSubscription;
+  StreamSubscription<dynamic>? _messageSubscription;
+
+  String get _baseProxyUrl {
+    if (kIsWeb) return 'http://localhost:3000';
+    if (Platform.isAndroid) return 'http://192.168.0.102:3000';
+    return 'http://localhost:3000';
+  }
+
+   Future<void> discoverDevices() async {
     final foundDevices = await CastDiscoveryService().search();
     _devices
       ..clear()
       ..addAll(foundDevices);
+    devicesNotifier.value = List.unmodifiable(_devices);
+    print('📡 Devices found: ${_devices.map((d) => d.name).join(', ')}');
   }
 
-  /// Connect ke device
   Future<void> connectToDevice(CastDevice device) async {
-    _session = await CastSessionManager().startSession(device);
+    try {
+      _connectedDevice = device;
+      final session = await CastSessionManager().startSession(device);
 
-    _session!.stateStream.listen((state) async {
-      print('Cast session state: $state');
+      await _stateSubscription?.cancel();
+      await _messageSubscription?.cancel();
 
-      if (state == CastSessionState.connected) {
-        print('Connected to device: ${device.name}');
-      }
-    });
+      _stateSubscription = session.stateStream.listen(
+        _handleCastState,
+        onError: (e) => debugPrint('⚠️ Error in state stream: $e'),
+      );
 
-    _session!.messageStream.listen((message) {
-      print('Received message: $message');
-    });
+      _messageSubscription = session.messageStream.listen((message) {
+        debugPrint('💬 Received message: $message');
+      });
+
+      _session = session;
+    } catch (e) {
+      print('❌ Failed to connect: $e');
+      _clearSession();
+    }
   }
 
-  /// Play audio ke device cast
-  Future<void> playMedia(String url, {String? title}) async {
-    if (_session == null) throw Exception('Belum terhubung ke device cast');
+  void _handleCastState(CastSessionState state) {
+    debugPrint('📶 Cast session state: $state');
+
+    final stateStr = state.toString().toLowerCase();
+
+    if (stateStr.contains('connected')) {
+      final name = _connectedDevice?.name ?? 'Unknown';
+      debugPrint('✅ Connected to device: $name');
+    } else if (stateStr.contains('disconnected') || stateStr.contains('nosession') || stateStr.contains('no_session')) {
+      debugPrint('🔌 Disconnected or no session detected');
+      _clearSession();
+    } else {
+      debugPrint('ℹ️ Other session state: $state');
+    }
+  }
+
+  Future<void> playFromFileId(String fileId, {String? title, String? category}) async {
+    if (_session == null) throw Exception('Belum terhubung ke device');
+
+    final proxyUrl = '$_baseProxyUrl/stream/$fileId';
 
     try {
-      // Launch default media receiver app (CC1AD845 = default receiver)
       _session!.sendMessage(
         CastSession.kNamespaceReceiver,
         {
@@ -55,47 +104,111 @@ class CastService {
         {
           'type': 'LOAD',
           'media': {
-            'contentId': url,
+            'contentId': proxyUrl,
             'streamType': 'BUFFERED',
             'contentType': 'audio/mpeg',
             'metadata': {
               'metadataType': 3,
               'title': title ?? 'Audio',
+              'category': category ?? '',
             },
           },
           'autoplay': true,
         },
       );
+
+      currentFileId = fileId;
+      isPlaying = true;
+      isPlayingNotifier.value = true;
+      currentTitleNotifier.value = title;
+      currentCategoryNotifier.value = category;
+
+      print('🎶 Playing: $proxyUrl');
     } catch (e) {
-      print('sendMessage error: $e');
-      rethrow;
+      print('❌ Gagal casting musik: $e');
     }
   }
 
-  /// Pause
   Future<void> pause() async {
-    if (_session == null) return;
-    _session!.sendMessage('urn:x-cast:com.google.cast.media', {
-      'type': 'PAUSE',
-      'mediaSessionId': 0,
-    });
+    if (_session == null || !isPlaying) return;
+
+    _session!.sendMessage(
+      'urn:x-cast:com.google.cast.media',
+      {
+        'type': 'PAUSE',
+        'mediaSessionId': 0,
+      },
+    );
+
+    isPlaying = false;
+    isPlayingNotifier.value = false;
+    print('⏸️ Cast paused.');
   }
 
-  /// Resume
   Future<void> resume() async {
-    if (_session == null) return;
-    _session!.sendMessage('urn:x-cast:com.google.cast.media', {
-      'type': 'PLAY',
-      'mediaSessionId': 0,
-    });
+    if (_session == null || isPlaying) return;
+
+    _session!.sendMessage(
+      'urn:x-cast:com.google.cast.media',
+      {
+        'type': 'PLAY',
+        'mediaSessionId': 0,
+      },
+    );
+
+    isPlaying = true;
+    isPlayingNotifier.value = true;
+    print('▶️ Cast resumed.');
   }
 
-  /// Stop
   Future<void> stop() async {
     if (_session == null) return;
-    _session!.sendMessage('urn:x-cast:com.google.cast.media', {
-      'type': 'STOP',
-      'mediaSessionId': 0,
-    });
+
+    _session!.sendMessage(
+      'urn:x-cast:com.google.cast.media',
+      {
+        'type': 'STOP',
+        'mediaSessionId': 0,
+      },
+    );
+
+    _clearCurrentMedia();
+    print('🛑 Cast stopped.');
   }
+
+  void _clearCurrentMedia() {
+    isPlaying = false;
+    isPlayingNotifier.value = false;
+    currentFileId = null;
+    currentTitleNotifier.value = null;
+    currentCategoryNotifier.value = null;
+  }
+
+  void _clearSession() {
+    try {
+      _stateSubscription?.cancel();
+      _messageSubscription?.cancel();
+    } catch (_) {}
+
+    _session = null;
+    _connectedDevice = null;
+    _stateSubscription = null;
+    _messageSubscription = null;
+
+    _clearCurrentMedia();
+    debugPrint('♻️ Session cleared safely.');
+  }
+
+  void setOnCompleteListener(VoidCallback callback) {
+    _onComplete = callback;
+  }
+
+  Future<void> dispose() async {
+    await stop();
+    _clearSession();
+    print('🗑️ Cast session disposed.');
+  }
+
+  String? get currentTitle => currentTitleNotifier.value;
+  String? get currentCategory => currentCategoryNotifier.value;
 }

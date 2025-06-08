@@ -87,6 +87,7 @@ flutter:
     - assets/sounds/bell.mp3
     - assets/surah_list.json
     - assets/kids.jpg
+    - assets/cast.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -47,7 +47,7 @@ class MusicPlayerService {
     if (kIsWeb) {
       return 'http://localhost:3000';
     } else if (Platform.isAndroid) {
-      return 'http://172.20.10.7:3000';
+      return 'http://192.168.0.102:3000';
     } else {
       return 'http://localhost:3000';
     }

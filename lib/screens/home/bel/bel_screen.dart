@@ -42,32 +42,25 @@ class _BellScreenState extends State<BellScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Set background putih
+      backgroundColor: Colors.white, 
       appBar: AppBar(
-        elevation: 0,
-        centerTitle: true,
-        title: const Text(
-          "Bel",
-          style: TextStyle(
-            fontSize: 22,
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.white],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
+      elevation: 0,
+      centerTitle: true,
+      backgroundColor: Colors.blueAccent, 
+      title: const Text(
+        "Bel",
+        style: TextStyle(
+          fontSize: 22,
+          color: Colors.white, 
+          fontWeight: FontWeight.bold,
         ),
       ),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white), 
+        onPressed: () => Navigator.pop(context),
+      ),
+    ),
+
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(

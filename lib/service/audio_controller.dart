@@ -17,7 +17,7 @@ class AudioControllerService {
     required String title,
     bool toGoogleCast = false,
   }) async {
-    final url = "http://172.20.10.7:3000/stream/$fileId";
+    final url = "http://192.168.0.102:3000/stream/$fileId";
 
     if (toGoogleCast) {
       if (selectedDevice == null)

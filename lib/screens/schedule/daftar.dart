@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:soundnest/screens/schedule/alarm_audio_controller.dart';
 import 'dart:convert';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tzData;
 import 'package:soundnest/screens/schedule/alarm_screen.dart';
-
 
 class DaftarJadwalScreen extends StatefulWidget {
   const DaftarJadwalScreen({super.key});
@@ -50,32 +50,38 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
     super.dispose();
   }
 
-
-  void _showMiniStatusBar(String message, {Duration duration = const Duration(seconds: 2)}) {
+  void _showMiniStatusBar(
+    String message, {
+    Duration duration = const Duration(seconds: 2),
+  }) {
     _overlayEntry?.remove();
     _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        top: MediaQuery.of(context).size.height * 0.4,
-        left: MediaQuery.of(context).size.width * 0.2,
-        right: MediaQuery.of(context).size.width * 0.2,
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.7),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Center(
-              child: Text(
-                message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+      builder:
+          (context) => Positioned(
+            top: MediaQuery.of(context).size.height * 0.4,
+            left: MediaQuery.of(context).size.width * 0.2,
+            right: MediaQuery.of(context).size.width * 0.2,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 20,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Center(
+                  child: Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -141,18 +147,22 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
           return {
             'key': key,
             'rawKey': entry.key,
-            'title': schedule['title'] ?? (source == 'otomatis'
-                ? '[Otomatis] ${schedule['category'] ?? 'Tanpa Judul'}'
-                : 'Tanpa Judul'),
+            'title':
+                schedule['title'] ??
+                (source == 'otomatis'
+                    ? '[Otomatis] ${schedule['category'] ?? 'Tanpa Judul'}'
+                    : 'Tanpa Judul'),
             'category': schedule['category'] ?? '-',
             'hari': hari,
             'waktu': schedule['waktu'] ?? 'Tidak ada waktu',
             'enabled': schedule['enabled'] ?? false,
             'source': source,
-            'audioUrl': schedule['audioUrl'] ?? (
-              schedule['fileId'] != null && (schedule['fileId'] as String).isNotEmpty
-                  ? 'https://docs.google.com/uc?export=download&id=${schedule['fileId']}'
-                  : ''),
+            'audioUrl':
+                schedule['audioUrl'] ??
+                (schedule['fileId'] != null &&
+                        (schedule['fileId'] as String).isNotEmpty
+                    ? 'https://docs.google.com/uc?export=download&id=${schedule['fileId']}'
+                    : ''),
           };
         } catch (e) {
           print("⚠ Error parsing entry ${entry.key} di $source: $e");
@@ -207,7 +217,9 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Jadwal berhasil ${isActive ? 'diaktifkan' : 'dinonaktifkan'}'),
+          content: Text(
+            'Jadwal berhasil ${isActive ? 'diaktifkan' : 'dinonaktifkan'}',
+          ),
         ),
       );
     } catch (e) {
@@ -237,14 +249,14 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
         if (currentlyPlayingKey == key) currentlyPlayingKey = null;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Jadwal berhasil dihapus")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Jadwal berhasil dihapus")));
     } catch (e) {
       print("⚠ Gagal hapus jadwal $key: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Gagal menghapus jadwal")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Gagal menghapus jadwal")));
     }
   }
 
@@ -262,30 +274,40 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
             children: [
               TextFormField(
                 initialValue: newHari,
-                decoration: const InputDecoration(labelText: 'Hari (pisah koma jika banyak)'),
+                decoration: const InputDecoration(
+                  labelText: 'Hari (pisah koma jika banyak)',
+                ),
                 onChanged: (val) => newHari = val,
               ),
               TextFormField(
                 initialValue: newWaktu,
-                decoration: const InputDecoration(labelText: 'Waktu (misal: 14:00)'),
+                decoration: const InputDecoration(
+                  labelText: 'Waktu (misal: 14:00)',
+                ),
                 onChanged: (val) => newWaktu = val,
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
+            ),
             ElevatedButton(
               onPressed: () async {
                 try {
                   final ref = _getRefBySource(schedule['source']);
-                  final hariList = newHari.split(',').map((e) => e.trim()).toList();
+                  final hariList =
+                      newHari.split(',').map((e) => e.trim()).toList();
 
                   await ref.child(schedule['rawKey']).update({
                     'hari': hariList,
                     'waktu': newWaktu,
                   });
 
-                  final idx = schedules.indexWhere((s) => s['key'] == schedule['key']);
+                  final idx = schedules.indexWhere(
+                    (s) => s['key'] == schedule['key'],
+                  );
                   if (idx != -1) {
                     setState(() {
                       schedules[idx]['hari'] = newHari;
@@ -339,53 +361,56 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
     }
   }
 
-
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black),
-        onPressed: () => Navigator.pop(context),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        title: const Text(
+          "Daftar Jadwal",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        ),
+        centerTitle: true,
       ),
-      flexibleSpace: Container(
+      body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blueAccent, Colors.white],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.fromARGB(255, 164, 214, 255),
+              Color.fromARGB(255, 164, 214, 255),
+            ],
           ),
         ),
-      ),
-      title: const Text(
-        "Daftar Jadwal",
-        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-      ),
-      centerTitle: true,
-    ),
-    body: Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color.fromARGB(255, 164, 214, 255), Color.fromARGB(255, 164, 214, 255)],
-        ),
-      ),
-      child: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/cloud.jpg'),
-            fit: BoxFit.fitWidth,
+        child: Container(
+          width: double.infinity,
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/cloud.jpg'),
+              fit: BoxFit.fitWidth,
+            ),
           ),
-        ),
-        child: isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : schedules.isEmpty
-                ? const Center(child: Text("Belum ada jadwal"))
-                : ListView.builder(
+          child:
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : schedules.isEmpty
+                  ? const Center(child: Text("Belum ada jadwal"))
+                  : ListView.builder(
                     padding: const EdgeInsets.all(16.0),
                     itemCount: schedules.length,
                     itemBuilder: (context, index) {
@@ -394,7 +419,7 @@ Widget build(BuildContext context) {
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: Container(
-                          height: 150,
+                          height: 200,
                           padding: const EdgeInsets.all(8),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -414,11 +439,18 @@ Widget build(BuildContext context) {
                                     ),
                                     const SizedBox(height: 4),
                                     ...[
-                                      "Hari: ${schedule['hari']}",
-                                      "Mulai: ${schedule['waktu']}",
-                                      "Sumber: ${schedule['source'].toString().capitalize()}",
-                                    ]
-                                        .map((text) => Text(text, style: const TextStyle(fontSize: 12)))
+                                          "Hari: ${schedule['hari']}",
+                                          "Mulai: ${schedule['waktu']}",
+                                          "Sumber: ${schedule['source'].toString().capitalize()}",
+                                        ]
+                                        .map(
+                                          (text) => Text(
+                                            text,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        )
                                         .toList(),
                                   ],
                                 ),
@@ -441,61 +473,88 @@ Widget build(BuildContext context) {
                                     ),
                                     const SizedBox(height: 10),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
                                       children: [
                                         IconButton(
-                                          icon: const Icon(Icons.edit, color: Colors.blue),
+                                          icon: const Icon(
+                                            Icons.edit,
+                                            color: Colors.blue,
+                                          ),
                                           tooltip: "Edit Jadwal",
-                                          onPressed: () => _editSchedule(schedule),
+                                          onPressed:
+                                              () => _editSchedule(schedule),
                                         ),
                                         IconButton(
-                                          icon: const Icon(Icons.delete, color: Colors.red),
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            color: Colors.red,
+                                          ),
                                           tooltip: "Hapus Jadwal",
-                                          onPressed: () => _deleteSchedule(schedule['key']),
+                                          onPressed:
+                                              () => _deleteSchedule(
+                                                schedule['key'],
+                                              ),
                                         ),
                                       ],
                                     ),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
                                       children: [
                                         IconButton(
                                           icon: Icon(
-                                            isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                                            isPlaying
+                                                ? Icons.pause_circle_filled
+                                                : Icons.play_circle_fill,
                                             color: Colors.green,
                                           ),
                                           tooltip: isPlaying ? "Pause" : "Play",
-                                          onPressed: () => _togglePlayPause(schedule['key'], schedule['audioUrl']),
+                                          onPressed:
+                                              () => _togglePlayPause(
+                                                schedule['key'],
+                                                schedule['audioUrl'],
+                                              ),
                                         ),
                                         IconButton(
-                                          icon: const Icon(Icons.alarm, color: Colors.orange),
+                                          icon: const Icon(
+                                            Icons.alarm,
+                                            color: Colors.orange,
+                                          ),
                                           tooltip: "Buka Alarm",
                                           onPressed: () {
-                                            final audioUrl = schedule['audioUrl'] ?? '';
-                                            final title = schedule['title'] ?? 'Alarm';
-                                            if (audioUrl.isEmpty) {
-                                              _showMiniStatusBar("⚠ Audio tidak tersedia");
-                                              return;
-                                            }
+                                          final audioUrl = schedule['audioUrl'] ?? '';
+                                          final title = schedule['title'] ?? 'Alarm';
+
+                                          if (audioUrl.isEmpty) {
+                                            _showMiniStatusBar("⚠ Audio tidak tersedia");
+                                            return;
+                                          }
+
+                                          final controller = AlarmAudioController();
+
+                                          // Set URL dulu sebelum navigasi, agar audio siap diputar
+                                          controller.setUrl(audioUrl).then((_) {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
                                                 builder: (context) => AlarmPlayScreen(
                                                   audioUrl: audioUrl,
                                                   title: title,
+                                                  audioController: controller,
                                                   onResume: () {
-                                                    // Contoh aksi lanjutkan: bisa kamu sesuaikan
-                                                    print("Lanjutkan ditekan");
+                                                    controller.play(); // lanjutkan playback
                                                     Navigator.pop(context);
                                                   },
                                                   onStop: () {
-                                                    // Contoh aksi stop: bisa kamu sesuaikan
-                                                    print("Stop ditekan");
+                                                    controller.stop(); // hentikan playback
                                                     Navigator.pop(context);
                                                   },
                                                 ),
                                               ),
                                             );
-                                          },
+                                          });
+                                        },
                                         ),
                                       ],
                                     ),
