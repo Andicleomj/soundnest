@@ -42,17 +42,17 @@ class _BellScreenState extends State<BellScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, 
+      backgroundColor: Colors.grey[50], 
       appBar: AppBar(
       elevation: 0,
       centerTitle: true,
-      backgroundColor: Colors.blueAccent, 
+      backgroundColor: Colors.blueAccent,  
       title: const Text(
         "Bel",
         style: TextStyle(
-          fontSize: 22,
           color: Colors.white, 
           fontWeight: FontWeight.bold,
+          fontSize: 22,
         ),
       ),
       leading: IconButton(

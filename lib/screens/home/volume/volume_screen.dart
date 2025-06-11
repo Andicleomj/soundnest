@@ -8,17 +8,12 @@ class VolumeScreen extends StatefulWidget {
   State<VolumeScreen> createState() => _VolumeScreenState();
 }
 
-class _VolumeScreenState extends State<VolumeScreen>
-    with SingleTickerProviderStateMixin {
+class _VolumeScreenState extends State<VolumeScreen> {
   double _tempVolume = 50;
-  late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(seconds: 2))
-          ..repeat();
     _loadVolume();
   }
 
@@ -40,45 +35,31 @@ class _VolumeScreenState extends State<VolumeScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text("Volume disimpan: ${_tempVolume.toInt()}%"),
-        backgroundColor: Colors.indigo,
+        backgroundColor: Colors.blue,
       ),
     );
-
-    // TODO: Integrasi dengan player
-    // contoh: player.setVolume(_tempVolume / 100);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text(
-          "Volume",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.white],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+          "Atur Volume",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 22,
           ),
         ),
+        backgroundColor: Colors.blueAccent,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        elevation: 0,
       ),
       body: SafeArea(
         child: Padding(
@@ -90,15 +71,28 @@ class _VolumeScreenState extends State<VolumeScreen>
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
+                      Container(
+                        width: 220,
+                        height: 220,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              Colors.lightBlue.shade100,
+                              Colors.blueAccent,
+                            ],
+                          ),
+                        ),
+                      ),
                       SizedBox(
-                        width: 200,
-                        height: 200,
+                        width: 180,
+                        height: 180,
                         child: CircularProgressIndicator(
                           value: _tempVolume / 100,
                           strokeWidth: 12,
-                          backgroundColor: Colors.grey[300],
+                          backgroundColor: Colors.lightBlue.shade50,
                           valueColor: const AlwaysStoppedAnimation<Color>(
-                            Colors.blueAccent,
+                            Colors.blue,
                           ),
                         ),
                       ),
@@ -109,13 +103,24 @@ class _VolumeScreenState extends State<VolumeScreen>
                             "${_tempVolume.toInt()}%",
                             style: const TextStyle(
                               fontSize: 40,
-                              color: Colors.black,
                               fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  blurRadius: 3,
+                                  color: Colors.black26,
+                                  offset: Offset(2, 2),
+                                ),
+                              ],
                             ),
                           ),
                           const Text(
                             "Volume",
-                            style: TextStyle(color: Colors.black54, fontSize: 16),
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),
@@ -123,46 +128,59 @@ class _VolumeScreenState extends State<VolumeScreen>
                   ),
                 ),
               ),
-
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  FloatingActionButton(
-                    heroTag: 'decrease',
-                    onPressed: _decreaseVolume,
-                    backgroundColor: Colors.blue,
-                    child: const Icon(Icons.remove, color: Colors.white),
-                  ),
+                  _buildCircleButton(Icons.remove, _decreaseVolume, Colors.cyan),
                   const SizedBox(width: 40),
-                  FloatingActionButton(
-                    heroTag: 'increase',
-                    onPressed: _increaseVolume,
-                    backgroundColor: Colors.blue,
-                    child: const Icon(Icons.add, color: Colors.white),
-                  ),
+                  _buildCircleButton(Icons.add, _increaseVolume, Colors.cyan),
                 ],
               ),
-
-              const SizedBox(height: 40),
-
+              const SizedBox(height: 30),
               ElevatedButton.icon(
                 onPressed: _saveVolume,
                 icon: const Icon(Icons.save, color: Colors.white),
                 label: const Text(
-                  "Simpan",
-                  style: TextStyle(fontSize: 18),
+                  "Simpan Volume",
+                  style: TextStyle(color: Colors.white, fontSize: 20),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blueAccent,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(30),
                   ),
+                  elevation: 4,
                 ),
               ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCircleButton(IconData icon, VoidCallback onTap, Color color) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(40),
+      child: Container(
+        width: 70,
+        height: 70,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.4),
+              blurRadius: 8,
+              offset: const Offset(2, 4),
+            )
+          ],
+        ),
+        child: Icon(icon, color: Colors.white, size: 36),
       ),
     );
   }

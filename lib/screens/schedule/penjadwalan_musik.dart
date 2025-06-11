@@ -7,26 +7,21 @@ class PenjadwalanMusik extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.blueAccent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.white],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-        ),
         title: const Text(
           "Penjadwalan",
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
         ),
         centerTitle: true,
       ),
@@ -62,14 +57,20 @@ class PenjadwalanMusik extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.home, color: Colors.white),
-                Text("Home", style: TextStyle(color: Colors.white, fontSize: 12)),
+                Text(
+                  "Home",
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
               ],
             ),
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.schedule, color: Colors.white),
-                Text("Penjadwalan", style: TextStyle(color: Colors.white, fontSize: 12)),
+                Text(
+                  "Penjadwalan",
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
               ],
             ),
           ],

@@ -110,24 +110,17 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
               'Kategori Musik',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: Colors.white,
+                fontSize: 22,
               ),
             ),
             centerTitle: true,
-            backgroundColor: Colors.transparent,
+            backgroundColor: Colors.blueAccent,
             elevation: 0,
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blueAccent, Colors.white],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-            ),
+            iconTheme: const IconThemeData(color: Colors.white),
             actions: [
               IconButton(
-                icon: const Icon(Icons.add, color: Colors.black),
+                icon: const Icon(Icons.add, color: Colors.white, ),
                 onPressed: () {
                   showAddCategoryDialog(context);
                 },

@@ -321,31 +321,24 @@ class _MurottalScreenState extends State<MurottalScreen> {
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: const Text(
-              'Kategori Musrottal',
+              'Kategori Murottal',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: Colors.white,
+                fontSize: 22,
               ),
             ),
             centerTitle: true,
-            backgroundColor: Colors.transparent,
+            backgroundColor: Colors.blueAccent,
             elevation: 0,
+            iconTheme: const IconThemeData(color: Colors.white),
             actions: [
               IconButton(
-                icon: const Icon(Icons.add, color: Colors.black),
+                icon: const Icon(Icons.add, color: Colors.white),
                 tooltip: 'Tambah Kategori',
                 onPressed: _showAddCategoryDialog,
               ),
             ],
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blueAccent, Colors.white],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-            ),
           ),
           body: Column(
             children: [

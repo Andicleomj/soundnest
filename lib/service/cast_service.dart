@@ -6,35 +6,30 @@ import 'dart:async';
 typedef VoidCallback = void Function();
 
 class CastService {
-  static final CastService _instance = CastService._internal();
   factory CastService() => _instance;
+
   CastService._internal();
 
-  CastSession? _session;
-  CastDevice? _connectedDevice;
-
-  bool isPlaying = false;
-  String? currentFileId;
-
-  final ValueNotifier<bool> isPlayingNotifier = ValueNotifier(false);
-  final ValueNotifier<String?> currentTitleNotifier = ValueNotifier(null);
   final ValueNotifier<String?> currentCategoryNotifier = ValueNotifier(null);
- final ValueNotifier<List<CastDevice>> devicesNotifier = ValueNotifier([]);
-  VoidCallback? _onComplete;
+  String? currentFileId;
+  final ValueNotifier<String?> currentTitleNotifier = ValueNotifier(null);
+  final ValueNotifier<List<CastDevice>> devicesNotifier = ValueNotifier([]);
+  bool isPlaying = false;
+  final ValueNotifier<bool> isPlayingNotifier = ValueNotifier(false);
 
+  static final CastService _instance = CastService._internal();
+
+  CastDevice? _connectedDevice;
   final List<CastDevice> _devices = [];
+  int? _mediaSessionId;
+  StreamSubscription<dynamic>? _messageSubscription;
+  VoidCallback? _onComplete;
+  CastSession? _session;
+  StreamSubscription<CastSessionState>? _stateSubscription;
+
   List<CastDevice> get devices => _devices;
 
-  StreamSubscription<CastSessionState>? _stateSubscription;
-  StreamSubscription<dynamic>? _messageSubscription;
-
-  String get _baseProxyUrl {
-    if (kIsWeb) return 'http://localhost:3000';
-    if (Platform.isAndroid) return 'http://192.168.0.102:3000';
-    return 'http://localhost:3000';
-  }
-
-   Future<void> discoverDevices() async {
+  Future<void> discoverDevices() async {
     final foundDevices = await CastDiscoveryService().search();
     _devices
       ..clear()
@@ -51,71 +46,70 @@ class CastService {
       await _stateSubscription?.cancel();
       await _messageSubscription?.cancel();
 
-      _stateSubscription = session.stateStream.listen(
-        _handleCastState,
-        onError: (e) => debugPrint('⚠️ Error in state stream: $e'),
-      );
+      final completer = Completer<void>();
+
+      _stateSubscription = session.stateStream.listen((state) {
+        _handleCastState(state);
+        if (state == CastSessionState.connected) {
+          completer.complete();
+        }
+      }, onError: (e) => debugPrint('⚠️ Error in state stream: $e'));
 
       _messageSubscription = session.messageStream.listen((message) {
         debugPrint('💬 Received message: $message');
+
+        if (message is Map && message['mediaSessionId'] != null) {
+          _mediaSessionId = message['mediaSessionId'];
+          print('ℹ️ Media Session ID updated: $_mediaSessionId');
+        }
       });
 
       _session = session;
+
+      await completer.future.timeout(
+        Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('Timeout waiting for cast session connection');
+        },
+      );
     } catch (e) {
       print('❌ Failed to connect: $e');
       _clearSession();
+      rethrow;
     }
   }
 
-  void _handleCastState(CastSessionState state) {
-    debugPrint('📶 Cast session state: $state');
-
-    final stateStr = state.toString().toLowerCase();
-
-    if (stateStr.contains('connected')) {
-      final name = _connectedDevice?.name ?? 'Unknown';
-      debugPrint('✅ Connected to device: $name');
-    } else if (stateStr.contains('disconnected') || stateStr.contains('nosession') || stateStr.contains('no_session')) {
-      debugPrint('🔌 Disconnected or no session detected');
-      _clearSession();
-    } else {
-      debugPrint('ℹ️ Other session state: $state');
-    }
-  }
-
-  Future<void> playFromFileId(String fileId, {String? title, String? category}) async {
+  Future<void> playFromFileId(
+    String fileId, {
+    String? title,
+    String? category,
+  }) async {
     if (_session == null) throw Exception('Belum terhubung ke device');
 
     final proxyUrl = '$_baseProxyUrl/stream/$fileId';
 
     try {
-      _session!.sendMessage(
-        CastSession.kNamespaceReceiver,
-        {
-          'type': 'LAUNCH',
-          'appId': 'CC1AD845',
-        },
-      );
+      _session!.sendMessage(CastSession.kNamespaceReceiver, {
+        'type': 'LAUNCH',
+        'appId': 'CC1AD845',
+      });
 
       await Future.delayed(const Duration(seconds: 2));
 
-      _session!.sendMessage(
-        'urn:x-cast:com.google.cast.media',
-        {
-          'type': 'LOAD',
-          'media': {
-            'contentId': proxyUrl,
-            'streamType': 'BUFFERED',
-            'contentType': 'audio/mpeg',
-            'metadata': {
-              'metadataType': 3,
-              'title': title ?? 'Audio',
-              'category': category ?? '',
-            },
+      _session!.sendMessage('urn:x-cast:com.google.cast.media', {
+        'type': 'LOAD',
+        'media': {
+          'contentId': proxyUrl,
+          'streamType': 'BUFFERED',
+          'contentType': 'audio/mpeg',
+          'metadata': {
+            'metadataType': 3,
+            'title': title ?? 'Audio',
+            'category': category ?? '',
           },
-          'autoplay': true,
         },
-      );
+        'autoplay': true,
+      });
 
       currentFileId = fileId;
       isPlaying = true;
@@ -132,13 +126,10 @@ class CastService {
   Future<void> pause() async {
     if (_session == null || !isPlaying) return;
 
-    _session!.sendMessage(
-      'urn:x-cast:com.google.cast.media',
-      {
-        'type': 'PAUSE',
-        'mediaSessionId': 0,
-      },
-    );
+    _session!.sendMessage('urn:x-cast:com.google.cast.media', {
+      'type': 'PAUSE',
+      'mediaSessionId': _mediaSessionId,
+    });
 
     isPlaying = false;
     isPlayingNotifier.value = false;
@@ -148,13 +139,10 @@ class CastService {
   Future<void> resume() async {
     if (_session == null || isPlaying) return;
 
-    _session!.sendMessage(
-      'urn:x-cast:com.google.cast.media',
-      {
-        'type': 'PLAY',
-        'mediaSessionId': 0,
-      },
-    );
+    _session!.sendMessage('urn:x-cast:com.google.cast.media', {
+      'type': 'PLAY',
+      'mediaSessionId': _mediaSessionId,
+    });
 
     isPlaying = true;
     isPlayingNotifier.value = true;
@@ -164,16 +152,51 @@ class CastService {
   Future<void> stop() async {
     if (_session == null) return;
 
-    _session!.sendMessage(
-      'urn:x-cast:com.google.cast.media',
-      {
-        'type': 'STOP',
-        'mediaSessionId': 0,
-      },
-    );
+    _session!.sendMessage('urn:x-cast:com.google.cast.media', {
+      'type': 'STOP',
+      'mediaSessionId': _mediaSessionId,
+    });
 
     _clearCurrentMedia();
     print('🛑 Cast stopped.');
+  }
+
+  void setOnCompleteListener(VoidCallback callback) {
+    _onComplete = callback;
+  }
+
+  Future<void> dispose() async {
+    await stop();
+    _clearSession();
+    print('🗑️ Cast session disposed.');
+  }
+
+  String? get currentTitle => currentTitleNotifier.value;
+
+  String? get currentCategory => currentCategoryNotifier.value;
+
+  String get _baseProxyUrl {
+    if (kIsWeb) return 'http://localhost:3000';
+    if (Platform.isAndroid) return 'http://192.168.110.225:3000';
+    return 'http://localhost:3000';
+  }
+
+  void _handleCastState(CastSessionState state) {
+    debugPrint('📶 Cast session state: $state');
+
+    final stateStr = state.toString().toLowerCase();
+
+    if (stateStr.contains('connected')) {
+      final name = _connectedDevice?.name ?? 'Unknown';
+      debugPrint('✅ Connected to device: $name');
+    } else if (stateStr.contains('disconnected') ||
+        stateStr.contains('nosession') ||
+        stateStr.contains('no_session')) {
+      debugPrint('🔌 Disconnected or no session detected');
+      _clearSession();
+    } else {
+      debugPrint('ℹ️ Other session state: $state');
+    }
   }
 
   void _clearCurrentMedia() {
@@ -198,17 +221,4 @@ class CastService {
     _clearCurrentMedia();
     debugPrint('♻️ Session cleared safely.');
   }
-
-  void setOnCompleteListener(VoidCallback callback) {
-    _onComplete = callback;
-  }
-
-  Future<void> dispose() async {
-    await stop();
-    _clearSession();
-    print('🗑️ Cast session disposed.');
-  }
-
-  String? get currentTitle => currentTitleNotifier.value;
-  String? get currentCategory => currentCategoryNotifier.value;
 }

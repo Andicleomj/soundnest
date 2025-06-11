@@ -3,15 +3,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:soundnest/firebase_options.dart';
 import 'package:soundnest/screens/home/volume/volume_control_service.dart';
 import 'package:soundnest/screens/splash_screen.dart';
-import 'package:soundnest/service/audio_controller.dart';
-import 'package:soundnest/service/cast_service.dart';
-import 'package:soundnest/service/music_player_service.dart';
 import 'package:soundnest/service/schedule_service.dart';
 import 'package:soundnest/screens/home/musik/musik_screen.dart';
 import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/utils/app_routes.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:soundnest/screens/home/cast/cast_screen.dart';
+import 'package:soundnest/screens/home/cast/cast_screen.dart'; 
+
 
 Future<void> requestMicPermission() async {
   if (await Permission.microphone.request().isGranted) {
@@ -24,9 +22,9 @@ Future<void> requestMicPermission() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // inisialisasi volume control
+  // inisialisasi volume control 
   await initVolumeControl();
-
+  
   try {
     print("🔧 Menginisialisasi Firebase...");
     await Firebase.initializeApp(
@@ -40,19 +38,8 @@ void main() async {
     print("✅ ScheduleService berhasil dijalankan.");
 
     await requestMicPermission();
-    final castService = CastService();
-    final musicPlayerService = MusicPlayerService();
-    final audioControllerService = AudioControllerService(
-      castService,
-      musicPlayerService,
-    );
 
-    runApp(
-      MyApp(
-        scheduleService: scheduleService,
-        audioControllerService: audioControllerService,
-      ),
-    );
+    runApp(MyApp(scheduleService: scheduleService));
   } catch (e, stack) {
     print("❌ Gagal menginisialisasi Firebase: $e");
     print(stack);
@@ -61,13 +48,8 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   final ScheduleService scheduleService;
-  final AudioControllerService audioControllerService;
 
-  const MyApp({
-    super.key,
-    required this.scheduleService,
-    required this.audioControllerService,
-  });
+  const MyApp({super.key, required this.scheduleService});
 
   @override
   Widget build(BuildContext context) {
@@ -79,20 +61,17 @@ class MyApp extends StatelessWidget {
         AppRoutes.splash: (context) => const SplashScreen(),
         ...AppRoutes.getRoutes(),
         '/music': (context) => const MusicScreen(),
-        '/music/list':
-            (context) => DaftarMusikScreen(categoryId: '', categoryName: ''),
+        '/music/list': (context) =>
+            DaftarMusikScreen(categoryId: '', categoryName: ''),
       },
-      // ✅ Gunakan onGenerateRoute untuk parsing fileId dan kirim audioControllerService
+      // ✅ Gunakan onGenerateRoute untuk parsing fileId
       onGenerateRoute: (settings) {
         if (settings.name!.startsWith('/cast/')) {
           final fileId = settings.name!.split('/cast/').last;
           return MaterialPageRoute(
-            builder:
-                (context) => CastScreen(
-                  streamingUrl: 'http://192.168.0.102:3000/stream/$fileId',
-                  scheduleService: scheduleService,
-                  audioControllerService: audioControllerService,
-                ),
+            builder: (context) => CastScreen(
+              playFromFileId: 'http://192.168.0.102:3000/stream/$fileId',
+            ),
           );
         }
         return null;

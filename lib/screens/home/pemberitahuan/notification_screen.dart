@@ -9,15 +9,27 @@ class NotificationScreen extends StatefulWidget {
   State<NotificationScreen> createState() => _NotificationScreenState();
 }
 
-class _NotificationScreenState extends State<NotificationScreen> {
+class _NotificationScreenState extends State<NotificationScreen>
+    with SingleTickerProviderStateMixin {
   bool _isRecording = false;
-
   static const platform = MethodChannel('com.example.soundnest/audio');
+
+  late AnimationController _waveController;
 
   @override
   void initState() {
     super.initState();
     _requestPermissions();
+    _waveController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _waveController.dispose();
+    super.dispose();
   }
 
   Future<void> _requestPermissions() async {
@@ -30,20 +42,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
   }
 
   Future<void> _startMicLoop() async {
-    print("Calling startMicLoop...");
     try {
       await platform.invokeMethod('startMicLoop');
-      print("startMicLoop called");
     } catch (e) {
       print("Start error: $e");
     }
   }
 
   Future<void> _stopMicLoop() async {
-    print("Calling stopMicLoop...");
     try {
       await platform.invokeMethod('stopMicLoop');
-      print("stopMicLoop called");
     } catch (e) {
       print("Stop error: $e");
     }
@@ -51,57 +59,115 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorTheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         centerTitle: true,
-        title: const Text("Mic to Speaker", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),),
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.blueAccent,
         elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.blueAccent, Colors.white],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          "Mic ke Speaker",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 22,
           ),
         ),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              _isRecording ? Icons.mic : Icons.mic_none,
-              size: 100,
-              color: _isRecording ? Colors.red : Colors.grey,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                if (_isRecording) {
-                  await _stopMicLoop();
-                } else {
-                  await _startMicLoop();
-                }
-                setState(() {
-                  _isRecording = !_isRecording;
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                backgroundColor: _isRecording ? Colors.red : Colors.blue,
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedBuilder(
+                animation: _waveController,
+                builder: (context, child) {
+                  return Container(
+                    width: 150 + (_isRecording ? _waveController.value * 30 : 0),
+                    height: 150 + (_isRecording ? _waveController.value * 30 : 0),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _isRecording ? Colors.red.shade100 : Colors.blue.shade100,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Icon(
+                        _isRecording ? Icons.mic : Icons.mic_none,
+                        size: 60,
+                        color: _isRecording ? Colors.red : Colors.blueAccent,
+                      ),
+                    ),
+                  );
+                },
               ),
-              child: Text(_isRecording ? "Stop" : "Mulai Rekam"),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "Suara dari mic akan langsung diputar di speaker",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
-          ],
+              const SizedBox(height: 30),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: ElevatedButton.icon(
+                  key: ValueKey(_isRecording),
+                  icon: Icon(
+                    _isRecording ? Icons.stop : Icons.play_arrow,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    _isRecording ? "Hentikan" : "Mulai Rekam",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isRecording ? Colors.red : Colors.blueAccent,
+                    padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 6,
+                  ),
+                  onPressed: () async {
+                    if (_isRecording) {
+                      await _stopMicLoop();
+                    } else {
+                      await _startMicLoop();
+                    }
+                    setState(() {
+                      _isRecording = !_isRecording;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.info_outline, size: 20, color: Colors.black45),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "Suara dari mikrofon akan langsung diputar ke speaker Bluetooth atau speaker bawaan.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
