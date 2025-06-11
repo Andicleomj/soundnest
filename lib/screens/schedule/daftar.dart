@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -7,6 +9,7 @@ import 'dart:convert';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tzData;
 import 'package:soundnest/screens/schedule/alarm_screen.dart';
+import 'package:soundnest/models/alarmschedule.dart'; // ganti path sesuai dengan lokasi file kamu
 
 class DaftarJadwalScreen extends StatefulWidget {
   const DaftarJadwalScreen({super.key});
@@ -29,12 +32,20 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   final AudioPlayer _audioPlayer = AudioPlayer();
   String? currentlyPlayingKey;
   OverlayEntry? _overlayEntry;
+  Timer? _timer;
 
   Map<String, bool> playingStatus = {};
 
   @override
   void initState() {
     super.initState();
+    tzData.initializeTimeZones(); // Pastikan timezone ter-inisialisasi
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _checkAndTriggerAlarm(),
+    );
+    List<Map<String, dynamic>> schedules = [];
+
     _loadSchedules();
     _audioPlayer.onPlayerComplete.listen((event) {
       setState(() {
@@ -47,6 +58,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   void dispose() {
     _overlayEntry?.remove();
     _audioPlayer.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 
@@ -188,6 +200,65 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
       schedules = loadedSchedules;
       isLoading = false;
     });
+  }
+
+  void _checkAndTriggerAlarm() async {
+    final now = DateTime.now();
+
+    for (var schedule in schedules) {
+      final waktu = schedule['waktu']; // misalnya "07:30"
+      if (waktu == null || waktu == '-') continue;
+
+      final timeParts = waktu.split(":");
+      if (timeParts.length != 2) continue;
+
+      final alarmTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        int.tryParse(timeParts[0]) ?? 0,
+        int.tryParse(timeParts[1]) ?? 0,
+      );
+
+      if (schedule['enabled'] == true &&
+          now.hour == alarmTime.hour &&
+          now.minute == alarmTime.minute &&
+          now.second == 0 &&
+          currentlyPlayingKey != schedule['key']) {
+        setState(() {
+          currentlyPlayingKey = schedule['key'];
+        });
+
+        final controller = AlarmAudioController();
+
+        if (context.mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) => AlarmPlayScreen(
+                    alarm: AlarmSchedule(
+                      id: schedule['key'],
+                      title: schedule['title'],
+                      audioUrl: schedule['audioUrl'],
+                      time: alarmTime,
+                      isActive: true,
+                    ),
+                    audioController: controller,
+                    onResume: () {
+                      controller.play();
+                      Navigator.pop(context);
+                    },
+                    onStop: () {
+                      controller.stop();
+                      Navigator.pop(context);
+                    },
+                  ),
+            ),
+          );
+        }
+      }
+    }
   }
 
   DatabaseReference _getRefBySource(String source) {
@@ -515,38 +586,64 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                                           ),
                                           tooltip: "Buka Alarm",
                                           onPressed: () {
-                                          final audioUrl = schedule['audioUrl'] ?? '';
-                                          final title = schedule['title'] ?? 'Alarm';
+                                            final audioUrl =
+                                                schedule['audioUrl'] ?? '';
+                                            final title =
+                                                schedule['title'] ?? 'Alarm';
 
-                                          if (audioUrl.isEmpty) {
-                                            _showMiniStatusBar("⚠ Audio tidak tersedia");
-                                            return;
-                                          }
+                                            if (audioUrl.isEmpty) {
+                                              _showMiniStatusBar(
+                                                "⚠ Audio tidak tersedia",
+                                              );
+                                              return;
+                                            }
 
-                                          final controller = AlarmAudioController();
+                                            final controller =
+                                                AlarmAudioController();
 
-                                          // Set URL dulu sebelum navigasi, agar audio siap diputar
-                                          controller.setUrl(audioUrl).then((_) {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => AlarmPlayScreen(
-                                                  audioUrl: audioUrl,
-                                                  title: title,
-                                                  audioController: controller,
-                                                  onResume: () {
-                                                    controller.play(); // lanjutkan playback
-                                                    Navigator.pop(context);
-                                                  },
-                                                  onStop: () {
-                                                    controller.stop(); // hentikan playback
-                                                    Navigator.pop(context);
-                                                  },
+                                            // Set URL dulu sebelum navigasi, agar audio siap diputar
+                                            controller.setUrl(audioUrl).then((
+                                              _,
+                                            ) {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (
+                                                        context,
+                                                      ) => AlarmPlayScreen(
+                                                        alarm: AlarmSchedule(
+                                                          id: schedule['key'],
+                                                          title:
+                                                              schedule['title'],
+                                                          audioUrl:
+                                                              schedule['audioUrl'],
+                                                          time: DateTime.now(),
+                                                          isActive:
+                                                              schedule['enabled'] ??
+                                                              true,
+                                                        ),
+                                                        audioController:
+                                                            controller,
+                                                        onResume: () {
+                                                          controller
+                                                              .play(); // lanjutkan playback
+                                                          Navigator.pop(
+                                                            context,
+                                                          );
+                                                        },
+                                                        onStop: () {
+                                                          controller
+                                                              .stop(); // hentikan playback
+                                                          Navigator.pop(
+                                                            context,
+                                                          );
+                                                        },
+                                                      ),
                                                 ),
-                                              ),
-                                            );
-                                          });
-                                        },
+                                              );
+                                            });
+                                          },
                                         ),
                                       ],
                                     ),

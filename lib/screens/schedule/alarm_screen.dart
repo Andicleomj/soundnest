@@ -2,18 +2,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'alarm_audio_controller.dart';
+import 'package:soundnest/models/alarmschedule.dart'; // ganti path sesuai dengan lokasi file kamu
 
 class AlarmPlayScreen extends StatefulWidget {
-  final String title;
-  final String audioUrl;
+  final AlarmSchedule alarm;
   final AlarmAudioController audioController;
   final VoidCallback onResume;
   final VoidCallback onStop;
 
   const AlarmPlayScreen({
     super.key,
-    required this.title,
-    required this.audioUrl,
+    required this.alarm,
     required this.audioController,
     required this.onResume,
     required this.onStop,
@@ -44,7 +43,7 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
 
   Future<void> _startAudio() async {
     try {
-      await widget.audioController.setUrl(widget.audioUrl);
+      await widget.audioController.setUrl(widget.alarm.audioUrl);
       await widget.audioController.play();
       setState(() {
         _isPlaying = true;
@@ -107,9 +106,7 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
                 style: const TextStyle(
                   fontSize: 72,
                   fontWeight: FontWeight.bold,
-                  color:
-                      Colors
-                          .white, // sebelumnya hitam, jadi tidak terlihat di latar hitam
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(height: 8),
@@ -119,7 +116,7 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
               ),
               const SizedBox(height: 20),
               Text(
-                widget.title,
+                widget.alarm.title,
                 style: const TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w600,
