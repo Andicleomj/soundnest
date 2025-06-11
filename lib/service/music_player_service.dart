@@ -31,6 +31,7 @@ class MusicPlayerService {
   }
 
   final AudioPlayer _audioPlayer = AudioPlayer();
+final AudioPlayer _alarmPlayer = AudioPlayer(); 
 
   // Informasi state musik
   bool isPlaying = false;
@@ -97,6 +98,7 @@ class MusicPlayerService {
       print("❌ Gagal memutar musik dari URL: $e");
     }
   }
+
 
   Future<void> pauseMusic() async {
     if (!isPlaying) return; // Jika sudah pause, skip

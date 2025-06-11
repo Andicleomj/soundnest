@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:soundnest/models/alarmschedule.dart';
+import 'package:soundnest/screens/schedule/alarm_screen.dart';
+import 'package:soundnest/service/music_player_service.dart';
 
 class DaftarJadwalScreen extends StatefulWidget {
   const DaftarJadwalScreen({super.key});
@@ -23,16 +28,25 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   final AudioPlayer _audioPlayer = AudioPlayer();
   String? currentlyPlayingKey; // key dari jadwal yang sedang diputar
 
+  List<AlarmSchedule> _manualSchedules = [];
+  List<AlarmSchedule> _otomatisSchedules = [];
+  late Timer _alarmTimer;
+  String? _lastTriggeredId;
+  int? _lastTriggerMinute;
+
   Map<String, bool> playingStatus = {};
 
   @override
   void initState() {
     super.initState();
     _loadSchedules();
-    _audioPlayer.onPlayerComplete.listen((event) {
-      // Reset state saat audio selesai
-      setState(() {
-        currentlyPlayingKey = null;
+    _alarmTimer = Timer.periodic(Duration(seconds: 30), (_) {
+      _checkAndTriggerAlarm();
+      _audioPlayer.onPlayerComplete.listen((event) {
+        // Reset state saat audio selesai
+        setState(() {
+          currentlyPlayingKey = null;
+        });
       });
     });
   }
@@ -40,6 +54,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _alarmTimer.cancel();
     super.dispose();
   }
 
@@ -137,6 +152,87 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
       schedules = loadedSchedules;
       isLoading = false;
     });
+  }
+
+  void _checkAndTriggerAlarm() {
+    final now = DateTime.now();
+    final allSchedules = [..._manualSchedules, ..._otomatisSchedules];
+
+    for (var schedule in allSchedules) {
+      if (!schedule.isActive) continue;
+
+     final hour = schedule.time.hour;
+    final minute = schedule.time.minute;
+
+      final nowHour = now.hour;
+      final nowMinute = now.minute;
+
+      final today = _getTodayString(now.weekday);
+
+      if (schedule.days.contains(today) &&
+          nowHour == hour &&
+          nowMinute == minute) {
+        if (_lastTriggeredId == schedule.id &&
+            _lastTriggerMinute == nowMinute) {
+          return; // sudah dipicu tadi di menit ini
+        }
+
+        _lastTriggeredId = schedule.id;
+        _lastTriggerMinute = nowMinute;
+
+        // Panggil layar pemutar alarm
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AlarmPlayScreen(
+  alarm: schedule,
+  onResume: () {
+    // Misalnya: mulai audio player
+  MusicPlayerService().pauseMusic();
+    MusicPlayerService().stopMusic();
+  },
+  onStop: () {
+    // Misalnya: berhenti saat user keluar dari layar alarm
+    MusicPlayerService().pauseMusic();
+    MusicPlayerService().stopMusic();
+  },
+)
+
+          ),
+        );
+      }
+    }
+  }
+
+  String _getTodayString(int weekday) {
+    const hari = [
+      "Senin",
+      "Selasa",
+      "Rabu",
+      "Kamis",
+      "Jumat",
+      "Sabtu",
+      "Minggu",
+    ];
+    return hari[weekday - 1];
+  }
+
+  void _openAlarmScreen(AlarmSchedule schedule) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (_) => AlarmPlayScreen(
+              alarm: schedule,
+              onResume: () {
+                debugPrint('▶️ Lanjutkan audio');
+              },
+              onStop: () {
+                debugPrint('⏹ Audio dihentikan');
+              },
+            ),
+      ),
+    );
   }
 
   DatabaseReference _getRefBySource(String source) {

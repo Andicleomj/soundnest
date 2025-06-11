@@ -1,19 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
-import 'alarm_audio_controller.dart';
+import 'package:soundnest/service/music_player_service.dart';
 import 'package:soundnest/models/alarmschedule.dart'; // sesuaikan path ini
 
 class AlarmPlayScreen extends StatefulWidget {
   final AlarmSchedule alarm;
-  final AlarmAudioController audioController;
   final VoidCallback onResume;
   final VoidCallback onStop;
 
   const AlarmPlayScreen({
     super.key,
     required this.alarm,
-    required this.audioController,
     required this.onResume,
     required this.onStop,
   });
@@ -26,6 +23,7 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
   late Timer _timer;
   late DateTime _now;
   bool _isPlaying = true;
+  final MusicPlayerService _musicService = MusicPlayerService();
 
   @override
   void initState() {
@@ -43,39 +41,31 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
 
   Future<void> _startAudio() async {
     try {
-      await widget.audioController.setUrl(widget.alarm.audioUrl);
-      await widget.audioController.play();
+      await _musicService.playFromUrl(widget.alarm.audioUrl);
       setState(() {
         _isPlaying = true;
       });
     } catch (e) {
-      debugPrint('Error loading audio: $e');
+      debugPrint('❌ Error memutar audio alarm: $e');
     }
   }
 
   Future<void> _togglePlayPause() async {
-    if (!_isPlaying) {
-      await widget.audioController.seekToStart();
-    }
-
     setState(() {
       _isPlaying = !_isPlaying;
     });
 
     if (_isPlaying) {
-      await widget.audioController.play();
-      widget.onResume();
+      await _musicService.resumeMusic();
     } else {
-      await widget.audioController.pause();
+      await _musicService.pauseMusic();
     }
   }
 
   Future<void> _stopAudio() async {
     try {
-      await widget.audioController.stop();
+      await _musicService.stopMusic();
       await Future.delayed(const Duration(milliseconds: 300));
-      widget.audioController.dispose();
-      widget.onStop(); // callback dari luar
       if (mounted) Navigator.pop(context); // kembali ke layar sebelumnya
     } catch (e) {
       debugPrint('❌ Gagal stop audio: $e');
@@ -85,6 +75,7 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
   @override
   void dispose() {
     _timer.cancel();
+    _musicService.stopMusic(); // pastikan audio benar-benar dihentikan
     super.dispose();
   }
 
@@ -182,8 +173,18 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
 
   String _monthName(int month) {
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return months[month - 1];
   }
