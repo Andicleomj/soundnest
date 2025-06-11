@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'alarm_audio_controller.dart';
-import 'package:soundnest/models/alarmschedule.dart'; // ganti path sesuai dengan lokasi file kamu
+import 'package:soundnest/models/alarmschedule.dart'; // sesuaikan path ini
 
 class AlarmPlayScreen extends StatefulWidget {
   final AlarmSchedule alarm;
@@ -26,7 +26,6 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
   late Timer _timer;
   late DateTime _now;
   bool _isPlaying = true;
-  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
@@ -38,6 +37,7 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
         _now = DateTime.now();
       });
     });
+
     _startAudio(); // mulai saat layar terbuka
   }
 
@@ -53,13 +53,15 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
     }
   }
 
-  void _togglePlayPause() async {
+  Future<void> _togglePlayPause() async {
     if (!_isPlaying) {
       await widget.audioController.seekToStart();
     }
+
     setState(() {
       _isPlaying = !_isPlaying;
     });
+
     if (_isPlaying) {
       await widget.audioController.play();
       widget.onResume();
@@ -68,18 +70,21 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
     }
   }
 
-  void _stopAudio() async {
-    await _audioPlayer.stop();
-    setState(() {
-      _isPlaying = false;
-    });
-    widget.onStop();
+  Future<void> _stopAudio() async {
+    try {
+      await widget.audioController.stop();
+      await Future.delayed(const Duration(milliseconds: 300));
+      widget.audioController.dispose();
+      widget.onStop(); // callback dari luar
+      if (mounted) Navigator.pop(context); // kembali ke layar sebelumnya
+    } catch (e) {
+      debugPrint('❌ Gagal stop audio: $e');
+    }
   }
 
   @override
   void dispose() {
     _timer.cancel();
-    widget.audioController.dispose();
     super.dispose();
   }
 
@@ -177,18 +182,8 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
 
   String _monthName(int month) {
     const months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
     ];
     return months[month - 1];
   }

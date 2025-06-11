@@ -1,15 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:soundnest/screens/schedule/alarm_audio_controller.dart';
-import 'dart:convert';
-import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tzData;
-import 'package:soundnest/screens/schedule/alarm_screen.dart';
-import 'package:soundnest/models/alarmschedule.dart'; // ganti path sesuai dengan lokasi file kamu
 
 class DaftarJadwalScreen extends StatefulWidget {
   const DaftarJadwalScreen({super.key});
@@ -30,24 +21,16 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   bool isLoading = true;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
-  String? currentlyPlayingKey;
-  OverlayEntry? _overlayEntry;
-  Timer? _timer;
+  String? currentlyPlayingKey; // key dari jadwal yang sedang diputar
 
   Map<String, bool> playingStatus = {};
 
   @override
   void initState() {
     super.initState();
-    tzData.initializeTimeZones(); // Pastikan timezone ter-inisialisasi
-    _timer = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) => _checkAndTriggerAlarm(),
-    );
-    List<Map<String, dynamic>> schedules = [];
-
     _loadSchedules();
     _audioPlayer.onPlayerComplete.listen((event) {
+      // Reset state saat audio selesai
       setState(() {
         currentlyPlayingKey = null;
       });
@@ -56,54 +39,8 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
 
   @override
   void dispose() {
-    _overlayEntry?.remove();
     _audioPlayer.dispose();
-    _timer?.cancel();
     super.dispose();
-  }
-
-  void _showMiniStatusBar(
-    String message, {
-    Duration duration = const Duration(seconds: 2),
-  }) {
-    _overlayEntry?.remove();
-    _overlayEntry = OverlayEntry(
-      builder:
-          (context) => Positioned(
-            top: MediaQuery.of(context).size.height * 0.4,
-            left: MediaQuery.of(context).size.width * 0.2,
-            right: MediaQuery.of(context).size.width * 0.2,
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 20,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.7),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Center(
-                  child: Text(
-                    message,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                  ),
-                ),
-              ),
-            ),
-          ),
-    );
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Overlay.of(context)?.insert(_overlayEntry!);
-    });
-
-    Future.delayed(duration, () {
-      _overlayEntry?.remove();
-      _overlayEntry = null;
-    });
   }
 
   Future<void> _loadSchedules() async {
@@ -177,7 +114,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                     : ''),
           };
         } catch (e) {
-          print("⚠ Error parsing entry ${entry.key} di $source: $e");
+          print("⚠️ Error parsing entry ${entry.key} di $source: $e");
           return {
             'key': '$source-${entry.key}',
             'rawKey': entry.key,
@@ -200,65 +137,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
       schedules = loadedSchedules;
       isLoading = false;
     });
-  }
-
-  void _checkAndTriggerAlarm() async {
-    final now = DateTime.now();
-
-    for (var schedule in schedules) {
-      final waktu = schedule['waktu']; // misalnya "07:30"
-      if (waktu == null || waktu == '-') continue;
-
-      final timeParts = waktu.split(":");
-      if (timeParts.length != 2) continue;
-
-      final alarmTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        int.tryParse(timeParts[0]) ?? 0,
-        int.tryParse(timeParts[1]) ?? 0,
-      );
-
-      if (schedule['enabled'] == true &&
-          now.hour == alarmTime.hour &&
-          now.minute == alarmTime.minute &&
-          now.second == 0 &&
-          currentlyPlayingKey != schedule['key']) {
-        setState(() {
-          currentlyPlayingKey = schedule['key'];
-        });
-
-        final controller = AlarmAudioController();
-
-        if (context.mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (context) => AlarmPlayScreen(
-                    alarm: AlarmSchedule(
-                      id: schedule['key'],
-                      title: schedule['title'],
-                      audioUrl: schedule['audioUrl'],
-                      time: alarmTime,
-                      isActive: true,
-                    ),
-                    audioController: controller,
-                    onResume: () {
-                      controller.play();
-                      Navigator.pop(context);
-                    },
-                    onStop: () {
-                      controller.stop();
-                      Navigator.pop(context);
-                    },
-                  ),
-            ),
-          );
-        }
-      }
-    }
   }
 
   DatabaseReference _getRefBySource(String source) {
@@ -294,7 +172,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
         ),
       );
     } catch (e) {
-      print("⚠ Gagal update jadwal $key: $e");
+      print("⚠️ Gagal update jadwal $key: $e");
       setState(() {
         final idx = schedules.indexWhere((s) => s['key'] == key);
         if (idx != -1) schedules[idx]['enabled'] = !isActive;
@@ -324,7 +202,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
         context,
       ).showSnackBar(const SnackBar(content: Text("Jadwal berhasil dihapus")));
     } catch (e) {
-      print("⚠ Gagal hapus jadwal $key: $e");
+      print("⚠️ Gagal hapus jadwal $key: $e");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Gagal menghapus jadwal")));
@@ -368,6 +246,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
               onPressed: () async {
                 try {
                   final ref = _getRefBySource(schedule['source']);
+
                   final hariList =
                       newHari.split(',').map((e) => e.trim()).toList();
 
@@ -391,7 +270,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                     const SnackBar(content: Text("Jadwal berhasil diperbarui")),
                   );
                 } catch (e) {
-                  print("⚠ Gagal update jadwal ${schedule['key']}: $e");
+                  print("⚠️ Gagal update jadwal ${schedule['key']}: $e");
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Gagal memperbarui jadwal")),
                   );
@@ -411,10 +290,14 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
       setState(() {
         currentlyPlayingKey = null;
       });
-      _showMiniStatusBar("⏸ Musik dijeda");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Pause musik")));
     } else {
       if (audioUrl.isEmpty) {
-        _showMiniStatusBar("⚠ Audio URL kosong");
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Audio URL kosong")));
         return;
       }
 
@@ -424,10 +307,14 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
         setState(() {
           currentlyPlayingKey = key;
         });
-        _showMiniStatusBar("▶ Memutar musik");
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Play musik")));
       } catch (e) {
-        print("⚠ Error play audio $key: $e");
-        _showMiniStatusBar("❌ Gagal memutar audio");
+        print("⚠️ Error play audio $key: $e");
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Gagal memutar audio")));
       }
     }
   }
@@ -435,17 +322,25 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.blueAccent, Colors.white],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
         ),
         title: const Text(
           "Daftar Jadwal",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         centerTitle: true,
       ),
@@ -479,10 +374,11 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                     itemBuilder: (context, index) {
                       final schedule = schedules[index];
                       final isPlaying = currentlyPlayingKey == schedule['key'];
+
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: Container(
-                          height: 200,
+                          height: 150,
                           padding: const EdgeInsets.all(8),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -524,15 +420,24 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Switch.adaptive(
-                                      value: schedule['enabled'],
-                                      onChanged: (bool value) {
-                                        _toggleSchedule(schedule['key'], value);
-                                      },
-                                      activeColor: Colors.white,
-                                      activeTrackColor: Colors.blue[200],
-                                      inactiveThumbColor: Colors.grey,
-                                      inactiveTrackColor: Colors.grey[400],
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Switch.adaptive(
+                                          value: schedule['enabled'],
+                                          onChanged: (bool value) {
+                                            _toggleSchedule(
+                                              schedule['key'],
+                                              value,
+                                            );
+                                          },
+                                          activeColor: Colors.white,
+                                          activeTrackColor: Colors.blue[200],
+                                          inactiveThumbColor: Colors.grey,
+                                          inactiveTrackColor: Colors.grey[400],
+                                        ),
+                                      ],
                                     ),
                                     const SizedBox(height: 10),
                                     Row(
@@ -561,92 +466,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                                         ),
                                       ],
                                     ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(
-                                            isPlaying
-                                                ? Icons.pause_circle_filled
-                                                : Icons.play_circle_fill,
-                                            color: Colors.green,
-                                          ),
-                                          tooltip: isPlaying ? "Pause" : "Play",
-                                          onPressed:
-                                              () => _togglePlayPause(
-                                                schedule['key'],
-                                                schedule['audioUrl'],
-                                              ),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.alarm,
-                                            color: Colors.orange,
-                                          ),
-                                          tooltip: "Buka Alarm",
-                                          onPressed: () {
-                                            final audioUrl =
-                                                schedule['audioUrl'] ?? '';
-                                            final title =
-                                                schedule['title'] ?? 'Alarm';
-
-                                            if (audioUrl.isEmpty) {
-                                              _showMiniStatusBar(
-                                                "⚠ Audio tidak tersedia",
-                                              );
-                                              return;
-                                            }
-
-                                            final controller =
-                                                AlarmAudioController();
-
-                                            // Set URL dulu sebelum navigasi, agar audio siap diputar
-                                            controller.setUrl(audioUrl).then((
-                                              _,
-                                            ) {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder:
-                                                      (
-                                                        context,
-                                                      ) => AlarmPlayScreen(
-                                                        alarm: AlarmSchedule(
-                                                          id: schedule['key'],
-                                                          title:
-                                                              schedule['title'],
-                                                          audioUrl:
-                                                              schedule['audioUrl'],
-                                                          time: DateTime.now(),
-                                                          isActive:
-                                                              schedule['enabled'] ??
-                                                              true,
-                                                        ),
-                                                        audioController:
-                                                            controller,
-                                                        onResume: () {
-                                                          controller
-                                                              .play(); // lanjutkan playback
-                                                          Navigator.pop(
-                                                            context,
-                                                          );
-                                                        },
-                                                        onStop: () {
-                                                          controller
-                                                              .stop(); // hentikan playback
-                                                          Navigator.pop(
-                                                            context,
-                                                          );
-                                                        },
-                                                      ),
-                                                ),
-                                              );
-                                            });
-                                          },
-                                        ),
-                                      ],
-                                    ),
                                   ],
                                 ),
                               ),
@@ -662,7 +481,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   }
 }
 
-// Jangan di dalam class
 extension StringCasingExtension on String {
   String capitalize() {
     if (isEmpty) return this;
