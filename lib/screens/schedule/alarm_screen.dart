@@ -1,22 +1,24 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:soundnest/service/music_player_service.dart';
 import 'alarm_audio_controller.dart';
 import 'package:soundnest/models/alarmschedule.dart'; // sesuaikan path ini
 
 class AlarmPlayScreen extends StatefulWidget {
   final AlarmSchedule alarm;
-  final AlarmAudioController audioController;
-  final VoidCallback onResume;
-  final VoidCallback onStop;
+ final VoidCallback onStop;
+final VoidCallback onResume;
+final MusicPlayerService musicPlayerService;
+
 
   const AlarmPlayScreen({
-    super.key,
-    required this.alarm,
-    required this.audioController,
-    required this.onResume,
-    required this.onStop,
-  });
+  super.key,
+  required this.alarm,
+  required this.onResume,
+  required this.onStop,
+  required this.musicPlayerService,
+});
 
   @override
   State<AlarmPlayScreen> createState() => _AlarmPlayScreenState();
@@ -41,46 +43,46 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
     _startAudio(); // mulai saat layar terbuka
   }
 
-  Future<void> _startAudio() async {
-    try {
-      await widget.audioController.setUrl(widget.alarm.audioUrl);
-      await widget.audioController.play();
-      setState(() {
-        _isPlaying = true;
-      });
-    } catch (e) {
-      debugPrint('Error loading audio: $e');
-    }
-  }
-
-  Future<void> _togglePlayPause() async {
-    if (!_isPlaying) {
-      await widget.audioController.seekToStart();
-    }
-
+ Future<void> _startAudio() async {
+  try {
+    await widget.musicPlayerService.playFromFileId(widget.alarm.audioUrl);
     setState(() {
-      _isPlaying = !_isPlaying;
+      _isPlaying = true;
     });
-
-    if (_isPlaying) {
-      await widget.audioController.play();
-      widget.onResume();
-    } else {
-      await widget.audioController.pause();
-    }
+  } catch (e) {
+    debugPrint('❌ Error saat memulai audio: $e');
   }
+}
 
-  Future<void> _stopAudio() async {
-    try {
-      await widget.audioController.stop();
-      await Future.delayed(const Duration(milliseconds: 300));
-      widget.audioController.dispose();
-      widget.onStop(); // callback dari luar
-      if (mounted) Navigator.pop(context); // kembali ke layar sebelumnya
-    } catch (e) {
-      debugPrint('❌ Gagal stop audio: $e');
-    }
+
+ Future<void> _togglePlayPause() async {
+  setState(() {
+    _isPlaying = !_isPlaying;
+  });
+
+  if (_isPlaying) {
+    await widget.musicPlayerService.resumeMusic(); // bisa juga play() jika resume tidak ada
+    widget.onResume();
+  } else {
+    await widget.musicPlayerService.pauseMusic();
   }
+}
+
+
+ void _stopAudio() async {
+   await widget.musicPlayerService.stopMusic();
+
+  setState(() {
+    _isPlaying = false;
+    widget.alarm.isActive = false; // Matikan alarm di memori
+  });
+
+  // TODO: Simpan perubahan ke database kalau kamu pakai Firebase atau SharedPreferences
+  // Contoh: await AlarmService.updateAlarm(widget.alarm);
+
+  Navigator.pop(context); // Tutup layar alarm
+}
+
 
   @override
   void dispose() {

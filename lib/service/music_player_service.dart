@@ -57,6 +57,7 @@ class MusicPlayerService {
     String fileId, {
     String? title,
     String? category,
+    VoidCallback? onComplete,
   }) async {
     final proxyUrl = "$_baseProxyUrl/stream/$fileId";
 
@@ -75,6 +76,8 @@ class MusicPlayerService {
 
       currentTitleNotifier.value = title;
       currentCategoryNotifier.value = category;
+
+      _onComplete = onComplete;
 
       print("🎶 Playing music from: $proxyUrl at volume: ${volume * 100}%");
     } catch (e) {

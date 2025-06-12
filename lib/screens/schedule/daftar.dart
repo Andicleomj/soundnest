@@ -6,11 +6,14 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:soundnest/screens/schedule/alarm_audio_controller.dart';
+import 'package:soundnest/service/music_player_service.dart';
 import 'dart:convert';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tzData;
 import 'package:soundnest/screens/schedule/alarm_screen.dart';
 import 'package:soundnest/models/alarmschedule.dart'; // ganti path sesuai dengan lokasi file kamu
+
+final MusicPlayerService musicPlayerService = MusicPlayerService();
 
 class DaftarJadwalScreen extends StatefulWidget {
   const DaftarJadwalScreen({super.key});
@@ -207,7 +210,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
     final now = DateTime.now();
 
     for (var schedule in schedules) {
-      final waktu = schedule['waktu']; // misalnya "07:30"
+      final waktu = schedule['waktu'];
       if (waktu == null || waktu == '-') continue;
 
       final timeParts = waktu.split(":");
@@ -230,8 +233,22 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
           currentlyPlayingKey = schedule['key'];
         });
 
-        final controller = AlarmAudioController();
+        // Dapatkan audio URL-nya
+        final audioUrl = schedule['audioUrl'];
 
+        // Play melalui MusicPlayerService
+        await musicPlayerService.playFromFileId(audioUrl);
+
+        // Buat model alarm-nya
+        final alarmSchedule = AlarmSchedule(
+          id: schedule['key'],
+          title: schedule['title'],
+          audioUrl: audioUrl,
+          time: alarmTime,
+          isActive: true,
+        );
+
+        // Navigasi ke layar alarm (tanpa audioController)
         if (context.mounted) {
           Navigator.push(
             context,
@@ -245,17 +262,26 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                       time: alarmTime,
                       isActive: true,
                     ),
-                    audioController: controller,
-                    onResume: () {
-                      controller.play();
+                    onResume: () async {
+                      await MusicPlayerService().resumeMusic();
                       Navigator.pop(context);
                     },
-                    onStop: () {
-                      controller.stop();
+                    onStop: () async {
+                      await MusicPlayerService().stopMusic();
                       Navigator.pop(context);
                     },
+                    musicPlayerService: MusicPlayerService(),
                   ),
             ),
+          );
+
+          await MusicPlayerService().playFromFileId(
+            schedule['audioUrl'],
+            title: schedule['title'],
+            category: "Alarm",
+            onComplete: () {
+              if (context.mounted) Navigator.pop(context);
+            },
           );
         }
       }
@@ -567,20 +593,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                                           MainAxisAlignment.spaceEvenly,
                                       children: [
                                         IconButton(
-                                          icon: Icon(
-                                            isPlaying
-                                                ? Icons.pause_circle_filled
-                                                : Icons.play_circle_fill,
-                                            color: Colors.green,
-                                          ),
-                                          tooltip: isPlaying ? "Pause" : "Play",
-                                          onPressed:
-                                              () => _togglePlayPause(
-                                                schedule['key'],
-                                                schedule['audioUrl'],
-                                              ),
-                                        ),
-                                        IconButton(
                                           icon: const Icon(
                                             Icons.alarm,
                                             color: Colors.orange,
@@ -624,18 +636,18 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                                                               schedule['enabled'] ??
                                                               true,
                                                         ),
-                                                        audioController:
-                                                            controller,
-                                                        onResume: () {
-                                                          controller
-                                                              .play(); // lanjutkan playback
+                                                        musicPlayerService:
+                                                            musicPlayerService,
+                                                        onResume: () async {
+                                                          await musicPlayerService
+                                                              .resumeMusic();
                                                           Navigator.pop(
                                                             context,
                                                           );
                                                         },
-                                                        onStop: () {
-                                                          controller
-                                                              .stop(); // hentikan playback
+                                                        onStop: () async {
+                                                          await musicPlayerService
+                                                              .stopMusic();
                                                           Navigator.pop(
                                                             context,
                                                           );
