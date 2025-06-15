@@ -1,17 +1,15 @@
-//daftarjadwal
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:soundnest/screens/schedule/alarm_audio_controller.dart';
 import 'package:soundnest/service/music_player_service.dart';
 import 'dart:convert';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tzData;
 import 'package:soundnest/screens/schedule/alarm_screen.dart';
-import 'package:soundnest/models/alarmschedule.dart'; // ganti path sesuai dengan lokasi file kamu
+import 'package:soundnest/models/alarmschedule.dart'; 
+import 'dart:math';
 
 final MusicPlayerService musicPlayerService = MusicPlayerService();
 
@@ -39,6 +37,52 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   Timer? _timer;
 
   Map<String, bool> playingStatus = {};
+
+  List<Widget> _buildStars(BuildContext context) {
+  final screenWidth = MediaQuery.of(context).size.width;
+  final screenHeight = MediaQuery.of(context).size.height;
+
+  final List<Map<String, dynamic>> positions = [
+    {'top': 40.0, 'left': 30.0, 'size': 40.0, 'color': Colors.white},
+    {'top': 80.0, 'left': screenWidth * 0.7, 'size': 80.0, 'color': Colors.yellowAccent},
+    {'top': 120.0, 'left': screenWidth * 0.3, 'size': 12.0, 'color': Colors.blueAccent},
+    {'top': screenHeight * 0.3, 'left': 50.0, 'size': 40.0, 'color': Colors.pinkAccent},
+    {'top': screenHeight * 0.45, 'left': screenWidth * 0.6, 'size': 10.0, 'color': Colors.white},
+    {'top': screenHeight * 0.65, 'left': screenWidth * 0.4, 'size': 40.0, 'color': Colors.cyanAccent},
+    {'top': screenHeight * 0.25, 'left': screenWidth * 0.5, 'size': 60.0, 'color': Colors.lightBlueAccent},
+    {'top': screenHeight * 0.38, 'left': screenWidth * 0.8, 'size': 20.0, 'color': Colors.white},
+    {'top': screenHeight * 0.5, 'left': screenWidth * 0.2, 'size': 60.0, 'color': Colors.white},
+    {'top': screenHeight * 0.42, 'left': screenWidth * 0.6, 'size': 50.0, 'color': Colors.white},
+    {'top': screenHeight * 0.1, 'left': screenWidth * 0.9, 'size': 20.0, 'color': Colors.orange},
+    {'top': screenHeight * 0.6, 'left': screenWidth * 0.1, 'size': 15.0, 'color': Colors.white},
+    {'top': screenHeight * 0.75, 'left': screenWidth * 0.7, 'size': 50.0, 'color': Colors.purpleAccent},
+    {'top': screenHeight * 0.85, 'left': screenWidth * 0.3, 'size': 50.0, 'color': Colors.greenAccent},
+  ];
+
+  return positions.map((pos) => Positioned(
+    top: pos['top'],
+    left: pos['left'],
+    child: _buildStar(size: pos['size'], color: pos['color']),
+  )).toList();
+}
+
+Widget _buildStar({required double size, required Color color}) {
+  return Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      gradient: RadialGradient(
+        colors: [
+          color.withOpacity(0.9),
+          color.withOpacity(0.0),
+        ],
+        stops: const [0.0, 1.0],
+      ),
+    ),
+  );
+}
+
 
   @override
   void initState() {
@@ -460,47 +504,50 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        backgroundColor: Colors.blueAccent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          "Daftar Jadwal",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        centerTitle: true,
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.grey[50],
+    appBar: AppBar(
+      backgroundColor: Colors.blueAccent,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () => Navigator.pop(context),
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color.fromARGB(255, 164, 214, 255),
-              Color.fromARGB(255, 164, 214, 255),
-            ],
-          ),
+      title: const Text(
+        "Daftar Jadwal",
+        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+      centerTitle: true,
+    ),
+   body: Stack(
+  children: [
+    // Background gradasi
+    Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFA4D6FF),
+            Color(0xFFE3F2FD),
+          ],
         ),
-        child: Container(
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/cloud.jpg'),
-              fit: BoxFit.fitWidth,
-            ),
-          ),
-          child:
-              isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : schedules.isEmpty
-                  ? const Center(child: Text("Belum ada jadwal"))
-                  : ListView.builder(
+      ),
+    ),
+
+    // Bintang-bintang
+    ..._buildStars(context),
+
+     Container(
+      padding: const EdgeInsets.only(top: 0),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : schedules.isEmpty
+                ? const Center(child: Text("Belum ada jadwal"))
+                : ListView.builder(
                     padding: const EdgeInsets.all(16.0),
                     itemCount: schedules.length,
                     itemBuilder: (context, index) {
@@ -511,6 +558,19 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                         child: Container(
                           height: 200,
                           padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                           borderRadius: BorderRadius.circular(12),
+                           gradient: const LinearGradient(
+                             begin: Alignment.topLeft,
+                             end: Alignment.bottomRight,
+                             colors: [
+                                Color(0xFFFFE0E0), // Merah muda pastel
+                                Color(0xFFFFF4C2), // Kuning pastel
+                                Color(0xFFCCF2F4), // Biru pastel
+                                Color(0xFFE0BBE4), // Ungu pastel
+                              ],
+                            ),
+                          ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -529,19 +589,15 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     ...[
-                                          "Hari: ${schedule['hari']}",
-                                          "Mulai: ${schedule['waktu']}",
-                                          "Sumber: ${schedule['source'].toString().capitalize()}",
-                                        ]
-                                        .map(
-                                          (text) => Text(
-                                            text,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        )
-                                        .toList(),
+                                      "Hari: ${schedule['hari']}",
+                                      "Mulai: ${schedule['waktu']}",
+                                      "Sumber: ${schedule['source'].toString().capitalize()}",
+                                    ].map(
+                                      (text) => Text(
+                                        text,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ).toList(),
                                   ],
                                 ),
                               ),
@@ -572,8 +628,8 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                                             color: Colors.blue,
                                           ),
                                           tooltip: "Edit Jadwal",
-                                          onPressed:
-                                              () => _editSchedule(schedule),
+                                          onPressed: () =>
+                                              _editSchedule(schedule),
                                         ),
                                         IconButton(
                                           icon: const Icon(
@@ -581,10 +637,8 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                                             color: Colors.red,
                                           ),
                                           tooltip: "Hapus Jadwal",
-                                          onPressed:
-                                              () => _deleteSchedule(
-                                                schedule['key'],
-                                              ),
+                                          onPressed: () =>
+                                              _deleteSchedule(schedule['key']),
                                         ),
                                       ],
                                     ),
@@ -611,51 +665,36 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                                               return;
                                             }
 
-                                            final controller =
-                                                AlarmAudioController();
-
-                                            // Set URL dulu sebelum navigasi, agar audio siap diputar
-                                            controller.setUrl(audioUrl).then((
-                                              _,
-                                            ) {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder:
-                                                      (
-                                                        context,
-                                                      ) => AlarmPlayScreen(
-                                                        alarm: AlarmSchedule(
-                                                          id: schedule['key'],
-                                                          title:
-                                                              schedule['title'],
-                                                          audioUrl:
-                                                              schedule['audioUrl'],
-                                                          time: DateTime.now(),
-                                                          isActive:
-                                                              schedule['enabled'] ??
-                                                              true,
-                                                        ),
-                                                        musicPlayerService:
-                                                            musicPlayerService,
-                                                        onResume: () async {
-                                                          await musicPlayerService
-                                                              .resumeMusic();
-                                                          Navigator.pop(
-                                                            context,
-                                                          );
-                                                        },
-                                                        onStop: () async {
-                                                          await musicPlayerService
-                                                              .stopMusic();
-                                                          Navigator.pop(
-                                                            context,
-                                                          );
-                                                        },
-                                                      ),
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    AlarmPlayScreen(
+                                                  alarm: AlarmSchedule(
+                                                    id: schedule['key'],
+                                                    title: schedule['title'],
+                                                    audioUrl:
+                                                        schedule['audioUrl'],
+                                                    time: DateTime.now(),
+                                                    isActive:
+                                                        schedule['enabled'] ??
+                                                            true,
+                                                  ),
+                                                  musicPlayerService:
+                                                      musicPlayerService,
+                                                  onResume: () async {
+                                                    await musicPlayerService
+                                                        .resumeMusic();
+                                                    Navigator.pop(context);
+                                                  },
+                                                  onStop: () async {
+                                                    await musicPlayerService
+                                                        .stopMusic();
+                                                    Navigator.pop(context);
+                                                  },
                                                 ),
-                                              );
-                                            });
+                                              ),
+                                            );
                                           },
                                         ),
                                       ],
@@ -666,16 +705,17 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                             ],
                           ),
                         ),
+  
                       );
                     },
                   ),
-        ),
-      ),
-    );
+  
+            ),
+  ],
+         ),
+      );
   }
 }
-
-// Jangan di dalam class
 extension StringCasingExtension on String {
   String capitalize() {
     if (isEmpty) return this;
