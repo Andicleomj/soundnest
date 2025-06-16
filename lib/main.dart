@@ -70,7 +70,7 @@ class MyApp extends StatelessWidget {
           final fileId = settings.name!.split('/cast/').last;
           return MaterialPageRoute(
             builder: (context) => CastScreen(
-              playFromFileId: 'http://192.168.0.102:3000/stream/$fileId',
+              playFromFileId: 'http://172.20.10.7:3000/stream/$fileId',
             ),
           );
         }
