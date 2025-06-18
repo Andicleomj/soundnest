@@ -94,7 +94,7 @@ class CastService {
         'appId': 'CC1AD845',
       });
 
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 3));
 
       _session!.sendMessage('urn:x-cast:com.google.cast.media', {
         'type': 'LOAD',
@@ -103,7 +103,7 @@ class CastService {
           'streamType': 'BUFFERED',
           'contentType': 'audio/mpeg',
           'metadata': {
-            'metadataType': 3,
+            'metadataType': 0,
             'title': title ?? 'Audio',
             'category': category ?? '',
           },
@@ -172,14 +172,10 @@ class CastService {
   }
 
   String? get currentTitle => currentTitleNotifier.value;
-
   String? get currentCategory => currentCategoryNotifier.value;
-
   String get _baseProxyUrl {
-    if (kIsWeb) return 'http://localhost:3000';
-    if (Platform.isAndroid) return 'http://192.168.110.225:3000';
-    return 'http://localhost:3000';
-  }
+    return   'https://b099-125-161-30-148.ngrok-free.app';
+}
 
   void _handleCastState(CastSessionState state) {
     debugPrint('📶 Cast session state: $state');

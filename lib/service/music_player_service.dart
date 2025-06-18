@@ -43,15 +43,9 @@ class MusicPlayerService {
 
   VoidCallback? _onComplete;
 
-  String get _baseProxyUrl {
-    if (kIsWeb) {
-      return 'http://localhost:3000';
-    } else if (Platform.isAndroid) {
-      return 'http://172.20.10.7:3000';
-    } else {
-      return 'http://localhost:3000';
-    }
-  }
+ String get _baseProxyUrl {
+  return   'https://b099-125-161-30-148.ngrok-free.app';
+}
 
   Future<void> playFromFileId(
     String fileId, {

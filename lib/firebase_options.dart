@@ -11,7 +11,7 @@ class DefaultFirebaseOptions {
     appId: '1:307643391567:android:02b4ee9aecf759d220943a',
     messagingSenderId: '307643391567',
     projectId: 'databaseta-108d5',
-    storageBucket: 'databaseta-108d5.firebasestorage.app',
+    storageBucket: 'databaseta-108d5.appspot.com', // ✅ BENAR
     databaseURL: 'https://databaseta-108d5-default-rtdb.firebaseio.com',
   );
 }

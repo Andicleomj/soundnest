@@ -8,10 +8,7 @@ const API_KEY = "AIzaSyCvg8k9odUAk87UwtpCwQouOcUvWLXb1to";
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Range, Content-Type, Accept, Authorization"
-  );
+  res.setHeader("Access-Control-Allow-Headers", "Range, Content-Type, Accept, Authorization");
   next();
 });
 
@@ -35,9 +32,10 @@ app.get("/stream/:fileId", async (req, res) => {
 
     const filePath = path.join(tempFolder, `${fileId}.mp3`);
 
+    // Jika file belum ada → download dari Google Drive
     if (!fs.existsSync(filePath)) {
       const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${API_KEY}`;
-      console.log("Downloading from Google Drive API...");
+      console.log("⬇️  Downloading from Google Drive...");
 
       const response = await axios.get(downloadUrl, {
         responseType: "stream",
@@ -52,41 +50,44 @@ app.get("/stream/:fileId", async (req, res) => {
         writer.on("error", reject);
       });
 
-      console.log("Download selesai.");
+      console.log("✅ Download selesai.");
     }
 
+    // Streaming audio ke client
     const stat = fs.statSync(filePath);
     const fileSize = stat.size;
     const range = req.headers.range;
 
+    const headers = {
+      "Content-Type": "audio/mpeg",
+      "Cache-Control": "public, max-age=3600",
+      "Connection": "keep-alive",
+      "Accept-Ranges": "bytes",
+      "Content-Disposition": `inline; filename="${fileId}.mp3"`,
+    };
+
     if (range) {
       const { start, end } = parseRange(range, fileSize);
       const chunkSize = end - start + 1;
-      const fileStream = fs.createReadStream(filePath, { start, end });
+      headers["Content-Range"] = `bytes ${start}-${end}/${fileSize}`;
+      headers["Content-Length"] = chunkSize;
 
-      res.writeHead(206, {
-        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-        "Accept-Ranges": "bytes",
-        "Content-Length": chunkSize,
-        "Content-Type": "audio/mpeg",
-        "Content-Disposition": `inline; filename="${fileId}.mp3"`,
-      });
-      fileStream.pipe(res);
+      res.writeHead(206, headers);
+      fs.createReadStream(filePath, { start, end }).pipe(res);
     } else {
-      res.writeHead(200, {
-        "Content-Length": fileSize,
-        "Content-Type": "audio/mpeg",
-        "Content-Disposition": `inline; filename="${fileId}.mp3"`,
-      });
+      headers["Content-Length"] = fileSize;
+      res.writeHead(200, headers);
       fs.createReadStream(filePath).pipe(res);
     }
+
   } catch (error) {
-    console.error("Gagal streaming audio:", error.message);
-    res.status(500).send("Gagal streaming audio");
+    console.error("❌ Gagal streaming audio:", error.message);
+    res.status(500).send("Gagal streaming audio: " + error.message);
   }
 });
 
 const PORT = 3000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server aktif di http://172.20.10.7:${PORT}`);
+  console.log(`🚀 Server aktif di http://localhost:${PORT}`);
+  console.log(`🌐 Untuk publik: ngrok http ${PORT}`);
 });
