@@ -1,5 +1,5 @@
-echo '[phases.setup]
+[phases.setup]
 nixPkgs = ["nodejs-18_x"]
 
 [start]
-cmd = "node server.js"' > .nixpacks.toml
+cmd = "node server.js"
