@@ -1,2 +1,2 @@
-[start]
-cmd = "node server.js"
+echo '[start]
+cmd = "node server.js"' > .nixpacks.toml
