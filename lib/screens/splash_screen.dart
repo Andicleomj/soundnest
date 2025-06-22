@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:soundnest/utils/app_routes.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _SplashScreenState createState() => _SplashScreenState();
 }
 
@@ -14,9 +14,19 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 3), () {
+
+    Timer(const Duration(seconds: 3), _checkLoginStatus);
+  }
+
+  void _checkLoginStatus() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // Jika sudah login → langsung ke HomeScreen
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } else {
+      // Jika belum login → ke halaman Login
       Navigator.pushReplacementNamed(context, AppRoutes.login);
-    });
+    }
   }
 
   @override
@@ -27,14 +37,12 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Logo Aplikasi
             Image.asset(
               'assets/Logo 1.png',
               width: 200,
               height: 200,
             ),
             const SizedBox(height: 20),
-            // Nama Aplikasi
             const Text(
               "SoundNest",
               style: TextStyle(

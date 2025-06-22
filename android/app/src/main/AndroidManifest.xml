@@ -21,6 +21,11 @@
         android:usesCleartextTraffic="true"
         android:networkSecurityConfig="@xml/network_security_config">
         
+        <!-- Cast SDK Google -->
+        <meta-data
+            android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
+            android:value="com.example.soundnest.CastOptionsProvider" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -40,10 +45,6 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-
-        <meta-data
-           android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
-           android:value="com.example.soundnest.CastOptionsProvider" />
 
 
 

@@ -1,24 +1,29 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:soundnest/service/music_player_service.dart';
-import 'alarm_audio_controller.dart';
-import 'package:soundnest/models/alarmschedule.dart'; // sesuaikan path ini
+import 'package:soundnest/models/alarmschedule.dart';
 
 class AlarmPlayScreen extends StatefulWidget {
   final AlarmSchedule alarm;
- final VoidCallback onStop;
-final VoidCallback onResume;
-final MusicPlayerService musicPlayerService;
+  final VoidCallback onStop;
+  final VoidCallback onResume;
+  final MusicPlayerService musicPlayerService;
 
+  final String? audioUrl; // jika hanya satu audio
+  final List<String>? audioUrls; // jika playlist
 
   const AlarmPlayScreen({
-  super.key,
-  required this.alarm,
-  required this.onResume,
-  required this.onStop,
-  required this.musicPlayerService,
-});
+    super.key,
+    required this.alarm,
+    required this.onResume,
+    required this.onStop,
+    required this.musicPlayerService,
+    this.audioUrl,
+    this.audioUrls,
+  }) : assert(
+         audioUrl != null || audioUrls != null,
+         'Wajib isi salah satu audioUrl atau audioUrls',
+       );
 
   @override
   State<AlarmPlayScreen> createState() => _AlarmPlayScreenState();
@@ -28,61 +33,70 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
   late Timer _timer;
   late DateTime _now;
   bool _isPlaying = true;
+  int _currentIndex = 0; // untuk playlist
 
   @override
   void initState() {
     super.initState();
     _now = DateTime.now();
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
-      setState(() {
-        _now = DateTime.now();
-      });
-    });
-
-    _startAudio(); // mulai saat layar terbuka
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => setState(() => _now = DateTime.now()),
+    );
+    _startAudio();
   }
 
- Future<void> _startAudio() async {
-  try {
-    await widget.musicPlayerService.playFromFileId(widget.alarm.audioUrl);
+  Future<void> _startAudio() async {
+    try {
+      if (widget.audioUrls != null && widget.audioUrls!.isNotEmpty) {
+        await _playPlaylist(widget.audioUrls!);
+      } else if (widget.audioUrl != null) {
+        await widget.musicPlayerService.playFromFileId(widget.audioUrl!);
+      }
+      setState(() => _isPlaying = true);
+    } catch (e) {
+      debugPrint('❌ Error saat memulai audio: $e');
+    }
+  }
+
+  Future<void> _playPlaylist(List<String> urls) async {
+    if (_currentIndex >= urls.length) return;
+
+    await widget.musicPlayerService.playFromFileId(
+      urls[_currentIndex],
+      onComplete: () async {
+        _currentIndex++;
+        if (_currentIndex < urls.length) {
+          await _playPlaylist(urls);
+        } else {
+          if (mounted) Navigator.pop(context);
+        }
+      },
+    );
+  }
+
+  Future<void> _togglePlayPause() async {
+    final nowPlaying = widget.musicPlayerService.isPlaying;
+
+    if (nowPlaying) {
+      await widget.musicPlayerService.pauseMusic();
+    } else {
+      await widget.musicPlayerService.resumeMusic();
+    }
+
+    setState(() => _isPlaying = widget.musicPlayerService.isPlaying);
+  }
+
+  void _stopAudio() async {
+    await widget.musicPlayerService.stopMusic();
+
     setState(() {
-      _isPlaying = true;
+      _isPlaying = false;
+      widget.alarm.isActive = false;
     });
-  } catch (e) {
-    debugPrint('❌ Error saat memulai audio: $e');
+
+    widget.onStop();
   }
-}
-
-
- Future<void> _togglePlayPause() async {
-  setState(() {
-    _isPlaying = !_isPlaying;
-  });
-
-  if (_isPlaying) {
-    await widget.musicPlayerService.resumeMusic(); // bisa juga play() jika resume tidak ada
-    widget.onResume();
-  } else {
-    await widget.musicPlayerService.pauseMusic();
-  }
-}
-
-
- void _stopAudio() async {
-   await widget.musicPlayerService.stopMusic();
-
-  setState(() {
-    _isPlaying = false;
-    widget.alarm.isActive = false; // Matikan alarm di memori
-  });
-
-  // TODO: Simpan perubahan ke database kalau kamu pakai Firebase atau SharedPreferences
-  // Contoh: await AlarmService.updateAlarm(widget.alarm);
-
-  Navigator.pop(context); // Tutup layar alarm
-}
-
 
   @override
   void dispose() {
@@ -92,16 +106,14 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final timeString =
+    final timeStr =
         "${_now.hour.toString().padLeft(2, '0')}:${_now.minute.toString().padLeft(2, '0')}";
-    final dateString = "${_now.day} ${_monthName(_now.month)} ${_now.year}";
+    final dateStr = "${_now.day} ${_monthName(_now.month)} ${_now.year}";
 
     return Material(
       color: Colors.black,
       child: SafeArea(
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
+        child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -109,7 +121,7 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
               const Icon(Icons.alarm_rounded, size: 100, color: Colors.orange),
               const SizedBox(height: 40),
               Text(
-                timeString,
+                timeStr,
                 style: const TextStyle(
                   fontSize: 72,
                   fontWeight: FontWeight.bold,
@@ -118,7 +130,7 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                dateString,
+                dateStr,
                 style: const TextStyle(fontSize: 20, color: Colors.white70),
               ),
               const SizedBox(height: 20),
@@ -184,8 +196,18 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
 
   String _monthName(int month) {
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     return months[month - 1];
   }

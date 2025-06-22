@@ -27,17 +27,16 @@ void main() async {
 
   try {
     print("🔧 Mengecek Firebase...");
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      print("✅ Firebase berhasil diinisialisasi.");
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print("✅ Firebase berhasil diinisialisasi.");
+  } on FirebaseException catch (e) {
+    if (e.code == 'duplicate-app') {
+      print("⚠️ Firebase sudah diinisialisasi sebelumnya.");
     } else {
-      print("✅ Firebase sudah terinisialisasi sebelumnya.");
+      print("❌ Gagal inisialisasi Firebase: ${e.message}");
     }
-  } catch (e, stack) {
-    print("❌ Gagal inisialisasi Firebase: $e");
-    print(stack);
   }
 
   final scheduleService = ScheduleService();
@@ -64,19 +63,18 @@ class MyApp extends StatelessWidget {
         AppRoutes.splash: (context) => const SplashScreen(),
         ...AppRoutes.getRoutes(),
         '/music': (context) => const MusicScreen(),
-        '/music/list': (context) => DaftarMusikScreen(
-              categoryId: '',
-              categoryName: '',
-            ),
+        '/music/list':
+            (context) => DaftarMusikScreen(categoryId: '', categoryName: ''),
       },
       onGenerateRoute: (settings) {
         if (settings.name!.startsWith('/cast/')) {
           final fileId = settings.name!.split('/cast/').last;
           return MaterialPageRoute(
-            builder: (context) => CastScreen(
-              playFromFileId:
-                  "https://b099-125-161-30-148.ngrok-free.app/stream/$fileId",
-            ),
+            builder:
+                (context) => CastScreen(
+                  playFromFileId:
+                      "https://28fa-118-96-203-155.ngrok-free.app/stream/$fileId",
+                ),
           );
         }
         return null;

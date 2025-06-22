@@ -21,6 +21,7 @@ class MainActivity : FlutterActivity() {
     private var audioRecord: AudioRecord? = null
     private var audioTrack: AudioTrack? = null
     private var isLooping = false
+    private var isFilterActive = false  // ✅ Tambahkan ini untuk menyimpan status filter
 
     private var castContext: CastContext? = null
     private var castSession: CastSession? = null
@@ -49,6 +50,14 @@ class MainActivity : FlutterActivity() {
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
+                "applyFilter" -> {
+                    val enable = call.argument<Boolean>("enable") ?: false
+                    isFilterActive = enable  // ✅ Simpan status
+                    result.success(null)
+                }
+                "isFilterActive" -> {
+                    result.success(isFilterActive)  // ✅ Balas status ke Flutter
+                }
                 "startMicLoop" -> {
                     startMicLoop()
                     result.success(null)
@@ -115,17 +124,30 @@ class MainActivity : FlutterActivity() {
         audioTrack?.play()
         isLooping = true
 
-        Log.d("MicLoop", "🟢 Mic loop started")
-
         thread {
             val buffer = ByteArray(bufferSize)
+            val shortBuffer = ShortArray(bufferSize / 2)
+
             while (isLooping && audioRecord?.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
                 val read = audioRecord?.read(buffer, 0, buffer.size) ?: 0
                 if (read > 0) {
+                    // Convert byte[] ke short[]
+                    for (i in 0 until read step 2) {
+                        val sample = (buffer[i].toInt() and 0xFF) or (buffer[i + 1].toInt() shl 8)
+                        shortBuffer[i / 2] = sample.toShort()
+                    }
+
+                    // ✅ Terapkan filter jika aktif
+                    val filtered = if (isFilterActive) applyLowPassFilter(shortBuffer) else shortBuffer
+
+                    for (i in filtered.indices) {
+                        buffer[i * 2] = (filtered[i].toInt() and 0xFF).toByte()
+                        buffer[i * 2 + 1] = ((filtered[i].toInt() shr 8) and 0xFF).toByte()
+                    }
+
                     audioTrack?.write(buffer, 0, read)
                 }
             }
-            Log.d("MicLoop", "🔴 Mic loop stopped")
         }
     }
 
@@ -139,11 +161,17 @@ class MainActivity : FlutterActivity() {
         audioTrack = null
     }
 
-    private fun castPlay(url: String, title: String) {
-        if (castSession == null || !castSession!!.isConnected) {
-            Log.e("Cast", "No Cast session available")
-            return
+    private fun applyLowPassFilter(input: ShortArray, alpha: Float = 0.05f): ShortArray {
+        val output = ShortArray(input.size)
+        output[0] = input[0]
+        for (i in 1 until input.size) {
+            output[i] = (alpha * input[i] + (1 - alpha) * output[i - 1]).toInt().toShort()
         }
+        return output
+    }
+
+    private fun castPlay(url: String, title: String) {
+        if (castSession == null || !castSession!!.isConnected) return
 
         val metadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_MUSIC_TRACK)
         metadata.putString(MediaMetadata.KEY_TITLE, title)
@@ -159,47 +187,34 @@ class MainActivity : FlutterActivity() {
             .build()
 
         remoteMediaClient?.load(requestData)
-        Log.d("Cast", "Cast play requested: $url")
     }
 
     private fun castPause() {
         remoteMediaClient?.pause()
-        Log.d("Cast", "Cast pause requested")
     }
 
     private fun castResume() {
         remoteMediaClient?.play()
-        Log.d("Cast", "Cast resume requested")
     }
 
     private fun castStop() {
         remoteMediaClient?.stop()
-        Log.d("Cast", "Cast stop requested")
     }
 
     private val sessionManagerListener = object : SessionManagerListener<CastSession> {
         override fun onSessionStarted(session: CastSession, sessionId: String) {
-            Log.d("Cast", "Session started: $sessionId")
             castSession = session
             remoteMediaClient = session.remoteMediaClient
         }
 
-        override fun onSessionStartFailed(session: CastSession, error: Int) {
-            Log.e("Cast", "Session start failed with error code: $error")
-        }
-
+        override fun onSessionStartFailed(session: CastSession, error: Int) {}
         override fun onSessionResumed(session: CastSession, wasSuspended: Boolean) {
-            Log.d("Cast", "Session resumed")
             castSession = session
             remoteMediaClient = session.remoteMediaClient
         }
 
-        override fun onSessionResumeFailed(session: CastSession, error: Int) {
-            Log.e("Cast", "Session resume failed with error code: $error")
-        }
-
+        override fun onSessionResumeFailed(session: CastSession, error: Int) {}
         override fun onSessionEnded(session: CastSession, error: Int) {
-            Log.d("Cast", "Session ended")
             castSession = null
             remoteMediaClient = null
         }

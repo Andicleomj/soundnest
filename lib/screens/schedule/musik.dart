@@ -224,11 +224,11 @@ class _MusikScheduleFormState extends State<MusikScheduleForm> {
               title: const Text("Ulangi Setiap Hari"),
               value: repeatEveryday,
               activeColor: Colors.white,
-              activeTrackColor: Colors.blue[200], // warna track saat aktif
+              activeTrackColor: Colors.blue[200], 
               inactiveThumbColor:
-                  Colors.grey[300], // warna thumb saat tidak aktif
+                  Colors.grey[300], 
               inactiveTrackColor:
-                  Colors.grey[400], // warna track saat tidak aktif
+                  Colors.grey[400], 
               onChanged: (val) {
                 setState(() {
                   repeatEveryday = val;

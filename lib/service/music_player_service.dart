@@ -44,7 +44,7 @@ class MusicPlayerService {
   VoidCallback? _onComplete;
 
  String get _baseProxyUrl {
-  return   'https://b099-125-161-30-148.ngrok-free.app';
+  return   'https://28fa-118-96-203-155.ngrok-free.app';
 }
 
   Future<void> playFromFileId(

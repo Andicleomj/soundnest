@@ -10,30 +10,41 @@ class MurottalScheduleForm extends StatefulWidget {
 }
 
 class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
-  List<Map<String, dynamic>> selectedMurottalList = [];
+  List<Map<String, String>> selectedMurottalList = [];
   TimeOfDay? startTime;
   TimeOfDay? endTime;
   bool repeatEveryday = false;
   List<String> selectedDays = [];
 
   final List<String> daysOfWeek = [
-    'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu',
+    'Senin',
+    'Selasa',
+    'Rabu',
+    'Kamis',
+    'Jumat',
+    'Sabtu',
+    'Minggu',
   ];
 
   Future<void> _pickMurottal() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const MurottalPickerScreen()),
+      MaterialPageRoute(
+        builder: (_) => const MurottalPickerScreen(multiPick: true),
+      ),
     );
 
     if (result != null && result is List) {
+      // ✅ Tambahkan ini agar pilihan disimpan dan ditampilkan
       setState(() {
-        selectedMurottalList = List<Map<String, dynamic>>.from(result);
+        selectedMurottalList = List<Map<String, String>>.from(
+          result.map((item) => Map<String, String>.from(item)),
+        );
       });
     }
   }
 
-  void _pickTime({required bool isStart}) async {
+  Future<void> _pickTime({required bool isStart}) async {
     final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -50,7 +61,9 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
   }
 
   void _saveSchedule() async {
-    if (selectedMurottalList.isEmpty || startTime == null || endTime == null ||
+    if (selectedMurottalList.isEmpty ||
+        startTime == null ||
+        endTime == null ||
         (!repeatEveryday && selectedDays.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Lengkapi semua isian dengan benar')),
@@ -65,6 +78,7 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
       'murottalList': selectedMurottalList,
       'startTime': startFormatted,
       'endTime': endFormatted,
+      'waktu': startFormatted, // <-- Tambahkan ini untuk konsistensi
       'hari': repeatEveryday ? 'Setiap Hari' : selectedDays,
       'enabled': true,
     };
@@ -79,87 +93,265 @@ class _MurottalScheduleFormState extends State<MurottalScheduleForm> {
         .push()
         .set(data);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Jadwal berhasil disimpan')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Jadwal berhasil disimpan')));
 
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    List<Map<String, dynamic>> stars = [
+      {'top': 30.0, 'left': 20.0, 'size': 25.0, 'color': Colors.pinkAccent},
+      {
+        'top': 60.0,
+        'left': screenWidth * 0.3,
+        'size': 20.0,
+        'color': Colors.lightBlueAccent,
+      },
+      {
+        'top': 90.0,
+        'left': screenWidth * 0.65,
+        'size': 35.0,
+        'color': Colors.greenAccent,
+      },
+      {
+        'top': screenHeight * 0.2,
+        'left': screenWidth * 0.1,
+        'size': 22.0,
+        'color': Colors.yellowAccent,
+      },
+      {
+        'top': screenHeight * 0.22,
+        'left': screenWidth * 0.75,
+        'size': 28.0,
+        'color': Colors.orangeAccent,
+      },
+      {
+        'top': screenHeight * 0.3,
+        'left': screenWidth * 0.4,
+        'size': 60.0,
+        'color': Colors.blueAccent,
+      },
+      {
+        'top': screenHeight * 0.4,
+        'left': screenWidth * 0.15,
+        'size': 24.0,
+        'color': Colors.white,
+      },
+      {
+        'top': screenHeight * 0.45,
+        'left': screenWidth * 0.7,
+        'size': 30.0,
+        'color': Colors.purpleAccent,
+      },
+      {
+        'top': screenHeight * 0.5,
+        'left': screenWidth * 0.5,
+        'size': 40.0,
+        'color': Colors.pinkAccent,
+      },
+      {
+        'top': screenHeight * 0.6,
+        'left': screenWidth * 0.25,
+        'size': 30.0,
+        'color': Colors.white,
+      },
+      {
+        'top': screenHeight * 0.68,
+        'left': screenWidth * 0.6,
+        'size': 45.0,
+        'color': Colors.cyanAccent,
+      },
+      {
+        'top': screenHeight * 0.72,
+        'left': screenWidth * 0.15,
+        'size': 35.0,
+        'color': Colors.purpleAccent,
+      },
+      {
+        'top': screenHeight * 0.8,
+        'left': screenWidth * 0.8,
+        'size': 50.0,
+        'color': Colors.greenAccent,
+      },
+      {
+        'top': screenHeight * 0.85,
+        'left': screenWidth * 0.4,
+        'size': 40.0,
+        'color': Colors.amberAccent,
+      },
+      {
+        'top': screenHeight * 0.7,
+        'left': screenWidth * 0.9,
+        'size': 22.0,
+        'color': Colors.pinkAccent,
+      },
+    ];
+
+    Widget buildStar({required double size, required Color color}) {
+      return ShaderMask(
+        shaderCallback: (bounds) {
+          return RadialGradient(
+            colors: [color.withOpacity(0.9), color.withOpacity(0)],
+            stops: const [0.0, 1.0],
+          ).createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height));
+        },
+        blendMode: BlendMode.srcATop,
+        child: Icon(Icons.star, size: size, color: Colors.white),
+      );
+    }
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text("Jadwal Murottal"),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            ListTile(
-              title: Text(
-                selectedMurottalList.isEmpty
-                    ? "Pilih Murottal"
-                    : selectedMurottalList.map((e) => e['title']).join(', '),
-              ),
-              trailing: const Icon(Icons.menu_book),
-              onTap: _pickMurottal,
-            ),
-            ListTile(
-              title: Text(
-                startTime == null
-                    ? "Pilih Jam Mulai"
-                    : "Mulai: ${startTime!.format(context)}",
-              ),
-              trailing: const Icon(Icons.access_time),
-              onTap: () => _pickTime(isStart: true),
-            ),
-            ListTile(
-              title: Text(
-                endTime == null
-                    ? "Pilih Jam Selesai"
-                    : "Selesai: ${endTime!.format(context)}",
-              ),
-              trailing: const Icon(Icons.access_time),
-              onTap: () => _pickTime(isStart: false),
-            ),
-            SwitchListTile(
-              title: const Text("Ulangi Setiap Hari"),
-              value: repeatEveryday,
-              onChanged: (val) {
-                setState(() {
-                  repeatEveryday = val;
-                  if (val) selectedDays.clear();
-                });
-              },
-            ),
-            if (!repeatEveryday)
-              Wrap(
-                spacing: 8,
-                children: daysOfWeek.map((day) {
-                  final isSelected = selectedDays.contains(day);
-                  return FilterChip(
-                    label: Text(day),
-                    selected: isSelected,
-                    onSelected: (val) {
-                      setState(() {
-                        if (val) {
-                          selectedDays.add(day);
-                        } else {
-                          selectedDays.remove(day);
-                        }
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _saveSchedule,
-              child: const Text("Simpan Jadwal"),
-            ),
-          ],
+        backgroundColor: Colors.blueAccent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
+        title: const Text(
+          "Buat Jadwal Murottal",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 22,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: Stack(
+        children: [
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFDCF1FF),
+                  Color(0xFFA4D6FF),
+                  Color(0xFFF2F9FD),
+                ],
+              ),
+            ),
+          ),
+          ...stars.map(
+            (pos) => Positioned(
+              top: pos['top'],
+              left: pos['left'],
+              child: buildStar(size: pos['size'], color: pos['color']),
+            ),
+          ),
+          Container(color: Colors.white.withOpacity(0.2)),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ListView(
+              children: [
+                ListTile(
+                  title: Text(
+                    selectedMurottalList.isEmpty
+                        ? "Pilih Murottal"
+                        : selectedMurottalList
+                            .map((e) => e['title'])
+                            .join(', '),
+                  ),
+                  trailing: const Icon(
+                    Icons.menu_book,
+                    color: Color.fromARGB(255, 81, 177, 255),
+                  ),
+                  onTap: _pickMurottal,
+                ),
+
+                const Divider(),
+                ListTile(
+                  title: Text(
+                    startTime == null
+                        ? "Pilih Waktu Mulai"
+                        : "Mulai: ${startTime!.format(context)}",
+                  ),
+                  trailing: const Icon(
+                    Icons.access_time,
+                    color: Color.fromARGB(255, 81, 177, 255),
+                  ),
+                  onTap: () => _pickTime(isStart: true),
+                ),
+                ListTile(
+                  title: Text(
+                    endTime == null
+                        ? "Pilih Waktu Selesai"
+                        : "Selesai: ${endTime!.format(context)}",
+                  ),
+                  trailing: const Icon(
+                    Icons.timelapse,
+                    color: Color.fromARGB(255, 81, 177, 255),
+                  ),
+                  onTap: () => _pickTime(isStart: false),
+                ),
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  title: const Text("Ulangi Setiap Hari"),
+                  value: repeatEveryday,
+                  activeColor: Colors.white,
+                  activeTrackColor: Colors.blue[200],
+                  inactiveThumbColor: Colors.grey[300],
+                  inactiveTrackColor: Colors.grey[400],
+                  onChanged: (val) {
+                    setState(() {
+                      repeatEveryday = val;
+                      if (val) selectedDays.clear();
+                    });
+                  },
+                ),
+                if (!repeatEveryday)
+                  Wrap(
+                    spacing: 8,
+                    children:
+                        daysOfWeek.map((day) {
+                          final isSelected = selectedDays.contains(day);
+                          return FilterChip(
+                            label: Text(
+                              day,
+                              style: TextStyle(
+                                color:
+                                    isSelected
+                                        ? Color.fromARGB(255, 81, 177, 255)
+                                        : Colors.black,
+                              ),
+                            ),
+                            selected: isSelected,
+                            onSelected: (val) {
+                              setState(() {
+                                if (val) {
+                                  selectedDays.add(day);
+                                } else {
+                                  selectedDays.remove(day);
+                                }
+                              });
+                            },
+                          );
+                        }).toList(),
+                  ),
+                const SizedBox(height: 20),
+                OutlinedButton(
+                  onPressed: _saveSchedule,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Color.fromARGB(255, 81, 177, 255),
+                    side: const BorderSide(color: Colors.blue),
+                    shape: const StadiumBorder(),
+                  ),
+                  child: const Text("Simpan Jadwal"),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

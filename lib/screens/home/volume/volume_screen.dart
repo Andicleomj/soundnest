@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soundnest/utils/audio_filter_helper.dart';
 import 'package:soundnest/utils/volume_helper.dart';
 
 class VolumeScreen extends StatefulWidget {
@@ -20,24 +21,44 @@ class _VolumeScreenState extends State<VolumeScreen> {
   Future<void> _loadVolume() async {
     int savedVolume = await VolumeHelper.getVolumePercentage();
     setState(() => _tempVolume = savedVolume.toDouble());
+    _applyFilter(); // Terapkan filter saat volume diload
   }
 
   void _increaseVolume() {
-    setState(() => _tempVolume = (_tempVolume + 10).clamp(0, 100));
+    setState(() {
+      _tempVolume = (_tempVolume + 10).clamp(0, 100);
+    });
+    _applyFilter(); // Terapkan filter setiap naik volume
   }
 
   void _decreaseVolume() {
-    setState(() => _tempVolume = (_tempVolume - 10).clamp(0, 100));
+    setState(() {
+      _tempVolume = (_tempVolume - 10).clamp(0, 100);
+    });
+    _applyFilter(); // Terapkan filter setiap turun volume
   }
 
   Future<void> _saveVolume() async {
     await VolumeHelper.setVolume(_tempVolume / 100);
+    await _applyFilter(); // Terapkan filter saat volume disimpan
+
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text("Volume disimpan: ${_tempVolume.toInt()}%"),
         backgroundColor: Colors.blue,
+        duration: const Duration(milliseconds: 1500),
       ),
     );
+    await Future.delayed(const Duration(milliseconds: 1600));
+    if (mounted) Navigator.pop(context);
+  }
+
+  Future<void> _applyFilter() async {
+    // Aktifkan filter jika volume bukan 0 (tetap aktif pada volume rendah)
+    final enableFilter = _tempVolume > 0;
+    await AudioFilterHelper.applyFilterForKids(enableFilter);
   }
 
   @override
@@ -132,7 +153,11 @@ class _VolumeScreenState extends State<VolumeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildCircleButton(Icons.remove, _decreaseVolume, Colors.cyan),
+                  _buildCircleButton(
+                    Icons.remove,
+                    _decreaseVolume,
+                    Colors.cyan,
+                  ),
                   const SizedBox(width: 40),
                   _buildCircleButton(Icons.add, _increaseVolume, Colors.cyan),
                 ],
@@ -147,7 +172,10 @@ class _VolumeScreenState extends State<VolumeScreen> {
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blueAccent,
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 40,
+                    vertical: 16,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
@@ -155,6 +183,35 @@ class _VolumeScreenState extends State<VolumeScreen> {
                 ),
               ),
               const SizedBox(height: 20),
+
+              ElevatedButton(
+                onPressed: () async {
+                  bool aktif = await AudioFilterHelper.isFilterActive();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        "Filter Frekuensi: ${aktif ? "AKTIF" : "TIDAK AKTIF"}",
+                      ),
+                      backgroundColor: aktif ? Colors.green : Colors.red,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: const Text(
+                  "Cek Filter Frekuensi",
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+              ),
             ],
           ),
         ),
@@ -177,7 +234,7 @@ class _VolumeScreenState extends State<VolumeScreen> {
               color: color.withOpacity(0.4),
               blurRadius: 8,
               offset: const Offset(2, 4),
-            )
+            ),
           ],
         ),
         child: Icon(icon, color: Colors.white, size: 36),

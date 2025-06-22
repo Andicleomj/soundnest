@@ -87,29 +87,34 @@ class CastService {
     if (_session == null) throw Exception('Belum terhubung ke device');
 
     final proxyUrl = '$_baseProxyUrl/stream/$fileId';
+    // Gunakan URL uji publik jika gagal
+    final testUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
 
     try {
+      print('📤 Sending LAUNCH...');
       _session!.sendMessage(CastSession.kNamespaceReceiver, {
         'type': 'LAUNCH',
         'appId': 'CC1AD845',
       });
+      print('✅ LAUNCH sent.');
 
-      await Future.delayed(const Duration(seconds: 3));
+      await Future.delayed(const Duration(seconds: 5));
 
+      print('📤 Sending LOAD...');
       _session!.sendMessage('urn:x-cast:com.google.cast.media', {
         'type': 'LOAD',
         'media': {
-          'contentId': proxyUrl,
+          'contentId': proxyUrl, // ganti dengan testUrl jika perlu
           'streamType': 'BUFFERED',
           'contentType': 'audio/mpeg',
           'metadata': {
             'metadataType': 0,
             'title': title ?? 'Audio',
-            'category': category ?? '',
           },
         },
         'autoplay': true,
       });
+      print('✅ LOAD sent.');
 
       currentFileId = fileId;
       isPlaying = true;
@@ -173,9 +178,10 @@ class CastService {
 
   String? get currentTitle => currentTitleNotifier.value;
   String? get currentCategory => currentCategoryNotifier.value;
+
   String get _baseProxyUrl {
-    return   'https://b099-125-161-30-148.ngrok-free.app';
-}
+    return 'https://28fa-118-96-203-155.ngrok-free.app';
+  }
 
   void _handleCastState(CastSessionState state) {
     debugPrint('📶 Cast session state: $state');
