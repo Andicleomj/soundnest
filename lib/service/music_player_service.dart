@@ -64,7 +64,7 @@ class MusicPlayerService {
     String? category,
     VoidCallback? onComplete,
   }) async {
-    final proxyUrl = "$_baseProxyUrl/stream/$fileId";
+    final server = "$_baseProxyUrl/stream/$fileId";
 
     if (isPlaying) {
       await stopMusic(); // Ini menghentikan musik apa pun yang sedang jalan
@@ -73,7 +73,7 @@ class MusicPlayerService {
     try {
       final volume = await VolumeHelper.getVolume(); // <== Ambil volume
       await _audioPlayer.setVolume(volume); // <== Terapkan volume
-      await _audioPlayer.play(UrlSource(proxyUrl));
+      await _audioPlayer.play(UrlSource(server));
 
       currentFileId = fileId;
       isPlaying = true;
