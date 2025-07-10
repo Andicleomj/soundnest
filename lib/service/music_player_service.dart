@@ -90,22 +90,6 @@ class MusicPlayerService {
     }
   }
 
-  Future<void> playFromUrl(String url) async {
-    try {
-      final volume = await VolumeHelper.getVolume(); // <== Ambil volume
-      await _audioPlayer.setVolume(volume); // <== Terapkan volume
-      await _audioPlayer.play(UrlSource(url));
-
-      currentFileId = url;
-      isPlaying = true;
-      isPlayingNotifier.value = true;
-
-      print("🎶 Playing from URL: $url at volume: ${volume * 100}%");
-    } catch (e) {
-      print("❌ Gagal memutar musik dari URL: $e");
-    }
-  }
-
   Future<void> pauseMusic() async {
     if (!isPlaying) return; // Jika sudah pause, skip
 
