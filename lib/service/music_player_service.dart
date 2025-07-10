@@ -54,7 +54,7 @@ class MusicPlayerService {
 
   VoidCallback? _onComplete;
 
-  String get _baseProxyUrl {
+  String get _serverUrl {
     return 'https://telu-monitoring.site/stream';
   }
 
@@ -64,7 +64,7 @@ class MusicPlayerService {
     String? category,
     VoidCallback? onComplete,
   }) async {
-    final server = "$_baseProxyUrl/stream/$fileId";
+    final server = "$_serverUrl/stream/$fileId";
 
     if (isPlaying) {
       await stopMusic(); // Ini menghentikan musik apa pun yang sedang jalan
