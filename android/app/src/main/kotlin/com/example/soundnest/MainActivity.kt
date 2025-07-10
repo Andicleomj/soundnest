@@ -1,6 +1,10 @@
 package com.example.soundnest
 
-import android.media.*
+import android.media.AudioFormat
+import android.media.AudioManager
+import android.media.AudioRecord
+import android.media.AudioTrack
+import android.media.MediaRecorder
 import android.os.Bundle
 import android.util.Log
 import io.flutter.embedding.android.FlutterActivity
@@ -14,6 +18,7 @@ import com.google.android.gms.cast.framework.CastSession
 import com.google.android.gms.cast.framework.SessionManagerListener
 import com.google.android.gms.cast.framework.media.RemoteMediaClient
 import com.google.android.gms.cast.MediaLoadRequestData
+import kotlin.math.min
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.example.soundnest/audio"
@@ -21,7 +26,6 @@ class MainActivity : FlutterActivity() {
     private var audioRecord: AudioRecord? = null
     private var audioTrack: AudioTrack? = null
     private var isLooping = false
-    private var isFilterActive = false  // ✅ Tambahkan ini untuk menyimpan status filter
 
     private var castContext: CastContext? = null
     private var castSession: CastSession? = null
@@ -43,6 +47,7 @@ class MainActivity : FlutterActivity() {
     override fun onDestroy() {
         super.onDestroy()
         castContext?.sessionManager?.removeSessionManagerListener(sessionManagerListener, CastSession::class.java)
+        stopMicLoop()
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -50,20 +55,17 @@ class MainActivity : FlutterActivity() {
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
-                "applyFilter" -> {
-                    val enable = call.argument<Boolean>("enable") ?: false
-                    isFilterActive = enable  // ✅ Simpan status
-                    result.success(null)
-                }
-                "isFilterActive" -> {
-                    result.success(isFilterActive)  // ✅ Balas status ke Flutter
-                }
                 "startMicLoop" -> {
                     startMicLoop()
                     result.success(null)
                 }
                 "stopMicLoop" -> {
                     stopMicLoop()
+                    result.success(null)
+                }
+                "setVolumeBasedOnSPL" -> {
+                    val volume = call.argument<Double>("volume")?.toFloat() ?: 1.0f
+                    setVolume(volume)
                     result.success(null)
                 }
                 "castPlay" -> {
@@ -109,7 +111,16 @@ class MainActivity : FlutterActivity() {
             AudioFormat.CHANNEL_IN_MONO,
             AudioFormat.ENCODING_PCM_16BIT,
             bufferSize
-        )
+        ).apply {
+            try {
+                startRecording()
+                Log.d("Audio", "Audio recording started")
+            } catch (e: IllegalStateException) {
+                Log.e("Audio", "Failed to start recording: ${e.message}")
+                release()
+                return
+            }
+        }
 
         audioTrack = AudioTrack(
             AudioManager.STREAM_MUSIC,
@@ -118,33 +129,25 @@ class MainActivity : FlutterActivity() {
             AudioFormat.ENCODING_PCM_16BIT,
             bufferSize,
             AudioTrack.MODE_STREAM
-        )
+        ).apply {
+            try {
+                play()
+                Log.d("Audio", "Audio playback started")
+            } catch (e: IllegalStateException) {
+                Log.e("Audio", "Failed to start playback: ${e.message}")
+                release()
+                return
+            }
+        }
 
-        audioRecord?.startRecording()
-        audioTrack?.play()
         isLooping = true
 
         thread {
             val buffer = ByteArray(bufferSize)
-            val shortBuffer = ShortArray(bufferSize / 2)
 
             while (isLooping && audioRecord?.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
                 val read = audioRecord?.read(buffer, 0, buffer.size) ?: 0
                 if (read > 0) {
-                    // Convert byte[] ke short[]
-                    for (i in 0 until read step 2) {
-                        val sample = (buffer[i].toInt() and 0xFF) or (buffer[i + 1].toInt() shl 8)
-                        shortBuffer[i / 2] = sample.toShort()
-                    }
-
-                    // ✅ Terapkan filter jika aktif
-                    val filtered = if (isFilterActive) applyLowPassFilter(shortBuffer) else shortBuffer
-
-                    for (i in filtered.indices) {
-                        buffer[i * 2] = (filtered[i].toInt() and 0xFF).toByte()
-                        buffer[i * 2 + 1] = ((filtered[i].toInt() shr 8) and 0xFF).toByte()
-                    }
-
                     audioTrack?.write(buffer, 0, read)
                 }
             }
@@ -153,25 +156,33 @@ class MainActivity : FlutterActivity() {
 
     private fun stopMicLoop() {
         isLooping = false
-        audioRecord?.stop()
-        audioTrack?.stop()
-        audioRecord?.release()
-        audioTrack?.release()
+        audioRecord?.apply {
+            stop()
+            release()
+        }
+        audioTrack?.apply {
+            stop()
+            release()
+        }
         audioRecord = null
         audioTrack = null
     }
 
-    private fun applyLowPassFilter(input: ShortArray, alpha: Float = 0.05f): ShortArray {
-        val output = ShortArray(input.size)
-        output[0] = input[0]
-        for (i in 1 until input.size) {
-            output[i] = (alpha * input[i] + (1 - alpha) * output[i - 1]).toInt().toShort()
+    private fun setVolume(volume: Float) {
+        if (audioTrack == null) {
+            Log.w("Audio", "AudioTrack belum diinisialisasi, abaikan setVolume")
+            return
         }
-        return output
+        val adjustedVolume = volume.coerceIn(0.1f, 1.0f) // Minimal 10% untuk menghindari silent
+        audioTrack?.setVolume(adjustedVolume)
+        Log.d("Audio", "Volume disetel ke: $adjustedVolume")
     }
 
     private fun castPlay(url: String, title: String) {
-        if (castSession == null || !castSession!!.isConnected) return
+        if (castSession == null || !castSession!!.isConnected) {
+            Log.w("Cast", "Cast session tidak tersedia")
+            return
+        }
 
         val metadata = MediaMetadata(MediaMetadata.MEDIA_TYPE_MUSIC_TRACK)
         metadata.putString(MediaMetadata.KEY_TITLE, title)

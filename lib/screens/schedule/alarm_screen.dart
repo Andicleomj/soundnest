@@ -6,16 +6,14 @@ import 'package:soundnest/models/alarmschedule.dart';
 class AlarmPlayScreen extends StatefulWidget {
   final AlarmSchedule alarm;
   final VoidCallback onStop;
-  final VoidCallback onResume;
   final MusicPlayerService musicPlayerService;
 
-  final String? audioUrl; // jika hanya satu audio
-  final List<String>? audioUrls; // jika playlist
+  final String? audioUrl;
+  final List<String>? audioUrls;
 
   const AlarmPlayScreen({
     super.key,
     required this.alarm,
-    required this.onResume,
     required this.onStop,
     required this.musicPlayerService,
     this.audioUrl,
@@ -32,8 +30,7 @@ class AlarmPlayScreen extends StatefulWidget {
 class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
   late Timer _timer;
   late DateTime _now;
-  bool _isPlaying = true;
-  int _currentIndex = 0; // untuk playlist
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -43,6 +40,7 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
       const Duration(seconds: 1),
       (_) => setState(() => _now = DateTime.now()),
     );
+
     _startAudio();
   }
 
@@ -53,7 +51,7 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
       } else if (widget.audioUrl != null) {
         await widget.musicPlayerService.playFromFileId(widget.audioUrl!);
       }
-      setState(() => _isPlaying = true);
+      if (mounted) setState(() {});
     } catch (e) {
       debugPrint('❌ Error saat memulai audio: $e');
     }
@@ -62,40 +60,35 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
   Future<void> _playPlaylist(List<String> urls) async {
     if (_currentIndex >= urls.length) return;
 
-    await widget.musicPlayerService.playFromFileId(
-      urls[_currentIndex],
-      onComplete: () async {
-        _currentIndex++;
-        if (_currentIndex < urls.length) {
-          await _playPlaylist(urls);
-        } else {
-          if (mounted) Navigator.pop(context);
-        }
-      },
-    );
-  }
-
-  Future<void> _togglePlayPause() async {
-    final nowPlaying = widget.musicPlayerService.isPlaying;
-
-    if (nowPlaying) {
-      await widget.musicPlayerService.pauseMusic();
-    } else {
-      await widget.musicPlayerService.resumeMusic();
+    try {
+      await widget.musicPlayerService.playFromFileId(
+        urls[_currentIndex],
+        onComplete: () async {
+          if (!widget.musicPlayerService.isPlaying) {
+            debugPrint("⏸️ Playback dihentikan, tidak lanjut playlist");
+            return;
+          }
+          _currentIndex++;
+          if (_currentIndex < urls.length) {
+            await _playPlaylist(urls);
+          } else {
+            if (mounted) Navigator.pop(context);
+          }
+        },
+      );
+    } catch (e) {
+      debugPrint('❌ Error saat memutar playlist: $e');
     }
-
-    setState(() => _isPlaying = widget.musicPlayerService.isPlaying);
   }
 
-  void _stopAudio() async {
-    await widget.musicPlayerService.stopMusic();
-
-    setState(() {
-      _isPlaying = false;
-      widget.alarm.isActive = false;
-    });
-
-    widget.onStop();
+  Future<void> _stopAudio() async {
+    try {
+      await widget.musicPlayerService.stopMusic();
+      setState(() => widget.alarm.isActive = false);
+      widget.onStop();
+    } catch (e) {
+      debugPrint('❌ Error saat stop audio: $e');
+    }
   }
 
   @override
@@ -106,9 +99,10 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final now = _now;
     final timeStr =
-        "${_now.hour.toString().padLeft(2, '0')}:${_now.minute.toString().padLeft(2, '0')}";
-    final dateStr = "${_now.day} ${_monthName(_now.month)} ${_now.year}";
+        "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+    final dateStr = "${now.day} ${_monthName(now.month)} ${now.year}";
 
     return Material(
       color: Colors.black,
@@ -143,49 +137,27 @@ class _AlarmPlayScreenState extends State<AlarmPlayScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 50),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _togglePlayPause,
-                      icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
-                      label: Text(_isPlaying ? "Jeda" : "Lanjutkan"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        textStyle: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
+              const SizedBox(height: 15),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _stopAudio,
+                  icon: const Icon(Icons.stop_circle_rounded, size: 32),
+                  label: const Text("Stop"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    elevation: 8,
+                    textStyle: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _stopAudio,
-                      icon: const Icon(Icons.stop),
-                      label: const Text("Stop"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        textStyle: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ],
           ),

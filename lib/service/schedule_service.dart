@@ -148,6 +148,11 @@ class ScheduleService {
     await _manualRef.child(key).update({'enabled': enabled});
   }
 
+  /// Mengaktifkan/menonaktifkan jadwal (otomatis)
+  Future<void> toggleOtomatisScheduleEnabled(String key, bool enabled) async {
+    await _otomatisRef.child(key).update({'enabled': enabled});
+  }
+
   /// Mulai pengecekan periodik jadwal (tiap 30 detik)
   void start() async {
     if (!_initialized) {

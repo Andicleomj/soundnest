@@ -40,40 +40,62 @@ class CastService {
 
   Future<void> connectToDevice(CastDevice device) async {
     try {
+      print(
+        '🔗 Mencoba terhubung ke ${device.name} di ${device.host}:${device.port}',
+      );
       _connectedDevice = device;
-      final session = await CastSessionManager().startSession(device);
 
+      // Batalkan langganan stream sebelumnya untuk mencegah kebocoran memori
       await _stateSubscription?.cancel();
       await _messageSubscription?.cancel();
 
+      // Mulai sesi dengan CastSessionManager
+      final session = await CastSessionManager().startSession(device);
+      print('✅ Sesi berhasil dimulai: ${session.toString()}');
+
+      // Gunakan Completer untuk menunggu status connected
       final completer = Completer<void>();
 
-      _stateSubscription = session.stateStream.listen((state) {
-        _handleCastState(state);
-        if (state == CastSessionState.connected) {
-          completer.complete();
-        }
-      }, onError: (e) => debugPrint('⚠️ Error in state stream: $e'));
+      // Dengarkan status sesi
+      _stateSubscription = session.stateStream.listen(
+        (state) {
+          _handleCastState(state);
+          if (state == CastSessionState.connected) {
+            print('✅ Status sesi: Terhubung ke ${device.name}');
+            completer.complete();
+          }
+        },
+        onError: (e, stackTrace) {
+          debugPrint('⚠️ Error di state stream: $e\nStackTrace: $stackTrace');
+        },
+      );
 
-      _messageSubscription = session.messageStream.listen((message) {
-        debugPrint('💬 Received message: $message');
-
-        if (message is Map && message['mediaSessionId'] != null) {
-          _mediaSessionId = message['mediaSessionId'];
-          print('ℹ️ Media Session ID updated: $_mediaSessionId');
-        }
-      });
+      // Dengarkan pesan untuk memperbarui mediaSessionId
+      _messageSubscription = session.messageStream.listen(
+        (message) {
+          debugPrint('💬 Pesan diterima: $message');
+          if (message is Map && message['mediaSessionId'] != null) {
+            _mediaSessionId = message['mediaSessionId'];
+            print('ℹ️ Media Session ID diperbarui: $_mediaSessionId');
+          }
+        },
+        onError: (e, stackTrace) {
+          debugPrint('⚠️ Error di message stream: $e\nStackTrace: $stackTrace');
+        },
+      );
 
       _session = session;
 
+      // Tunggu hingga sesi terhubung atau timeout setelah 10 detik
       await completer.future.timeout(
         Duration(seconds: 10),
         onTimeout: () {
-          throw Exception('Timeout waiting for cast session connection');
+          print('❌ Timeout menunggu koneksi sesi cast');
+          throw Exception('Timeout menunggu koneksi sesi cast');
         },
       );
-    } catch (e) {
-      print('❌ Failed to connect: $e');
+    } catch (e, stackTrace) {
+      print('❌ Gagal terhubung ke ${device.name}: $e\nStackTrace: $stackTrace');
       _clearSession();
       rethrow;
     }
@@ -88,7 +110,8 @@ class CastService {
 
     final proxyUrl = '$_baseProxyUrl/stream/$fileId';
     // Gunakan URL uji publik jika gagal
-    final testUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+    final testUrl =
+        'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
 
     try {
       print('📤 Sending LAUNCH...');
@@ -107,10 +130,7 @@ class CastService {
           'contentId': proxyUrl, // ganti dengan testUrl jika perlu
           'streamType': 'BUFFERED',
           'contentType': 'audio/mpeg',
-          'metadata': {
-            'metadataType': 0,
-            'title': title ?? 'Audio',
-          },
+          'metadata': {'metadataType': 0, 'title': title ?? 'Audio'},
         },
         'autoplay': true,
       });
@@ -180,7 +200,7 @@ class CastService {
   String? get currentCategory => currentCategoryNotifier.value;
 
   String get _baseProxyUrl {
-    return 'https://28fa-118-96-203-155.ngrok-free.app';
+    return 'https://telu-monitoring.site/stream';
   }
 
   void _handleCastState(CastSessionState state) {

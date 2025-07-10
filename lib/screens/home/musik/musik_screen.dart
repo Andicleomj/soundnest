@@ -39,6 +39,8 @@ class _MusicScreenStateful extends StatefulWidget {
 
 class _MusicScreenState extends State<_MusicScreenStateful> {
   List<Map<String, dynamic>> dynamicCategories = [];
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, dynamic>> searchResults = [];
 
   @override
   void initState() {
@@ -77,11 +79,79 @@ class _MusicScreenState extends State<_MusicScreenStateful> {
     await dbRef.remove();
   }
 
+  void searchAudio(String query) async {
+    final dbRef = FirebaseDatabase.instance.ref(
+      'devices/devices_01/music/categories',
+    );
+    final snapshot = await dbRef.get();
+    final results = <Map<String, dynamic>>[];
+
+    if (snapshot.exists) {
+      final categories = Map<String, dynamic>.from(snapshot.value as Map);
+      for (var category in categories.entries) {
+        final categoryData = Map<String, dynamic>.from(category.value);
+        final files = Map<String, dynamic>.from(categoryData['files'] ?? {});
+        for (var file in files.values) {
+          if (file is Map && file['title'] != null && file['fileId'] != null) {
+            final title = file['title'].toString();
+            if (title.toLowerCase().contains(query.toLowerCase())) {
+              results.add({
+                'title': title,
+                'fileId': file['fileId'],
+                'category': categoryData['name'] ?? '',
+              });
+            }
+          }
+        }
+      }
+    }
+
+    setState(() => searchResults = results);
+  }
+
+  Widget _buildSearchResults() {
+    return ListView.builder(
+      shrinkWrap: true, // Memungkinkan ListView mengambil ruang yang dibutuhkan
+      itemCount: searchResults.length,
+      itemBuilder: (context, index) {
+        final item = searchResults[index];
+        return ListTile(
+          leading: const Icon(Icons.music_note),
+          title: Text(item['title'] ?? 'Tanpa Judul'),
+          subtitle: Text(item['category'] ?? ''),
+          trailing: IconButton(
+            icon: const Icon(Icons.play_arrow),
+            onPressed: () {
+              final title = item['title'] ?? 'Tanpa Judul';
+              final category = item['category'] ?? '';
+              final fileId = item['fileId'] ?? '';
+              musicPlayerService.playFromFileId(
+                fileId,
+                title: title,
+                category: category,
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MusicScreenWithDynamicCategories(
       dynamicCategories: dynamicCategories,
       onDelete: deleteCategory,
+      searchController: _searchController,
+      onSearchChanged: (value) {
+        if (value.trim().isNotEmpty) {
+          searchAudio(value.trim());
+        } else {
+          setState(() => searchResults.clear());
+        }
+      },
+      searchResults: searchResults,
+      buildSearchResults: _buildSearchResults,
     );
   }
 }
@@ -89,11 +159,19 @@ class _MusicScreenState extends State<_MusicScreenStateful> {
 class MusicScreenWithDynamicCategories extends StatelessWidget {
   final List<Map<String, dynamic>> dynamicCategories;
   final Function(String key) onDelete;
+  final TextEditingController searchController;
+  final Function(String) onSearchChanged;
+  final List<Map<String, dynamic>> searchResults;
+  final Widget Function() buildSearchResults;
 
   const MusicScreenWithDynamicCategories({
     super.key,
     required this.dynamicCategories,
     required this.onDelete,
+    required this.searchController,
+    required this.onSearchChanged,
+    required this.searchResults,
+    required this.buildSearchResults,
   });
 
   @override
@@ -103,6 +181,13 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         Positioned.fill(
           child: Image.asset('assets/musik.jpg', fit: BoxFit.cover),
         ),
+        // Jika sedang mencari, lapisan putih transparan full screen
+        if (searchResults.isNotEmpty)
+          Positioned.fill(
+            child: Container(
+              color: Colors.white.withOpacity(0.95), // ✅ Full transparent white
+            ),
+          ),
         Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
@@ -120,7 +205,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
             iconTheme: const IconThemeData(color: Colors.white),
             actions: [
               IconButton(
-                icon: const Icon(Icons.add, color: Colors.white, ),
+                icon: const Icon(Icons.add, color: Colors.white),
                 onPressed: () {
                   showAddCategoryDialog(context);
                 },
@@ -129,101 +214,205 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
           ),
           body: Column(
             children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(15.0),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        _buildCategoryGrid(context, [
-                          'Masa Adaptasi Sekolah',
-                          'Aku Suka Olahraga',
-                          'My Family',
-                          'Bumi Planet',
-                          'Hari Kemerdekaan',
-                          'Ramadhan',
-                          'Hewan',
-                          'Manasik Haji',
-                          'Budaya Sunda',
-                          'Batik',
-                          'Mother Day',
-                          'Guruku Tersayang',
-                          'Profesi',
-                          'Kendaraan',
-                        ], isDeletable: true),
-                        const SizedBox(height: 20),
-                        if (dynamicCategories.isNotEmpty)
-                          _buildDynamicCategoryGrid(context),
-                      ],
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: TextField(
+                  controller: searchController,
+                  onChanged: onSearchChanged,
+                  style: const TextStyle(fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: 'Cari judul musik...',
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    prefixIcon: const Icon(
+                      Icons.search,
+                      color: Colors.blueAccent,
+                    ),
+                    suffixIcon:
+                        searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(
+                                  Icons.clear,
+                                  color: Colors.blueAccent,
+                                ),
+                                onPressed: () {
+                                  searchController.clear();
+                                  onSearchChanged('');
+                                },
+                              )
+                            : null,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    filled: true,
+                    fillColor: Colors.blue.shade100,
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide.none,
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide.none,
+                      borderRadius: BorderRadius.circular(12.0),
                     ),
                   ),
                 ),
               ),
-              // ✅ Mini Player di bagian bawah
+              if (searchResults.isNotEmpty)
+                Expanded(child: buildSearchResults())
+              else
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(15.0),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          _buildCategoryGrid(context, [
+                            'Masa Adaptasi Sekolah',
+                            'Aku Suka Olahraga',
+                            'My Family',
+                            'Bumi Planet',
+                            'Hari Kemerdekaan',
+                            'Ramadhan',
+                            'Hewan',
+                            'Manasik Haji',
+                            'Budaya Sunda',
+                            'Batik',
+                            'Mother Day',
+                            'Guruku Tersayang',
+                            'Profesi',
+                            'Kendaraan',
+                          ], isDeletable: true),
+                          const SizedBox(height: 20),
+                          if (dynamicCategories.isNotEmpty)
+                            _buildDynamicCategoryGrid(context),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ValueListenableBuilder<bool>(
                 valueListenable: musicPlayerService.isPlayingNotifier,
                 builder: (context, isPlaying, _) {
                   if (!isPlaying || musicPlayerService.currentTitle == null) {
                     return const SizedBox.shrink();
                   }
-                  return Container(
-                    height: 60,
-                    color: Colors.blue.shade100,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.music_note,
-                          color: Colors.blueAccent,
-                          size: 30,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ValueListenableBuilder<String?>(
-                                valueListenable:
-                                    musicPlayerService.currentTitleNotifier,
-                                builder:
-                                    (context, title, _) => Text(
-                                      title ?? '',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
+                  return ValueListenableBuilder<Duration>(
+                    valueListenable: musicPlayerService.currentPositionNotifier,
+                    builder: (context, currentPosition, child) {
+                      return ValueListenableBuilder<Duration>(
+                        valueListenable: musicPlayerService.durationNotifier,
+                        builder: (context, duration, child) {
+                          return Container(
+                            color: Colors.blue.shade100,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 15,
+                              vertical: 8,
+                            ), // Sama dengan MurottalScreen
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min, // Kontrol ukuran berdasarkan konten
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.music_note,
+                                      size: 30,
+                                      color: Colors.blueAccent,
                                     ),
-                              ),
-                              ValueListenableBuilder<String?>(
-                                valueListenable:
-                                    musicPlayerService.currentCategoryNotifier,
-                                builder:
-                                    (context, category, _) => Text(
-                                      category ?? '',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.black54,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          ValueListenableBuilder<String?>(
+                                            valueListenable:
+                                                musicPlayerService.currentTitleNotifier,
+                                            builder: (context, title, _) => Text(
+                                              title ?? '',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          ValueListenableBuilder<String?>(
+                                            valueListenable:
+                                                musicPlayerService.currentCategoryNotifier,
+                                            builder: (context, category, _) => Text(
+                                              category ?? '',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.black54,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      overflow: TextOverflow.ellipsis,
                                     ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.pause,
-                            color: Colors.blueAccent,
-                            size: 30,
-                          ),
-                          onPressed: musicPlayerService.pauseMusic,
-                        ),
-                      ],
-                    ),
+                                    IconButton(
+                                      icon: Icon(
+                                        musicPlayerService.isPlaying
+                                            ? Icons.pause_circle_filled
+                                            : Icons.play_circle_fill,
+                                        size: 32,
+                                        color: Colors.blueAccent,
+                                      ),
+                                      onPressed: () {
+                                        if (musicPlayerService.isPlaying) {
+                                          musicPlayerService.pauseMusic();
+                                        } else {
+                                          musicPlayerService.resumeMusic();
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                Slider(
+                                  value: currentPosition.inSeconds.toDouble().clamp(
+                                        0.0,
+                                        duration.inSeconds.toDouble(),
+                                      ),
+                                  max: duration.inSeconds.toDouble(),
+                                  min: 0.0,
+                                  onChanged: (value) {
+                                    final newPosition = Duration(seconds: value.toInt());
+                                    musicPlayerService.seekTo(newPosition);
+                                  },
+                                  activeColor: Colors.blueAccent,
+                                  inactiveColor: Colors.blue.shade200,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        _formatDuration(currentPosition),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                      Text(
+                                        _formatDuration(duration),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
                   );
                 },
               ),
@@ -232,6 +421,13 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return "$minutes:$seconds";
   }
 
   Widget _buildCategoryGrid(
@@ -246,15 +442,14 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
       childAspectRatio: 2.2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      children:
-          categories.map((category) {
-            // Untuk kategori statis, keyOrName kita isi dengan nama kategori agar tombol hapus muncul
-            return _buildCategoryCard(
-              context,
-              category,
-              isDeletable ? category : null,
-            );
-          }).toList(),
+      children: categories.map((category) {
+        // Untuk kategori statis, keyOrName kita isi dengan nama kategori agar tombol hapus muncul
+        return _buildCategoryCard(
+          context,
+          category,
+          isDeletable ? category : null,
+        );
+      }).toList(),
     );
   }
 
@@ -266,10 +461,9 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
       childAspectRatio: 2.2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      children:
-          dynamicCategories.map((cat) {
-            return _buildCategoryCard(context, cat['name'], cat['key']);
-          }).toList(),
+      children: dynamicCategories.map((cat) {
+        return _buildCategoryCard(context, cat['name'], cat['key']);
+      }).toList(),
     );
   }
 
@@ -349,8 +543,6 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
   ) {
     String categoryPath;
     Widget screen;
-
-    // baru di tambah !!
 
     switch (category) {
       case 'Hewan':
@@ -438,6 +630,7 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         screen = SundaScreen(
           categoryPath: categoryPath,
           categoryName: category,
+          selectMode: selectMode,
         );
         break;
       case 'Batik':
@@ -465,7 +658,6 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
         );
         break;
       default:
-        // Default jika kategori tidak dikenal
         categoryPath = '';
         screen = Scaffold(
           appBar: AppBar(title: Text(category)),
@@ -477,12 +669,10 @@ class MusicScreenWithDynamicCategories extends StatelessWidget {
       selectedMusic,
     ) {
       if (selectedMusic != null && widget.selectMode) {
-        // Kembalikan data musik terpilih ke layar sebelumnya (misalnya ke penjadwalan)
         Navigator.pop(context, selectedMusic);
       }
     });
   }
-  // Fungsi untuk menambahkan kategori baru ke Firebase Realtime Database
 
   void addCategoryToFirebase(String name) {
     final dbRef = FirebaseDatabase.instance.ref(

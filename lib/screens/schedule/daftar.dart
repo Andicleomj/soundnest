@@ -33,6 +33,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
   bool isLoading = true;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
+  StreamSubscription? _completeSubscription;
   String? currentlyPlayingKey;
   OverlayEntry? _overlayEntry;
   Timer? _timer;
@@ -170,6 +171,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
 
   @override
   void dispose() {
+    _completeSubscription?.cancel();
     _overlayEntry?.remove();
     _audioPlayer.dispose();
     _timer?.cancel();
@@ -417,10 +419,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
               builder:
                   (_) => AlarmPlayScreen(
                     alarm: alarmSchedule,
-                    onResume: () async {
-                      await musicPlayerService.resumeMusic();
-                      if (context.mounted) Navigator.pop(context);
-                    },
+
                     onStop: () async {
                       await musicPlayerService.stopMusic();
                       if (context.mounted) {
@@ -467,29 +466,42 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
     return DateTime(now.year, now.month, now.day, hour, minute);
   }
 
-  void _playNextAudioWithTimeCheck(String title) async {
-    if (currentAudioIndex >= currentAudioList.length ||
-        DateTime.now().isAfter(currentEndTime!)) {
+  void _setupCompleteListener(String title) {
+    _completeSubscription?.cancel(); // Pastikan gak dobel
+    _completeSubscription = _audioPlayer.onPlayerComplete.listen((event) {
+      currentAudioIndex++;
+      _playNextAudioWithTimeCheck(title);
+    });
+  }
+
+  Future<void> _playNextAudioWithTimeCheck(String title) async {
+    if (currentEndTime == null || DateTime.now().isAfter(currentEndTime!)) {
       await _audioPlayer.stop();
+      _completeSubscription?.cancel();
       setState(() {
         currentlyPlayingKey = null;
         currentAudioList = [];
         currentAudioIndex = 0;
         currentEndTime = null;
       });
-      _showMiniStatusBar("🛌 Pemutaran selesai");
+      if (mounted) {
+        _showMiniStatusBar("🛌 Pemutaran selesai karena waktu habis");
+      }
       return;
     }
 
+    if (currentAudioIndex >= currentAudioList.length) {
+      currentAudioIndex = 0; // Loop ulang
+    }
+
     final audioUrl = currentAudioList[currentAudioIndex];
+
     try {
       await _audioPlayer.play(UrlSource(audioUrl));
-      _showMiniStatusBar("▶ Memutar $title (${currentAudioIndex + 1})");
-
-      _audioPlayer.onPlayerComplete.listen((event) {
-        currentAudioIndex++;
-        _playNextAudioWithTimeCheck(title);
-      });
+      _setupCompleteListener(title); // Pasang listener sekali
+      if (mounted) {
+        _showMiniStatusBar("▶ Memutar $title (${currentAudioIndex + 1})");
+      }
     } catch (e) {
       print("❌ Gagal memutar audio ke-$currentAudioIndex: $e");
       currentAudioIndex++;
@@ -896,13 +908,6 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                                                                           .isNotEmpty
                                                                       ? audioList
                                                                       : null,
-                                                              onResume: () async {
-                                                                await musicPlayerService
-                                                                    .resumeMusic();
-                                                                Navigator.pop(
-                                                                  context,
-                                                                );
-                                                              },
                                                               onStop: () async {
                                                                 await musicPlayerService
                                                                     .stopMusic();
@@ -1022,13 +1027,7 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                                                                   schedule['audioUrls'] ??
                                                                       [],
                                                                 ),
-                                                                onResume: () async {
-                                                                  await musicPlayerService
-                                                                      .resumeMusic();
-                                                                  Navigator.pop(
-                                                                    context,
-                                                                  );
-                                                                },
+
                                                                 onStop: () async {
                                                                   await musicPlayerService
                                                                       .stopMusic();

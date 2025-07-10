@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:soundnest/firebase_options.dart';
-import 'package:soundnest/screens/home/volume/volume_control_service.dart';
 import 'package:soundnest/screens/splash_screen.dart';
 import 'package:soundnest/service/schedule_service.dart';
 import 'package:soundnest/screens/home/musik/musik_screen.dart';
-import 'package:soundnest/screens/home/musik/daftar_musik.dart';
 import 'package:soundnest/utils/app_routes.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:soundnest/screens/home/cast/cast_screen.dart';
@@ -21,9 +19,6 @@ Future<void> requestMicPermission() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Inisialisasi volume
-  await initVolumeControl();
 
   try {
     print("🔧 Mengecek Firebase...");
@@ -63,8 +58,6 @@ class MyApp extends StatelessWidget {
         AppRoutes.splash: (context) => const SplashScreen(),
         ...AppRoutes.getRoutes(),
         '/music': (context) => const MusicScreen(),
-        '/music/list':
-            (context) => DaftarMusikScreen(categoryId: '', categoryName: ''),
       },
       onGenerateRoute: (settings) {
         if (settings.name!.startsWith('/cast/')) {

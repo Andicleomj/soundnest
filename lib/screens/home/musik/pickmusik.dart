@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 class MusicPickerScreen extends StatefulWidget {
-  const MusicPickerScreen({super.key});
+  final bool multiPick;
+  const MusicPickerScreen({super.key, this.multiPick = false});
 
   @override
   State<MusicPickerScreen> createState() => _MusicPickerScreenState();
@@ -13,8 +14,8 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
     'devices/devices_01/music/categories',
   );
   bool isLoading = true;
-  Map<String, dynamic> allMusicData =
-      {}; // key: nama kategori, value: list of music
+  Map<String, dynamic> allMusicData = {};
+  List<Map<String, String>> selectedItems = [];
 
   @override
   void initState() {
@@ -25,26 +26,23 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
   Future<void> fetchAllMusic() async {
     final snapshot = await categoryRef.get();
     if (snapshot.exists) {
-      print("Snapshot value: ${snapshot.value}"); // Debug
       final rawData = Map<String, dynamic>.from(snapshot.value as Map);
       Map<String, List<Map<String, dynamic>>> parsedData = {};
 
       for (final entry in rawData.entries) {
         final categoryData = Map<String, dynamic>.from(entry.value);
         final categoryName = categoryData['nama'] ?? 'Tanpa Nama';
-        final files =
-            categoryData['files'] != null
-                ? Map<String, dynamic>.from(categoryData['files'])
-                : {};
+        final files = categoryData['files'] != null
+            ? Map<String, dynamic>.from(categoryData['files'])
+            : {};
 
-        final musicList =
-            files.entries.map((e) {
-              final fileData = Map<String, dynamic>.from(e.value);
-              return {
-                'title': fileData['title'] ?? 'Judul tidak tersedia',
-                'fileId': fileData['fileId'] ?? '',
-              };
-            }).toList();
+        final musicList = files.entries.map((e) {
+          final fileData = Map<String, dynamic>.from(e.value);
+          return {
+            'title': fileData['title'] ?? 'Judul tidak tersedia',
+            'fileId': fileData['fileId'] ?? '',
+          };
+        }).toList();
 
         parsedData[categoryName] = musicList;
       }
@@ -54,12 +52,31 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
         isLoading = false;
       });
     } else {
-      print('Snapshot tidak ditemukan');
       setState(() {
         allMusicData = {};
         isLoading = false;
       });
     }
+  }
+
+  bool isItemSelected(String fileId) {
+    return selectedItems.any((item) => item['fileId'] == fileId);
+  }
+
+  void toggleItemSelection(String category, String title, String fileId) {
+    final item = {
+      'category': category,
+      'title': title,
+      'fileId': fileId,
+    };
+
+    setState(() {
+      if (isItemSelected(fileId)) {
+        selectedItems.removeWhere((e) => e['fileId'] == fileId);
+      } else {
+        selectedItems.add(item);
+      }
+    });
   }
 
   @override
@@ -79,40 +96,61 @@ class _MusicPickerScreenState extends State<MusicPickerScreen> {
           ),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: widget.multiPick
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.check),
+                  onPressed: () {
+                    Navigator.pop(context, selectedItems);
+                  },
+                )
+              ]
+            : null,
       ),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : allMusicData.isEmpty
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : allMusicData.isEmpty
               ? const Center(child: Text('Tidak ada musik tersedia'))
               : ListView(
-                children:
-                    allMusicData.entries.map((entry) {
-                      final categoryName = entry.key;
-                      final musicList =
-                          entry.value as List<Map<String, dynamic>>;
+                  children: allMusicData.entries.map((entry) {
+                    final categoryName = entry.key;
+                    final musicList =
+                        entry.value as List<Map<String, dynamic>>;
 
-                      return ExpansionTile(
-                        title: Text(categoryName),
-                        children:
-                            musicList.map((music) {
-                              final title = music['title'];
-                              final fileId = music['fileId'];
+                    return ExpansionTile(
+                      title: Text(categoryName),
+                      children: musicList.map((music) {
+                        final title = music['title'];
+                        final fileId = music['fileId'];
 
-                              return ListTile(
-                                title: Text(title),
-                                onTap: () {
-                                  Navigator.pop(context, {
-                                    'category': categoryName,
-                                    'title': title,
-                                    'fileId': fileId,
-                                  });
-                                },
-                              );
-                            }).toList(),
-                      );
-                    }).toList(),
-              ),
+                        return ListTile(
+                          title: Text(title),
+                          trailing: widget.multiPick
+                              ? Checkbox(
+                                  value: isItemSelected(fileId),
+                                  onChanged: (_) {
+                                    toggleItemSelection(
+                                        categoryName, title, fileId);
+                                  },
+                                )
+                              : null,
+                          onTap: () {
+                            if (widget.multiPick) {
+                              toggleItemSelection(
+                                  categoryName, title, fileId);
+                            } else {
+                              Navigator.pop(context, {
+                                'category': categoryName,
+                                'title': title,
+                                'fileId': fileId,
+                              });
+                            }
+                          },
+                        );
+                      }).toList(),
+                    );
+                  }).toList(),
+                ),
     );
   }
 }
