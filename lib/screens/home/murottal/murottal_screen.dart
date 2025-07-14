@@ -140,43 +140,6 @@ class _MurottalScreenState extends State<MurottalScreen> {
     );
   }
 
-  // Dialog tambah kategori baru
-  void _showAddCategoryDialog() {
-    final TextEditingController controller = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Tambah Kategori Baru'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'Nama kategori'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final name = controller.text.trim();
-              if (name.isNotEmpty) {
-                final newRef = categoriesRef.push();
-                await newRef.set({'name': name, 'files': {}});
-                Navigator.pop(context);
-                await fetchCustomCategories();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Kategori "$name" ditambahkan')),
-                );
-              }
-            },
-            child: const Text('Tambah'),
-          ),
-        ],
-      ),
-    );
-  }
-
   // Navigasi ke layar kategori tertentu
   void navigateToCategoryScreen(BuildContext context, String category) {
     String categoryPath;
@@ -205,64 +168,6 @@ class _MurottalScreenState extends State<MurottalScreen> {
     }
 
     Navigator.push(context, MaterialPageRoute(builder: (context) => screen));
-  }
-
-  // Konfirmasi hapus kategori kustom
-  void _confirmDeleteCategory(BuildContext context, String category) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Hapus Kategori'),
-        content: Text(
-          'Apakah Anda yakin ingin menghapus kategori "$category"?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _deleteCategory(category);
-            },
-            child: const Text('Hapus'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Hapus kategori dari Firebase Realtime Database
-  Future<void> _deleteCategory(String category) async {
-    try {
-      final snapshot = await categoriesRef.get();
-      if (snapshot.exists) {
-        final data = Map<String, dynamic>.from(snapshot.value as Map);
-        String? keyToDelete;
-
-        data.forEach((key, value) {
-          if (value is Map && value['name'] == category) {
-            keyToDelete = key;
-          }
-        });
-
-        if (keyToDelete != null) {
-          await categoriesRef.child(keyToDelete!).remove();
-          await fetchCustomCategories();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Kategori "$category" berhasil dihapus')),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Kategori "$category" tidak ditemukan')),
-          );
-        }
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Gagal menghapus kategori: $e')));
-    }
   }
 
   // Widget mini player di bawah layar, tampil saat ada musik diputar
@@ -393,30 +298,17 @@ class _MurottalScreenState extends State<MurottalScreen> {
             ],
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    category,
-                    style: const TextStyle(
-                      fontSize: 12, // Ukuran teks dikurangi
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+          child: Center( // Changed from Row to Center for text centering
+            child: Text(
+              category,
+              style: const TextStyle(
+                fontSize: 12, // Ukuran teks dikurangi
+                fontWeight: FontWeight.w600,
               ),
-              Align(
-                alignment: Alignment.center,
-                child: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _confirmDeleteCategory(context, category),
-                ),
-              ),
-            ],
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center, // Added to ensure text is centered
+            ),
           ),
         ),
       ),
@@ -452,13 +344,6 @@ class _MurottalScreenState extends State<MurottalScreen> {
             backgroundColor: Colors.blueAccent,
             elevation: 0,
             iconTheme: const IconThemeData(color: Colors.white),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.add, color: Colors.white),
-                tooltip: 'Tambah Kategori',
-                onPressed: _showAddCategoryDialog,
-              ),
-            ],
           ),
           body: Column(
             children: [

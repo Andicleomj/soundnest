@@ -84,7 +84,7 @@ class MusicPlayerService {
 
       _onComplete = onComplete;
 
-      print("🎶 Playing music from: $proxyUrl at volume: ${volume * 100}%");
+      print("🎶 Playing music from: $server at volume: ${volume * 100}%");
     } catch (e) {
       print("❌ Gagal memutar musik: $e");
     }

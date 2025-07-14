@@ -4,11 +4,14 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
-const API_KEY = "AIzaSyCvg8k9odUAk87UwtpCwQouOcUvWLXb1to";
+const API_KEY = "AIzaSyDvDOfIkNGvAJeaYFMYDH5MA7mpuxRHZKE";
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Headers", "Range, Content-Type, Accept, Authorization");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Range, Content-Type, Accept, Authorization"
+  );
   next();
 });
 
@@ -61,7 +64,7 @@ app.get("/stream/:fileId", async (req, res) => {
     const headers = {
       "Content-Type": "audio/mpeg",
       "Cache-Control": "public, max-age=3600",
-      "Connection": "keep-alive",
+      Connection: "keep-alive",
       "Accept-Ranges": "bytes",
       "Content-Disposition": `inline; filename="${fileId}.mp3"`,
     };
@@ -79,7 +82,6 @@ app.get("/stream/:fileId", async (req, res) => {
       res.writeHead(200, headers);
       fs.createReadStream(filePath).pipe(res);
     }
-
   } catch (error) {
     console.error("❌ Gagal streaming audio:", error.message);
     res.status(500).send("Gagal streaming audio: " + error.message);
