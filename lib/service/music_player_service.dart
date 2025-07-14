@@ -55,7 +55,7 @@ class MusicPlayerService {
   VoidCallback? _onComplete;
 
   String get _serverUrl {
-    return 'https://telu-monitoring.site/stream';
+    return 'http://31.97.109.216:4500';
   }
 
   Future<void> playFromFileId(
