@@ -4,14 +4,13 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
-const API_KEY = "AIzaSyDvDOfIkNGvAJeaYFMYDH5MA7mpuxRHZKE";
+const API_KEY = process.env.GOOGLE_DRIVE_API_KEY; 
+const PORT = process.env.PORT || 4500;
+
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Range, Content-Type, Accept, Authorization"
-  );
+  res.setHeader("Access-Control-Allow-Headers", "Range, Content-Type, Accept, Authorization");
   next();
 });
 
@@ -64,7 +63,7 @@ app.get("/stream/:fileId", async (req, res) => {
     const headers = {
       "Content-Type": "audio/mpeg",
       "Cache-Control": "public, max-age=3600",
-      Connection: "keep-alive",
+      "Connection": "keep-alive",
       "Accept-Ranges": "bytes",
       "Content-Disposition": `inline; filename="${fileId}.mp3"`,
     };
@@ -82,14 +81,19 @@ app.get("/stream/:fileId", async (req, res) => {
       res.writeHead(200, headers);
       fs.createReadStream(filePath).pipe(res);
     }
+
   } catch (error) {
     console.error("❌ Gagal streaming audio:", error.message);
     res.status(500).send("Gagal streaming audio: " + error.message);
   }
 });
 
-const PORT = 3000;
+// const PORT = 4500;
+// app.listen(PORT, "0.0.0.0", () => {
+//   console.log(`🚀 Server aktif di http://localhost:${PORT}`);
+//   console.log(`🌐 Untuk publik: ngrok http ${PORT}`);
+// });
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server aktif di http://localhost:${PORT}`);
-  console.log(`🌐 Untuk publik: ngrok http ${PORT}`);
+  console.log(`🚀 Audio Stream Server aktif di http://0.0.0.0:${PORT}`);
 });
+
