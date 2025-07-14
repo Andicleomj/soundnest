@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
-const API_KEY = process.env.GOOGLE_DRIVE_API_KEY; 
+const API_KEY = process.env.GOOGLE_DRIVE_API_KEY || 'AIzaSyDvDOfIkNGvAJeaYFMYDH5MA7mpuxRHZKE'; 
 const PORT = process.env.PORT || 4500;
 
 
@@ -34,14 +34,20 @@ app.get("/stream/:fileId", async (req, res) => {
 
     const filePath = path.join(tempFolder, `${fileId}.mp3`);
 
-    // Jika file belum ada → download dari Google Drive
     if (!fs.existsSync(filePath)) {
       const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${API_KEY}`;
+      // const downloadUrl = `https://www.googleapis.com/drive/v3/files/1sftxIsIB7a5L6AUo_bM-EknF1o6lI3YX?alt=media&key=AIzaSyDvDOfIkNGvAJeaYFMYDH5MA7mpuxRHZKE`;
       console.log("⬇️  Downloading from Google Drive...");
-
+      console.log("Download URL:", downloadUrl);
+      // const response = await axios.get(downloadUrl, {
+      //   responseType: "stream",
+      //   headers: { "User-Agent": "Mozilla/5.0" },
+      // });
       const response = await axios.get(downloadUrl, {
-        responseType: "stream",
-        headers: { "User-Agent": "Mozilla/5.0" },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36'
+      },
+      responseType: "stream",
       });
 
       const writer = fs.createWriteStream(filePath);
