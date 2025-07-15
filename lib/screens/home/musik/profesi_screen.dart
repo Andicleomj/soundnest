@@ -5,8 +5,8 @@ import 'package:soundnest/service/music_player_service.dart';
 final MusicPlayerService musicPlayerService = MusicPlayerService();
 
 class ProfesiScreen extends StatefulWidget {
-  final String categoryPath; // Path lengkap di Firebase Realtime Database
-  final String categoryName; // Nama kategori untuk judul AppBar
+  final String categoryPath;
+  final String categoryName;
   final bool selectMode;
 
   const ProfesiScreen({
@@ -29,52 +29,144 @@ class _ProfesiScreenState extends State<ProfesiScreen> {
   @override
   void initState() {
     super.initState();
-    databaseRef = FirebaseDatabase.instance.ref(
-      'devices/devices_01/music/categories/kategori_013/files',
-    );
+    print('ProfesiScreen init - selectMode: ${widget.selectMode}');
+    databaseRef = FirebaseDatabase.instance.ref(widget.categoryPath);
     fetchMusicData();
   }
 
-  void fetchMusicData() async {
-    final snapshot = await databaseRef.get();
-    if (snapshot.exists) {
-      final data = Map<String, dynamic>.from(snapshot.value as Map);
-      setState(() {
-        musicList =
-            data.entries.map((e) {
-              final value = e.value as Map<dynamic, dynamic>;
-              return {
-                'title': value['title'] ?? 'Tidak ada judul',
-                'fileId': value['fileId'] ?? '',
-              };
-            }).toList();
-        isLoading = false;
-      });
-    } else {
+  Future<void> fetchMusicData() async {
+    try {
+      final snapshot = await databaseRef.get();
+      if (snapshot.exists) {
+        final data = Map<String, dynamic>.from(snapshot.value as Map);
+        setState(() {
+          musicList =
+              data.entries.map((e) {
+                final value = e.value as Map<dynamic, dynamic>;
+                return {
+                  'title': value['title'] ?? 'Tidak ada judul',
+                  'fileId': value['fileId'] ?? '',
+                };
+              }).toList();
+          isLoading = false;
+        });
+      } else {
+        setState(() => isLoading = false);
+        print(
+          '⚠ Data di path ${widget.categoryPath} tidak ditemukan di database.',
+        );
+      }
+    } catch (e) {
       setState(() => isLoading = false);
-      print('Data di path ${widget.categoryPath} tidak ditemukan di database.');
+      print('❌ Gagal mengambil data: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal memuat data: $e')));
     }
   }
 
   void togglePlay(int index) async {
     final fileId = musicList[index]['fileId'];
-
-    if (musicPlayerService.isPlaying &&
-        musicPlayerService.currentFileId == fileId) {
-      await musicPlayerService.pauseMusic();
-      setState(() {
-        currentIndex = -1;
-      });
-    } else {
-      await musicPlayerService.playFromFileId(
-        fileId,
-        title: musicList[index]['title'],
-        category: widget.categoryName,
-      );
-      setState(() {
-        currentIndex = index;
-      });
+    try {
+      if (musicPlayerService.isPlaying &&
+          musicPlayerService.currentFileId == fileId) {
+        await musicPlayerService.pauseMusic();
+        setState(() {
+          currentIndex = -1;
+        });
+      } else {
+        print('▶ Memutar fileId: $fileId');
+        await musicPlayerService.playFromFileId(
+          fileId,
+          title: musicList[index]['title'],
+          category: widget.categoryName,
+        );
+        setState(() {
+          currentIndex = index;
+        });
+      }
+    } catch (e) {
+      print('❌ Gagal memutar audio (fileId: $fileId): $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal memutar audio: $e')));
     }
+  }
+
+  void _showAddSongDialog() {
+    final titleController = TextEditingController();
+    final fileIdController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Tambah Musik Baru'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    hintText: 'Judul Audio',
+                    labelText: 'Judul',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: fileIdController,
+                  decoration: const InputDecoration(
+                    hintText: 'Google Drive File ID',
+                    labelText: 'File ID',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final title = titleController.text.trim();
+                  final fileId = fileIdController.text.trim();
+
+                  if (title.isNotEmpty && fileId.isNotEmpty) {
+                    try {
+                      final nextKey = 'file_${musicList.length + 1}';
+                      await databaseRef.child(nextKey).set({
+                        'title': title,
+                        'fileId': fileId,
+                      });
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Audio "$title" berhasil ditambahkan'),
+                        ),
+                      );
+                      await fetchMusicData(); // Refresh data setelah menambahkan
+                    } catch (e) {
+                      print('❌ Gagal menambahkan audio: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Gagal menambahkan audio: $e')),
+                      );
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Judul dan File ID harus diisi'),
+                      ),
+                    );
+                  }
+                },
+                child: const Text('Tambah'),
+              ),
+            ],
+          ),
+    );
   }
 
   @override
@@ -107,6 +199,13 @@ class _ProfesiScreenState extends State<ProfesiScreen> {
                   ),
                 ),
                 centerTitle: true,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    tooltip: 'Tambah Audio',
+                    onPressed: _showAddSongDialog,
+                  ),
+                ],
               ),
               Expanded(
                 child:
@@ -184,7 +283,17 @@ class _ProfesiScreenState extends State<ProfesiScreen> {
                                   ),
                                   onPressed: () => togglePlay(index),
                                 ),
-                                onTap: () => togglePlay(index),
+                                onTap: () {
+                                  if (widget.selectMode) {
+                                    Navigator.pop(context, {
+                                      'title': music['title'],
+                                      'fileId': music['fileId'],
+                                      'category': widget.categoryName,
+                                    });
+                                  } else {
+                                    togglePlay(index);
+                                  }
+                                },
                                 splashColor: Colors.blueAccent.withOpacity(0.3),
                               ),
                             );

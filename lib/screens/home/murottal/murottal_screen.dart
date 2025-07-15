@@ -147,7 +147,7 @@ class _MurottalScreenState extends State<MurottalScreen> {
 
     if (category == 'Ayat Kursi') {
       categoryPath = 'devices/devices_01/murottal/categories/kategori_1/files';
-      screen = AyatKursi(categoryPath: categoryPath, categoryName: category);
+      screen = AyatKursi(categoryPath: categoryPath, categoryName: category, categoryId: 'kategori_1');
     } else if (category == 'Surah Pendek') {
       categoryPath = 'devices/devices_01/murottal/categories/kategori_2/files';
       screen = SurahScreen(

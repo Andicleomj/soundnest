@@ -583,37 +583,94 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        String newHari = schedule['hari'];
-        String newStartTime = schedule['startTime'] ?? schedule['waktu'] ?? '';
-        String newEndTime = schedule['endTime'] ?? '';
+        final hariController = TextEditingController(text: schedule['hari']);
+        final startTimeController = TextEditingController(
+          text: schedule['startTime'] ?? schedule['waktu'] ?? '',
+        );
+        final endTimeController = TextEditingController(
+          text: schedule['endTime'] ?? '',
+        );
+        final formKey = GlobalKey<FormState>();
+        bool isHariValid = true;
 
         return AlertDialog(
           title: const Text('Edit Jadwal'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                initialValue: newHari,
-                decoration: const InputDecoration(
-                  labelText: 'Hari (pisah koma jika banyak)',
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: hariController,
+                  decoration: InputDecoration(
+                    labelText: 'Hari (pisah koma, huruf awal kapital)',
+                    errorText:
+                        isHariValid
+                            ? null
+                            : 'Gunakan huruf awal kapital',
+                    errorStyle: const TextStyle(color: Colors.red),
+                  ),
+                  onChanged: (val) {
+                    final hariList =
+                        val.split(',').map((e) => e.trim()).toList();
+                    final validDays = [
+                      'Senin',
+                      'Selasa',
+                      'Rabu',
+                      'Kamis',
+                      'Jumat',
+                      'Sabtu',
+                      'Minggu',
+                    ];
+                    bool valid = true;
+                    for (var hari in hariList) {
+                      if (hari.isNotEmpty &&
+                          hari != hari.toLowerCase() &&
+                          !validDays.contains(hari)) {
+                        valid = false;
+                        break;
+                      }
+                    }
+                    setState(() {
+                      isHariValid = valid;
+                    });
+                  },
+                  validator: (val) {
+                    if (val == null || val.isEmpty)
+                      return 'Hari tidak boleh kosong';
+                    final hariList =
+                        val.split(',').map((e) => e.trim()).toList();
+                    final validDays = [
+                      'Senin',
+                      'Selasa',
+                      'Rabu',
+                      'Kamis',
+                      'Jumat',
+                      'Sabtu',
+                      'Minggu',
+                    ];
+                    for (var hari in hariList) {
+                      if (hari.isNotEmpty && hari == hari.toLowerCase()) {
+                        return 'Gunakan huruf awal kapital (misal: Senin)';
+                      }
+                    }
+                    return null;
+                  },
                 ),
-                onChanged: (val) => newHari = val,
-              ),
-              TextFormField(
-                initialValue: newStartTime,
-                decoration: const InputDecoration(
-                  labelText: 'Waktu Mulai (misal: 07:30)',
+                TextFormField(
+                  controller: startTimeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Waktu Mulai (misal: 07:30)',
+                  ),
                 ),
-                onChanged: (val) => newStartTime = val,
-              ),
-              TextFormField(
-                initialValue: newEndTime,
-                decoration: const InputDecoration(
-                  labelText: 'Waktu Selesai (misal: 08:00)',
+                TextFormField(
+                  controller: endTimeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Waktu Selesai (misal: 08:00)',
+                  ),
                 ),
-                onChanged: (val) => newEndTime = val,
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -622,16 +679,30 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
+                if (!formKey.currentState!.validate() || !isHariValid) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Penulisan hari salah',
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
                 try {
                   final ref = _getRefBySource(schedule['source']);
                   final hariList =
-                      newHari.split(',').map((e) => e.trim()).toList();
+                      hariController.text
+                          .split(',')
+                          .map((e) => e.trim())
+                          .toList();
 
                   await ref.child(schedule['rawKey']).update({
                     'hari': hariList,
-                    'startTime': newStartTime,
-                    'endTime': newEndTime,
-                    'waktu': newStartTime,
+                    'startTime': startTimeController.text,
+                    'endTime': endTimeController.text,
+                    'waktu': startTimeController.text,
                   });
 
                   final idx = schedules.indexWhere(
@@ -639,10 +710,11 @@ class _DaftarJadwalScreenState extends State<DaftarJadwalScreen> {
                   );
                   if (idx != -1) {
                     setState(() {
-                      schedules[idx]['hari'] = newHari;
-                      schedules[idx]['startTime'] = newStartTime;
-                      schedules[idx]['endTime'] = newEndTime;
-                      schedules[idx]['waktu'] = newStartTime; // fallback
+                      schedules[idx]['hari'] = hariController.text;
+                      schedules[idx]['startTime'] = startTimeController.text;
+                      schedules[idx]['endTime'] = endTimeController.text;
+                      schedules[idx]['waktu'] =
+                          startTimeController.text; // fallback
                     });
                   }
 

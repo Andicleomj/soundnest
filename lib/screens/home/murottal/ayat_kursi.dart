@@ -12,10 +12,11 @@ class AyatKursi extends StatefulWidget {
     super.key,
     required this.categoryPath,
     required this.categoryName,
+    required String categoryId,
   });
 
   @override
-  _AyatKursiState createState() => _AyatKursiState();
+  State<AyatKursi> createState() => _AyatKursiState();
 }
 
 class _AyatKursiState extends State<AyatKursi> {
@@ -28,41 +29,44 @@ class _AyatKursiState extends State<AyatKursi> {
   void initState() {
     super.initState();
     databaseRef = FirebaseDatabase.instance.ref(widget.categoryPath);
-    fetchSurahData();
+    listenToDatabase();
   }
 
-  void fetchSurahData() async {
-    final snapshot = await databaseRef.get();
-    if (snapshot.exists) {
-      try {
-        final data = Map<String, dynamic>.from(snapshot.value as Map);
-        final List<Map<String, dynamic>> tempList = [];
+  void listenToDatabase() {
+    databaseRef.onValue.listen((event) {
+      final snapshot = event.snapshot;
+      if (snapshot.exists) {
+        try {
+          final data = Map<String, dynamic>.from(snapshot.value as Map);
+          final List<Map<String, dynamic>> tempList = [];
 
-        data.forEach((key, value) {
-          if (value is Map &&
-              value.containsKey('title') &&
-              value.containsKey('fileId')) {
-            tempList.add({'title': value['title'], 'fileId': value['fileId']});
-          }
-        });
+          data.forEach((key, value) {
+            if (value is Map &&
+                value.containsKey('title') &&
+                value.containsKey('fileId')) {
+              tempList.add({
+                'title': value['title'],
+                'fileId': value['fileId'],
+              });
+            }
+          });
 
+          setState(() {
+            surahList = tempList;
+            isLoading = false;
+          });
+        } catch (e) {
+          print('❌ Gagal parsing data: $e');
+          setState(() => isLoading = false);
+        }
+      } else {
+        print('⚠ Data tidak ditemukan di path: ${widget.categoryPath}');
         setState(() {
-          surahList = tempList;
+          surahList = [];
           isLoading = false;
         });
-      } catch (e) {
-        print('❌ Gagal parsing data: $e');
-        setState(() => isLoading = false);
       }
-    } else {
-      print('⚠️ Data tidak ditemukan di path: ${widget.categoryPath}');
-      setState(() => isLoading = false);
-    }
-  }
-
-  /// Fungsi untuk mendapatkan daftar surah secara eksternal (untuk JadwalMurottal)
-  List<String> getSurahList() {
-    return surahList.map((surah) => surah['title'] as String).toList();
+    });
   }
 
   void togglePlay(int index) async {
@@ -75,6 +79,7 @@ class _AyatKursiState extends State<AyatKursi> {
         currentIndex = -1;
       });
     } else {
+      print('▶ Memutar fileId: $fileId');
       await musicPlayerService.playFromFileId(
         fileId,
         title: surahList[index]['title'],
@@ -86,124 +91,122 @@ class _AyatKursiState extends State<AyatKursi> {
     }
   }
 
+  void _showAddSongDialog() {
+    final titleController = TextEditingController();
+    final fileIdController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Tambah Surah Baru'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(
+                hintText: 'Judul Surah',
+                labelText: 'Judul',
+              ),
+            ),
+            TextField(
+              controller: fileIdController,
+              decoration: const InputDecoration(
+                hintText: 'Google Drive File ID',
+                labelText: 'File ID',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final title = titleController.text.trim();
+              final fileId = fileIdController.text.trim();
+
+              if (title.isNotEmpty && fileId.isNotEmpty) {
+                try {
+                  final nextKey = 'file_${surahList.length + 1}';
+                  await databaseRef.child(nextKey).set({
+                    'title': title,
+                    'fileId': fileId,
+                  });
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Surah "$title" berhasil ditambahkan')),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Gagal menambahkan surah: $e')),
+                  );
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Judul dan File ID harus diisi')),
+                );
+              }
+            },
+            child: const Text('Tambah'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blueAccent, Colors.white],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.blueAccent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          "Ayat Kursi",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+            fontSize: 22,
           ),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              AppBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                title: Text(
-                  "Ayat Kursi",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 22,
-                  ),
-                ),
-                centerTitle: true,
-              ),
-              Expanded(
-                child:
-                    isLoading
-                        ? const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
-                        )
-                        : surahList.isEmpty
-                        ? const Center(
-                          child: Text(
-                            'Data musik tidak tersedia.',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        )
-                        : ListView.separated(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 4,
-                            horizontal: 4,
-                          ),
-                          itemCount: surahList.length,
-                          separatorBuilder:
-                              (context, index) => const Divider(
-                                color: Colors.white30,
-                                thickness: 0.5,
-                                height: 0.5,
-                              ),
-                          itemBuilder: (context, index) {
-                            final music = surahList[index];
-                            final isCurrent =
-                                musicPlayerService.currentFileId ==
-                                    music['fileId'] &&
-                                musicPlayerService.isPlaying;
-
-                            return Card(
-                              elevation: 1,
-                              margin: const EdgeInsets.symmetric(
-                                vertical: 2,
-                                horizontal: 4,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              color:
-                                  isCurrent
-                                      ? Colors.lightBlue[50]!.withOpacity(0.5)
-                                      : Colors.white.withOpacity(0.9),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.all(8),
-                                leading: const Icon(
-                                  Icons.music_note,
-                                  color: Colors.blueAccent,
-                                  size: 24,
-                                ),
-                                title: Text(
-                                  music['title'],
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color:
-                                        isCurrent
-                                            ? Colors.blueAccent
-                                            : Colors.black87,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                trailing: IconButton(
-                                  icon: Icon(
-                                    isCurrent ? Icons.pause : Icons.play_arrow,
-                                    color:
-                                        isCurrent
-                                            ? Colors.blueAccent
-                                            : Colors.black54,
-                                    size: 24,
-                                  ),
-                                  onPressed: () => togglePlay(index),
-                                ),
-                                onTap: () => togglePlay(index),
-                                splashColor: Colors.blueAccent.withOpacity(0.3),
-                              ),
-                            );
-                          },
-                        ),
-              ),
-            ],
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add, color: Colors.white),
+            tooltip: 'Tambah Surah',
+            onPressed: _showAddSongDialog,
           ),
-        ),
+        ],
       ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : surahList.isEmpty
+              ? const Center(child: Text('Data tidak tersedia.'))
+              : ListView.builder(
+                  itemCount: surahList.length,
+                  itemBuilder: (context, index) {
+                    final murottal = surahList[index];
+                    final isCurrent =
+                        musicPlayerService.currentFileId == murottal['fileId'] &&
+                        musicPlayerService.isPlaying;
+
+                    return ListTile(
+                      title: Text(murottal['title']),
+                      trailing: IconButton(
+                        icon: Icon(isCurrent ? Icons.pause : Icons.play_arrow),
+                        onPressed: () => togglePlay(index),
+                      ),
+                      onTap: () => togglePlay(index),
+                    );
+                  },
+                ),
     );
   }
 }

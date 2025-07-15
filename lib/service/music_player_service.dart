@@ -49,7 +49,9 @@ class MusicPlayerService {
   final ValueNotifier<bool> isPlayingNotifier = ValueNotifier<bool>(false);
   final ValueNotifier<String?> currentTitleNotifier = ValueNotifier(null);
   final ValueNotifier<String?> currentCategoryNotifier = ValueNotifier(null);
-  final ValueNotifier<Duration> currentPositionNotifier = ValueNotifier(Duration.zero);
+  final ValueNotifier<Duration> currentPositionNotifier = ValueNotifier(
+    Duration.zero,
+  );
   final ValueNotifier<Duration> durationNotifier = ValueNotifier(Duration.zero);
 
   VoidCallback? _onComplete;

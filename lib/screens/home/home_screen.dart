@@ -107,20 +107,6 @@ class HomeScreen extends StatelessWidget {
                         );
                       },
                     ),
-                    MenuItem(
-                      icon: 'assets/cast.png',
-                      label: "Cast",
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) =>
-                                    const CastScreen(playFromFileId: ''),
-                          ),
-                        );
-                      },
-                    ),
                   ],
                 ),
               ),
