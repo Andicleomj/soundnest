@@ -1,6 +1,6 @@
+import 'dart:developer' as dev;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'dart:developer' as dev;
 
 class ForgetPasswordScreen extends StatefulWidget {
   const ForgetPasswordScreen({super.key});
@@ -12,9 +12,52 @@ class ForgetPasswordScreen extends StatefulWidget {
 class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtl = TextEditingController();
+  final ValueNotifier<bool> _emailValid = ValueNotifier(false);
 
-  // notifier agar tombol bisa mengubah warna & status enable/disable
-  final ValueNotifier<bool> _emailValid = ValueNotifier<bool>(false);
+  /* ───────────────────── Helpers ───────────────────── */
+
+  bool _isValidEmail(String email) {
+    final reg = RegExp(r'^[a-zA-Z0-9._%+-]+@gmail\.com$');
+    return reg.hasMatch(email) && email.length >= 6 && email.length <= 254;
+  }
+
+  void _validateEmailRealtime() =>
+      _emailValid.value = _isValidEmail(_emailCtl.text.trim());
+
+  /* ───────────────────── Send Reset Link ───────────────────── */
+
+  Future<void> _sendResetPassword() async {
+    final email = _emailCtl.text.trim().toLowerCase();
+
+    if (!_isValidEmail(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Alamat e‑mail tidak valid')),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Link reset dikirim ke $email')),
+      );
+      Navigator.pop(context); // kembali ke halaman sebelumnya
+    } on FirebaseAuthException catch (e) {
+      final msg = switch (e.code) {
+        'invalid-email'  => 'Format e‑mail tidak valid.',
+        'user-not-found' => 'E‑mail belum terdaftar.',
+        _                => 'Terjadi kesalahan (${e.code}).',
+      };
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } catch (e) {
+      dev.log('❌ Reset error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Terjadi kesalahan, coba lagi.')),
+      );
+    }
+  }
+
+  /* ───────────────────── Lifecycle ───────────────────── */
 
   @override
   void initState() {
@@ -31,65 +74,6 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
     super.dispose();
   }
 
-  /* ───────────────────── Helper ───────────────────── */
-
-  // hanya @gmail.com & format umum
-  bool _isValidEmail(String email) {
-    final reg = RegExp(r'^[a-zA-Z0-9._%+-]+@gmail\.com$');
-    return reg.hasMatch(email) &&
-        email.length >= 6 &&
-        email.length <= 254;
-  }
-
-  void _validateEmailRealtime() {
-    _emailValid.value = _isValidEmail(_emailCtl.text.trim());
-  }
-
-  /* ─────────────── Kirim link reset ─────────────── */
-
-  Future<void> _sendResetPassword() async {
-  final email = _emailCtl.text.trim();
-
-  // validasi format lokal
-  if (!_isValidEmail(email)) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Alamat e‑mail tidak valid')),
-    );
-    return;
-  }
-
-  try {
-    // 🔍 1. Cek apakah e‑mail sudah terdaftar
-    final methods =
-        await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
-    if (methods.isEmpty) {
-      // e‑mail belum pernah sign‑up
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('E‑mail belum terdaftar.')),
-      );
-      return; // hentikan di sini
-    }
-
-    // 🔑 2. Jika terdaftar → kirim link reset
-    await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Link reset dikirim ke $email')),
-    );
-    Navigator.pop(context);
-
-  } on FirebaseAuthException catch (e) {
-    // kode error lain (jarang terjadi)
-    String msg = 'Terjadi kesalahan (${e.code}).';
-    if (e.code == 'invalid-email') msg = 'Format e‑mail tidak valid.';
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  } catch (e) {
-    dev.log('Reset error: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Terjadi kesalahan, coba lagi.')),
-    );
-  }
-}
-
   /* ───────────────────── UI ───────────────────── */
 
   @override
@@ -97,8 +81,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
         elevation: 0,
+        backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
@@ -117,14 +101,13 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
               ),
               const SizedBox(height: 5),
               const Text(
-                'Masukkan e‑mail Gmail Anda untuk menerima tautan reset.',
+                'Masukkan alamat Gmail  untuk menerima tautan reset kata sandi.',
                 style: TextStyle(fontSize: 14, color: Colors.grey),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 25),
 
-              /* ─────────────── Input E‑mail ─────────────── */
               const Text('E‑mail'),
-              const SizedBox(height: 5),
+              const SizedBox(height: 6),
               TextFormField(
                 controller: _emailCtl,
                 keyboardType: TextInputType.emailAddress,
@@ -138,9 +121,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                     v == null || !_isValidEmail(v) ? 'E‑mail Gmail tidak valid' : null,
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 25),
 
-              /* ─────────────── Tombol ─────────────── */
               ValueListenableBuilder<bool>(
                 valueListenable: _emailValid,
                 builder: (context, valid, _) => SizedBox(
@@ -158,8 +140,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                     child: const Text(
                       'Kirim Link Reset',
                       style: TextStyle(
-                        color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                   ),
