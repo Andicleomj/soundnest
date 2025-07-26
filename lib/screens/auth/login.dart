@@ -216,7 +216,7 @@ class _LoginState extends State<Login> {
                           ),
                         ),
                       ),
-                      const Spacer(), // Tambahkan agar kolom bisa dorong ke atas saat keyboard muncul
+                      const Spacer(), 
                     ],
                   ),
                 ),

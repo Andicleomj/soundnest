@@ -59,19 +59,6 @@ class MyApp extends StatelessWidget {
         ...AppRoutes.getRoutes(),
         '/music': (context) => const MusicScreen(),
       },
-      onGenerateRoute: (settings) {
-        if (settings.name!.startsWith('/cast/')) {
-          final fileId = settings.name!.split('/cast/').last;
-          return MaterialPageRoute(
-            builder:
-                (context) => CastScreen(
-                  playFromFileId:
-                      "https://28fa-118-96-203-155.ngrok-free.app/stream/$fileId",
-                ),
-          );
-        }
-        return null;
-      },
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,

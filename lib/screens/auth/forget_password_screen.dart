@@ -45,7 +45,6 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
     } on FirebaseAuthException catch (e) {
       final msg = switch (e.code) {
         'invalid-email'  => 'Format e‑mail tidak valid.',
-        'user-not-found' => 'E‑mail belum terdaftar.',
         _                => 'Terjadi kesalahan (${e.code}).',
       };
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
