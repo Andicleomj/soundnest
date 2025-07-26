@@ -109,33 +109,73 @@ class _VolumeScreenState extends State<VolumeScreen> {
     }
   }
 
-  Future<void> _saveVolume() async {
-    try {
-      await VolumeHelper.setVolume(_tempVolume / 100);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+ 
+Future<void> _saveVolume() async {
+  try {
+    // 🔁 Ganti validasi berdasarkan SPL (bukan _tempVolume)
+    if (_spl <= 10.0) {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text("SPL Terlalu Kecil"),
           content: Text(
-            "Volume disimpan: ${_tempVolume.toInt()}%, SPL: ${_spl.toStringAsFixed(2)} dB",
+            "Tingkat tekanan suara (SPL) saat ini sangat kecil (${_spl.toStringAsFixed(2)} dB). "
+            "Apakah Anda yakin ingin menyimpannya?",
           ),
-          backgroundColor: Colors.blue,
-          duration: const Duration(milliseconds: 1500),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text("Batal"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text("Lanjutkan"),
+            ),
+          ],
         ),
       );
-      await Future.delayed(const Duration(milliseconds: 1600));
-      if (mounted) Navigator.pop(context);
-    } catch (e) {
-      dev.log("❌ Error saving volume: $e", name: "VolumeScreen");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Gagal menyimpan volume"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+
+      if (confirm != true) return;
+    } else if (_spl <= 30.0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("⚠ SPL rendah (${_spl.toStringAsFixed(2)} dB). Pastikan ini yang Anda inginkan."),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      await Future.delayed(const Duration(milliseconds: 2100));
+    }
+
+    // Simpan volume jika lolos validasi
+    await VolumeHelper.setVolume(_tempVolume / 100);
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          "✅ Volume disimpan: ${_tempVolume.toInt()}%, SPL: ${_spl.toStringAsFixed(2)} dB",
+        ),
+        backgroundColor: Colors.blue,
+        duration: const Duration(milliseconds: 1500),
+      ),
+    );
+
+    await Future.delayed(const Duration(milliseconds: 1600));
+    if (mounted) Navigator.pop(context);
+
+  } catch (e) {
+    dev.log("❌ Error saving volume: $e", name: "VolumeScreen");
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Gagal menyimpan volume"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
+}
 
   void _calculateSPL() {
     try {
